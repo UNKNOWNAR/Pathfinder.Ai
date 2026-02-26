@@ -7,6 +7,7 @@ from flask_security import Security
 from flask_restful import Api
 from user_datastore import user_datastore
 from api.auth_apis import LoginUser, SignUpUser,LogoutUser
+from api.profile_api import ProfileAPI
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
@@ -41,6 +42,7 @@ init_db()
 api.add_resource(LoginUser, '/login')
 api.add_resource(SignUpUser, '/signup')
 api.add_resource(LogoutUser, '/logout')
+api.add_resource(ProfileAPI, '/profile')
 
 if __name__ == '__main__':  
     init_db()
