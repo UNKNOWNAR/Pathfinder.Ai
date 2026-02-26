@@ -3,14 +3,20 @@
 </template>
 
 <style>
-body {
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  background-color: #e0e0e0;
+}
+
+body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+#app {
+  width: 100%;
   min-height: 100vh;
 }
 </style>

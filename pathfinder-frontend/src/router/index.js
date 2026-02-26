@@ -11,9 +11,24 @@ const routes = [
   {
     path: '/dashboard',
     name: 'dashboard',
-    // This loads the file only when needed
     component: () => import('../views/DashboardView.vue')
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: () => import('../views/ProfileView.vue')
+  },
+  {
+    path: '/jobs',
+    name: 'jobs',
+    component: () => import('../views/JobsView.vue')
+  },
+  {
+    path: '/leetcode',
+    name: 'leetcode',
+    component: () => import('../views/LeetCodeView.vue')
   }
+
 ];
 
 const router = createRouter({
