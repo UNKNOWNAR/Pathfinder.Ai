@@ -88,7 +88,7 @@ const logout = () => {
   height: 48px;
   width: 48px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  flex-shrink: 0;
 }
 
 .nav-title {

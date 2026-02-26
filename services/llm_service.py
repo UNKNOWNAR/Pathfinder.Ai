@@ -74,6 +74,13 @@ class LLMService:
             \\item <Write JD-tailored bullet point>
         \\end{itemize}
 
+        % ================== ACHIEVEMENTS ==================
+        % ONLY include this section if the student has achievements. If achievements list is empty or null, skip this entire section.
+        \\section*{Achievements}
+        % For each achievement item:
+        \\textbf{<Inject Achievement Title>} \\hfill \\textit{<Inject Issuer> | <Inject Year>} \\\\
+        <Inject short description of the achievement>
+
         \\end{document}
         
         RULES:
