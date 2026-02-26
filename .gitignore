@@ -1,0 +1,20 @@
+# --- Python / Backend ---
+__pycache__/
+venv/
+.env
+instance/
+.pytest_cache/
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+.DS_Store
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+
