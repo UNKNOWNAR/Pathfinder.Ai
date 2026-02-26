@@ -1,12 +1,10 @@
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
-
-// ── Load/save helpers (localStorage only for now) ─────────────────────────
-const STORAGE_KEY = 'pathfinder_profile';
+import api from '@/services/api';
 
 const defaultProfile = () => ({
-  name:       localStorage.getItem('username') || '',
+  name:       '',
   headline:   '',
   github:     '',
   linkedin:   '',
@@ -23,8 +21,29 @@ const defaultProfile = () => ({
   photo:      null,
 });
 
-const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-const profile = reactive(saved || defaultProfile());
+const profile = reactive(defaultProfile());
+
+const isSaving = ref(false);
+const isGenerating = ref(false);
+
+onMounted(async () => {
+  try {
+    const res = await api.get('/profile');
+    if (res.data) {
+      Object.assign(profile, res.data);
+      // Ensure arrays are initialized if null in DB
+      profile.skills = res.data.skills || [];
+      profile.experience = res.data.experience || [];
+      profile.education = res.data.education || [];
+      profile.projects = res.data.projects || [];
+      profile.achievements = res.data.achievements || [];
+    }
+  } catch (err) {
+    if (err.response?.status !== 404) {
+      console.error("Error fetching profile", err);
+    }
+  }
+});
 
 const skillInput = ref('');
 const openSections = reactive({
@@ -75,12 +94,44 @@ const removeProject = (i) => profile.projects.splice(i, 1);
 const addAchievement = () => profile.achievements.push({ title: '', issuer: '', year: '', description: '' });
 const removeAchievement = (i) => profile.achievements.splice(i, 1);
 
-// ── Save ──────────────────────────────────────────────────────────────────
-const saveProfile = () => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  localStorage.setItem('username', profile.name);
-  saved_msg.value = 'Saved!';
-  setTimeout(() => saved_msg.value = '', 2000);
+const saveProfile = async () => {
+  isSaving.value = true;
+  saved_msg.value = 'Saving...';
+  try {
+    await api.put('/profile', profile);
+    saved_msg.value = '✦ SAVED!';
+    // Optional: Keep localStorage username in sync if used elsewhere
+    localStorage.setItem('username', profile.name);
+  } catch (err) {
+    console.error(err);
+    saved_msg.value = 'FAILED!';
+    alert('Failed to save profile. ' + (err.response?.data?.message || ''));
+  } finally {
+    setTimeout(() => {
+      saved_msg.value = '';
+      isSaving.value = false;
+    }, 2000);
+  }
+};
+
+const generateResume = async () => {
+  if (!jdText.value.trim() || isGenerating.value) return;
+  isGenerating.value = true;
+  try {
+    const res = await api.post('/generate-resume', { jd_text: jdText.value }, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Pathfinder_Tailored_Resume.pdf');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error(err);
+    alert('Failed to generate resume. Please ensure required profile fields are filled.');
+  } finally {
+    isGenerating.value = false;
+  }
 };
 
 // ── Toggle accordion ──────────────────────────────────────────────────────
@@ -137,7 +188,7 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 
         <!-- Save -->
         <div class="hero-actions">
-          <button class="save-btn" @click="saveProfile">
+          <button class="save-btn" @click="saveProfile" :disabled="isSaving">
             {{ saved_msg || '✦ SAVE PROFILE' }}
           </button>
         </div>
@@ -350,10 +401,10 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
               placeholder="Paste the job description here. The AI will tailor your resume to this role..."
             ></textarea>
           </div>
-          <button class="generate-btn" :disabled="!jdText.trim()">
-            ✦ GENERATE TAILORED RESUME  →
+          <button class="generate-btn" @click="generateResume" :disabled="!jdText.trim() || isGenerating">
+            {{ isGenerating ? 'GENERATING...' : '✦ GENERATE TAILORED RESUME →' }}
           </button>
-          <p class="generate-note">Backend integration coming soon. Profile is saved locally.</p>
+          <p class="generate-note">The AI will rewrite your bullets to match the JD, then compile a beautifully formatted PDF.</p>
         </div>
       </div>
 
