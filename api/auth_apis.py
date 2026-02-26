@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from flask import request
-from models.user import User, db
+from models.user import db,User
+from models.profile import Profile
 from user_datastore import user_datastore
 from sqlalchemy import or_
 from flask_jwt_extended import create_access_token, jwt_required
@@ -101,7 +102,8 @@ class SignUpUser(Resource):
             role=role,
             active=active
         )
-        
+        db.session.flush() #forces SQLite to assign user_id NOW
+        db.session.add(Profile(user_id=user.user_id,name = user.username,email = user.email))
         db.session.commit()
         result = {
             'message': 'User registered successfully',

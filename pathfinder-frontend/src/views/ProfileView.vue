@@ -19,6 +19,7 @@ const defaultProfile = () => ({
   experience: [],
   education:  [],
   projects:   [],
+  achievements: [],
   photo:      null,
 });
 
@@ -27,12 +28,13 @@ const profile = reactive(saved || defaultProfile());
 
 const skillInput = ref('');
 const openSections = reactive({
-  personal: true,
-  skills:     false,
-  experience: false,
-  education:  false,
-  projects:   false,
-  resume:     false,
+  personal:     true,
+  skills:       false,
+  experience:   false,
+  education:    false,
+  projects:     false,
+  achievements: false,
+  resume:       false,
 });
 
 const jdText = ref('');
@@ -69,6 +71,9 @@ const removeEdu = (i) => profile.education.splice(i, 1);
 
 const addProject = () => profile.projects.push({ title: '', tech: '', url: '', description: '' });
 const removeProject = (i) => profile.projects.splice(i, 1);
+
+const addAchievement = () => profile.achievements.push({ title: '', issuer: '', year: '', description: '' });
+const removeAchievement = (i) => profile.achievements.splice(i, 1);
 
 // ── Save ──────────────────────────────────────────────────────────────────
 const saveProfile = () => {
@@ -292,6 +297,41 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
             </div>
           </div>
           <button class="add-entry-btn" @click="addProject">+ Add Project</button>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="accord box">
+        <button class="accord-head" @click="toggle('achievements')">
+          <span>ACHIEVEMENTS</span>
+          <span class="chevron" :class="{ open: openSections.achievements }">▼</span>
+        </button>
+        <div v-if="openSections.achievements" class="accord-body">
+          <div v-for="(ach, i) in profile.achievements" :key="i" class="repeater-card">
+            <div class="repeater-header">
+              <strong>Achievement {{ i + 1 }}</strong>
+              <button class="remove-btn" @click="removeAchievement(i)">✕ Remove</button>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label>Title</label>
+                <input v-model="ach.title" placeholder="e.g. Best Paper Award, Dean's List, Hackathon Winner" />
+              </div>
+              <div class="field">
+                <label>Issuer</label>
+                <input v-model="ach.issuer" placeholder="e.g. IEEE, Google, AICTE, University" />
+              </div>
+              <div class="field">
+                <label>Year</label>
+                <input v-model="ach.year" placeholder="2024" />
+              </div>
+            </div>
+            <div class="field full">
+              <label>Description</label>
+              <textarea v-model="ach.description" rows="2" placeholder="Brief description of the achievement..."></textarea>
+            </div>
+          </div>
+          <button class="add-entry-btn" @click="addAchievement">+ Add Achievement</button>
         </div>
       </div>
 
