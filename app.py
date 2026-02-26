@@ -8,6 +8,7 @@ from flask_restful import Api
 from user_datastore import user_datastore
 from api.auth_apis import LoginUser, SignUpUser,LogoutUser
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
@@ -35,6 +36,7 @@ def init_db():
             db.session.commit()
 
 app,api = create_app()
+CORS(app)
 init_db()
 api.add_resource(LoginUser, '/login')
 api.add_resource(SignUpUser, '/signup')

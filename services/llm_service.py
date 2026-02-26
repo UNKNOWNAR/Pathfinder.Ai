@@ -1,5 +1,5 @@
 from huggingface_hub import InferenceClient
-from core.config import settings
+from config import Config
 import json
 import re
 
@@ -8,7 +8,7 @@ class LLMService:
         # Swapped to Llama 3 or Qwen Coder, which are much better at strictly following formatting
         self.client = InferenceClient(
             model="Qwen/Qwen2.5-Coder-7B-Instruct", 
-            token=settings.HF_TOKEN
+            token=Config.HF_TOKEN
         )
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
