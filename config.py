@@ -17,3 +17,8 @@ class Config:
 
     # Move Flask-Security's built-in routes away from /login so our API can use it
     SECURITY_URL_PREFIX = '/security'
+
+    HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    if not HF_TOKEN:
+        raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
+
