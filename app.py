@@ -8,6 +8,7 @@ from flask_restful import Api
 from user_datastore import user_datastore
 from api.auth_apis import LoginUser, SignUpUser,LogoutUser
 from api.profile_api import ProfileAPI
+from api.generate_resume import GenerateResume
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
@@ -43,6 +44,7 @@ api.add_resource(LoginUser, '/login')
 api.add_resource(SignUpUser, '/signup')
 api.add_resource(LogoutUser, '/logout')
 api.add_resource(ProfileAPI, '/profile')
+api.add_resource(GenerateResume, '/generate-resume')
 
 if __name__ == '__main__':  
     init_db()
