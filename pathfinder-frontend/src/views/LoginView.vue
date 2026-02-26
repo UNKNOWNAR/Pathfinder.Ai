@@ -5,13 +5,15 @@ import api from '@/services/api';
 
 const router = useRouter();
 const isSignUp = ref(false);
+const showLoginPassword = ref(false);
+const showSignupPassword = ref(false);
 
 const loginData = reactive({ username_or_email: '', password: '' });
 const signupData = reactive({ username: '', email: '', password: '', role: 'student' });
 
 const handleLogin = async () => {
   try {
-    const res = await api.post('/api/login', loginData);
+    const res = await api.post('/login', loginData);
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('role', res.data.role);
     router.push('/dashboard');
@@ -22,7 +24,7 @@ const handleLogin = async () => {
 
 const handleSignup = async () => {
   try {
-    await api.post('/api/register', signupData);
+    await api.post('/signup', signupData);
     alert('Account created! Please log in.');
     isSignUp.value = false;
   } catch (err) {
@@ -52,7 +54,13 @@ const handleSignup = async () => {
           <div class="title">Log in</div>
           <form class="flip-card__form" @submit.prevent="handleLogin">
             <input class="flip-card__input" v-model="loginData.username_or_email" placeholder="Email/Username" type="text" required />
-            <input class="flip-card__input" v-model="loginData.password" placeholder="Password" type="password" required />
+            <div class="password-wrapper">
+              <input class="flip-card__input" v-model="loginData.password" placeholder="Password" :type="showLoginPassword ? 'text' : 'password'" required />
+              <label class="show-pass-switch" title="Show password">
+                <input type="checkbox" class="pass-toggle" v-model="showLoginPassword" />
+                <span class="pass-slider"></span>
+              </label>
+            </div>
             <button class="flip-card__btn" type="submit">Let's go!</button>
           </form>
         </div>
@@ -62,7 +70,13 @@ const handleSignup = async () => {
           <form class="flip-card__form" @submit.prevent="handleSignup">
             <input class="flip-card__input" v-model="signupData.username" placeholder="Name" type="text" required />
             <input class="flip-card__input" v-model="signupData.email" placeholder="Email" type="email" required />
-            <input class="flip-card__input" v-model="signupData.password" placeholder="Password" type="password" required />
+            <div class="password-wrapper">
+              <input class="flip-card__input" v-model="signupData.password" placeholder="Password" :type="showSignupPassword ? 'text' : 'password'" required />
+              <label class="show-pass-switch" title="Show password">
+                <input type="checkbox" class="pass-toggle" v-model="showSignupPassword" />
+                <span class="pass-slider"></span>
+              </label>
+            </div>
             <select class="flip-card__input" v-model="signupData.role">
               <option value="student">Student</option>
               <option value="company">Company</option>
@@ -244,5 +258,73 @@ const handleSignup = async () => {
 .flip-card__btn:active {
   box-shadow: 0px 0px #323232;
   transform: translate(3px, 3px);
+}
+/* --- Password Wrapper & Show-Password Toggle --- */
+.password-wrapper {
+  position: relative;
+  width: 250px;
+}
+
+.password-wrapper .flip-card__input {
+  width: 100%;
+  padding-right: 62px;
+  box-sizing: border-box;
+}
+
+.show-pass-switch {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.pass-toggle {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.pass-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 100px;
+  border: 2px solid #323232;
+  box-shadow: 2px 2px #323232;
+  background-color: #ccc;
+  transition: background-color 0.3s;
+  box-sizing: border-box;
+}
+
+.pass-slider::before {
+  content: "off";
+  box-sizing: border-box;
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 1px;
+  top: 1px;
+  border: 2px solid #323232;
+  border-radius: 100px;
+  background-color: #fff;
+  color: #323232;
+  font-size: 7px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 14px;
+  transition: transform 0.3s;
+}
+
+.pass-toggle:checked + .pass-slider {
+  background-color: #2d8cf0;
+}
+
+.pass-toggle:checked + .pass-slider::before {
+  content: "on";
+  transform: translateX(26px);
 }
 </style>
