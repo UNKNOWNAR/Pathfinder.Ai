@@ -49,7 +49,9 @@ class LoginUser(Resource):
         
         result = {
             'message': 'Login successful',
-            'access_token': access_token
+            'access_token': access_token,
+            'role': user.role,
+            'username': user.username
         }
         return result, 200
 

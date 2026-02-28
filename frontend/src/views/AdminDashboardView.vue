@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import NavBar from '@/components/NavBar.vue';
 
@@ -44,7 +44,7 @@ const systemLogs = ref([
           </div>
           <div>
             <h2 class="profile-name">{{ userName }}</h2>
-            <p class="profile-role">SYSTEM ADMIN • Superuser Tier</p>
+            <p class="profile-role">{{ userRole }} • Superuser Tier</p>
           </div>
         </div>
         <button class="outline-btn" @click="router.push('/dashboard')">

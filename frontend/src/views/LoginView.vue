@@ -15,9 +15,15 @@ const handleLogin = async () => {
   try {
     const res = await api.post('/login', loginData);
     localStorage.setItem('token', res.data.access_token);
-    // Role is not returned in your login response currently, but let's leave it so it grabs undefined safely, or you can add role in backend later
     localStorage.setItem('role', res.data.role);
-    router.push('/dashboard');
+    localStorage.setItem('username', res.data.username);
+    
+    // Redirect based on role
+    if (res.data.role === 'admin') {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
+    }
   } catch (err) {
     alert(err.response?.data?.message || 'Login failed');
   }
