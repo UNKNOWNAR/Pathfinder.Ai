@@ -34,3 +34,4 @@ class Config:
     if not HF_TOKEN:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
 
+    RAPIDAPI_GLASSDOOR_KEY = os.getenv('RAPIDAPI_GLASSDOOR_KEY', '')
