@@ -8,6 +8,8 @@ REMOTIVE_URL  = "https://remotive.com/api/remote-jobs"
 ARBEITNOW_URL = "https://arbeitnow.com/api/job-board-api"
 JSEARCH_URL   = "https://jsearch.p.rapidapi.com/search"
 JSEARCH_HOST  = "jsearch.p.rapidapi.com"
+ACTIVE_JOBS_URL  = "https://active-jobs-db.p.rapidapi.com/active-rss"
+ACTIVE_JOBS_HOST = "active-jobs-db.p.rapidapi.com"
 
 # --- Glassdoor mock (no public API) ---
 GLASSDOOR_MOCK = [
@@ -82,6 +84,22 @@ def _fetch_jsearch(api_key: str) -> list:
     return res.json().get("data", [])
 
 
+def _fetch_active_jobs_db(api_key: str) -> list:
+    if not api_key:
+        print("[Harvester] ACTIVE_JOBS_DB_KEY not set — skipping Active Jobs DB source.")
+        return []
+    res = requests.get(
+        ACTIVE_JOBS_URL,
+        headers={"X-RapidAPI-Key": api_key, "X-RapidAPI-Host": ACTIVE_JOBS_HOST},
+        params={"title": "software engineer", "country": "US"},
+        timeout=15,
+    )
+    res.raise_for_status()
+    # Assuming the API returns a list of jobs directly or inside 'data'
+    data = res.json()
+    return data if isinstance(data, list) else data.get("data", [])
+
+
 # ── Source processors ──────────────────────────────────────────────────────────
 
 def _process_remotive():
@@ -137,6 +155,20 @@ def _process_linkedin(jsearch_key):
     return count
 
 
+def _process_active_jobs_db(active_jobs_key):
+    count = 0
+    for item in _fetch_active_jobs_db(active_jobs_key):
+        count += _insert_job(
+            title       = (item.get("title") or "").strip(),
+            company     = (item.get("company") or "").strip(),
+            location    = item.get("location") or "Remote",
+            description = item.get("description") or "",
+            source      = "ActiveJobsDB",
+            url         = item.get("link") or item.get("url") or "",
+        )
+    return count
+
+
 # ── Core runner (supports single source or all) ────────────────────────────────
 
 SOURCE_MAP = {
@@ -155,14 +187,18 @@ def _run_harvest(app, source="all"):
         try:
             jobs_added = 0
             jsearch_key = app.config.get("JSEARCH_API_KEY", "")
+            active_jobs_key = app.config.get("ACTIVE_JOBS_DB_KEY", "")
 
             if source == "all":
                 jobs_added += _process_remotive()
                 jobs_added += _process_arbeitnow()
                 jobs_added += _process_glassdoor()
                 jobs_added += _process_linkedin(jsearch_key)
+                jobs_added += _process_active_jobs_db(active_jobs_key)
             elif source == "LinkedIn":
                 jobs_added += _process_linkedin(jsearch_key)
+            elif source == "ActiveJobsDB":
+                jobs_added += _process_active_jobs_db(active_jobs_key)
             elif source in SOURCE_MAP:
                 jobs_added += SOURCE_MAP[source]()
             else:
