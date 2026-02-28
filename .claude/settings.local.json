@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"E:\\\\WorkSpace\\\\Projects\\\\Electronics Store Q&A System\\\\venv\\\\Scripts\\\\python.exe\":*)",
+      "Bash(git:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(\"venv/Scripts/python.exe\":*)",
+      "Bash(curl:*)",
+      "Bash(source:*)",
+      "Bash(E:/WorkSpace/Projects/\"Electronics Store Q&A System\"/venv/Scripts/python.exe:*)",
+      "Bash(dir:*)",
+      "Bash(\"E:/WorkSpace/Projects/Pathfinder.Ai/venv/Scripts/python.exe\":*)"
+    ]
+  }
+}

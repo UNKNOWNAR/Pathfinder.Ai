@@ -17,7 +17,7 @@ const studentLinks = [
 ];
 
 const adminLinks = [
-  { label: 'Control Room', to: '/admin' },
+  { label: 'Dashboard',  to: '/admin' },
   { label: 'Harvesters',   to: '/admin/harvesters' },
   { label: 'Jobs DB',      to: '/admin/jobs' },
   { label: 'Settings',     to: '/admin/settings' },
