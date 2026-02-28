@@ -53,6 +53,16 @@ router.beforeEach((to, from, next) => {
     return next('/dashboard');
   }
 
+  // Prevent admins from accidentally landing on student pages
+  if (role === 'admin' && !to.path.startsWith('/admin')) {
+    return next('/admin');
+  }
+
+  // Prevent students from landing on admin wrapper implicitly
+  if (role === 'student' && to.path === '/') {
+    return next('/dashboard');
+  }
+
   next();
 });
 
