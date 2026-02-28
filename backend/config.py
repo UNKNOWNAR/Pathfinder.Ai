@@ -41,3 +41,6 @@ class Config:
 
     # Active Jobs DB (RapidAPI)
     ACTIVE_JOBS_DB_KEY = os.getenv('ACTIVE_JOBS_DB_KEY', '')
+
+
+

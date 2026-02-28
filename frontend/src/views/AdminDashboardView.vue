@@ -3,9 +3,6 @@ import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
 
-const userName = (localStorage.getItem('username') || 'Admin').toUpperCase();
-const userRole = (localStorage.getItem('role') || 'System Admin').toUpperCase();
-
 const stats = ref({ students: '...', companies: '...', jobs: '...', sources: {} });
 
 const loadStats = async () => {
