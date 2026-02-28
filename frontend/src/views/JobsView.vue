@@ -27,8 +27,70 @@
           <p class="company-name">{{ job.company }} &mdash; <span>{{ job.location || 'Remote' }}</span></p>
           <div class="job-desc" v-html="truncateDesc(job.description)"></div>
           <div class="job-actions">
+            <button class="btn readiness-btn" @click="toggleReadiness(job)">
+              {{ activeReadiness === job.job_id ? 'HIDE' : 'CHECK READINESS' }}
+            </button>
             <a v-if="job.url" :href="job.url" target="_blank" class="btn link-btn">Apply / View Source</a>
             <span v-else class="btn link-btn disabled">Apply / View Source</span>
+          </div>
+
+          <!-- Readiness Panel -->
+          <div v-if="activeReadiness === job.job_id" class="readiness-panel">
+            <div v-if="readinessLoading" class="readiness-loading">
+              <p>Analyzing your readiness...</p>
+            </div>
+            <div v-else-if="readinessData">
+              <!-- No data for this company -->
+              <div v-if="!readinessData.has_data" class="readiness-empty">
+                <p>No interview data available for <strong>{{ readinessData.company }}</strong>.</p>
+              </div>
+
+              <!-- Readiness data available -->
+              <template v-else>
+                <div class="readiness-header">
+                  <div class="readiness-score-box">
+                    <span class="readiness-label">READINESS</span>
+                    <span class="readiness-pct" :class="readinessColor(readinessData.readiness_pct)">{{ readinessData.readiness_pct }}%</span>
+                  </div>
+                  <div class="readiness-meta">
+                    <p class="readiness-company">{{ readinessData.company }}</p>
+                    <p class="readiness-total">{{ readinessData.total_questions }} questions in database</p>
+                    <div class="difficulty-pills">
+                      <span class="pill easy">Easy {{ readinessData.difficulty_breakdown.EASY }}</span>
+                      <span class="pill medium">Med {{ readinessData.difficulty_breakdown.MEDIUM }}</span>
+                      <span class="pill hard">Hard {{ readinessData.difficulty_breakdown.HARD }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="!readinessData.leetcode_username" class="readiness-warning">
+                  Set your LeetCode username in your <router-link to="/profile">Profile</router-link> to see personalized topic comparison.
+                </div>
+
+                <div class="topic-comparison">
+                  <div class="topic-row topic-header-row">
+                    <span class="topic-col-name">TOPIC</span>
+                    <span class="topic-col-asked">ASKED</span>
+                    <span class="topic-col-solved">YOU</span>
+                    <span class="topic-col-bar"></span>
+                  </div>
+                  <div v-for="(t, i) in readinessData.topics" :key="i" class="topic-row">
+                    <span class="topic-col-name">{{ t.topic }}</span>
+                    <span class="topic-col-asked">{{ t.asked }}</span>
+                    <span class="topic-col-solved" :class="{ zero: t.solved === 0 }">{{ t.solved }}</span>
+                    <span class="topic-col-bar">
+                      <span class="bar-track">
+                        <span
+                          class="bar-fill"
+                          :class="barColor(t.solved, t.asked)"
+                          :style="{ width: barWidth(t.solved, t.asked) }"
+                        ></span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -60,6 +122,11 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const loading = ref(false);
 
+// Readiness state
+const activeReadiness = ref(null);
+const readinessData = ref(null);
+const readinessLoading = ref(false);
+
 const fetchJobs = async () => {
   loading.value = true;
   try {
@@ -86,9 +153,57 @@ const fetchJobs = async () => {
   }
 };
 
+const toggleReadiness = async (job) => {
+  if (activeReadiness.value === job.job_id) {
+    activeReadiness.value = null;
+    readinessData.value = null;
+    return;
+  }
+
+  activeReadiness.value = job.job_id;
+  readinessLoading.value = true;
+  readinessData.value = null;
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`http://localhost:5000/api/jobs/${job.job_id}/readiness`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    readinessData.value = data;
+  } catch (err) {
+    console.error('Error fetching readiness:', err);
+    readinessData.value = { has_data: false, company: job.company };
+  } finally {
+    readinessLoading.value = false;
+  }
+};
+
+const barWidth = (solved, asked) => {
+  if (!asked || asked === 0) return '0%';
+  const pct = Math.min((solved / asked) * 100, 100);
+  return pct + '%';
+};
+
+const barColor = (solved, asked) => {
+  if (solved === 0) return 'red';
+  const ratio = solved / asked;
+  if (ratio >= 0.6) return 'green';
+  if (ratio >= 0.3) return 'yellow';
+  return 'red';
+};
+
+const readinessColor = (pct) => {
+  if (pct >= 70) return 'high';
+  if (pct >= 40) return 'mid';
+  return 'low';
+};
+
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
+    activeReadiness.value = null;
+    readinessData.value = null;
     fetchJobs();
     window.scrollTo(0, 0);
   }
@@ -96,7 +211,6 @@ const changePage = (page) => {
 
 const truncateDesc = (desc) => {
   if (!desc) return 'No description available.';
-  // Strip basic HTML if any and truncate
   const temp = document.createElement('div');
   temp.innerHTML = desc;
   const text = temp.textContent || temp.innerText || '';
@@ -113,8 +227,16 @@ onMounted(() => {
 
 <style scoped>
 .page {
+  --ink: #111111;
+  --bg: #DEDEDE;
+  --surface: #FFFFFF;
+  --border: 2px solid var(--ink);
+  --shadow: 4px 4px 0 var(--ink);
+
   min-height: 100vh;
-  background: #DEDEDE;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Segoe UI', sans-serif;
 }
 .content {
   padding: 40px;
@@ -144,8 +266,8 @@ onMounted(() => {
 .search-bar {
   flex-grow: 1;
   padding: 12px 20px;
-  border: 2px solid #111;
-  box-shadow: 4px 4px 0 #111;
+  border: var(--border);
+  box-shadow: var(--shadow);
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
@@ -153,12 +275,12 @@ onMounted(() => {
 }
 .search-bar:focus {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #111;
+  box-shadow: 6px 6px 0 var(--ink);
 }
 .btn {
-  background: #fff;
-  border: 2px solid #111;
-  box-shadow: 4px 4px 0 #111;
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: var(--shadow);
   padding: 12px 24px;
   font-family: inherit;
   font-weight: 800;
@@ -167,23 +289,22 @@ onMounted(() => {
   transition: all 0.1s;
   text-decoration: none;
   display: inline-block;
-  color: #111;
+  color: var(--ink);
+  font-size: 13px;
 }
 .btn:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #111;
+  box-shadow: 2px 2px 0 var(--ink);
 }
 .btn:disabled, .btn.disabled {
   background: #ccc;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 4px 4px 0 #111;
+  box-shadow: var(--shadow);
   opacity: 0.7;
 }
 
-.search-btn {
-  background: #34d399; /* Neo-brutalist green */
-}
+.search-btn { background: #34d399; }
 
 .jobs-list {
   display: flex;
@@ -192,9 +313,9 @@ onMounted(() => {
 }
 
 .job-card {
-  background: #fff;
-  border: 2px solid #111;
-  box-shadow: 5px 5px 0 #111;
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: 5px 5px 0 var(--ink);
   padding: 25px;
 }
 .job-header {
@@ -213,13 +334,13 @@ onMounted(() => {
   font-weight: 800;
   text-transform: uppercase;
   padding: 4px 8px;
-  border: 2px solid #111;
+  border: var(--border);
   background: #e5e7eb;
 }
 .source-badge.remotive { background: #60a5fa; }
 .source-badge.jsearch { background: #f472b6; }
 .source-badge.activejobsdb { background: #fbbf24; }
-.source-badge.direct { background: #34d399; } /* Company posted */
+.source-badge.direct { background: #34d399; }
 
 .company-name {
   font-size: 18px;
@@ -242,8 +363,163 @@ onMounted(() => {
 .job-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
 }
 
+.readiness-btn {
+  background: #a78bfa;
+}
+
+/* ── Readiness Panel ─────────────────────────────────────────── */
+.readiness-panel {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px dashed var(--ink);
+}
+
+.readiness-loading, .readiness-empty {
+  text-align: center;
+  padding: 24px;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.readiness-header {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.readiness-score-box {
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 18px 24px;
+  text-align: center;
+  min-width: 120px;
+}
+.readiness-label {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  display: block;
+  margin-bottom: 4px;
+}
+.readiness-pct {
+  font-size: 40px;
+  font-weight: 900;
+}
+.readiness-pct.high { color: #22c55e; }
+.readiness-pct.mid  { color: #f59e0b; }
+.readiness-pct.low  { color: #ef4444; }
+
+.readiness-meta {
+  flex: 1;
+}
+.readiness-company {
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.readiness-total {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+
+.difficulty-pills {
+  display: flex;
+  gap: 8px;
+}
+.pill {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 2px solid var(--ink);
+}
+.pill.easy   { background: #bbf7d0; }
+.pill.medium { background: #fde68a; }
+.pill.hard   { background: #fca5a5; }
+
+.readiness-warning {
+  background: #fef3c7;
+  border: var(--border);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.readiness-warning a {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+/* ── Topic Comparison Table ───────────────────────────────────── */
+.topic-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.topic-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 1fr;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 12px;
+}
+.topic-row:last-child { border-bottom: none; }
+
+.topic-header-row {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+.topic-header-row span {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+}
+
+.topic-col-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.topic-col-asked, .topic-col-solved {
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+.topic-col-solved.zero {
+  color: #ef4444;
+}
+
+.bar-track {
+  display: block;
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border: 1px solid var(--ink);
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  transition: width 0.3s;
+}
+.bar-fill.green  { background: #22c55e; }
+.bar-fill.yellow { background: #f59e0b; }
+.bar-fill.red    { background: #ef4444; }
+
+/* ── Pagination ───────────────────────────────────────────────── */
 .pagination {
   display: flex;
   justify-content: center;
@@ -259,10 +535,17 @@ onMounted(() => {
 .no-jobs, .loading-state {
   text-align: center;
   padding: 50px;
-  background: #fff;
-  border: 2px solid #111;
-  box-shadow: 5px 5px 0 #111;
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: 5px 5px 0 var(--ink);
   font-weight: 800;
   font-size: 18px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .content { padding: 16px; }
+  .readiness-header { flex-direction: column; align-items: flex-start; }
+  .topic-row { grid-template-columns: 1fr 50px 50px 80px; }
 }
 </style>
