@@ -25,13 +25,6 @@ const systemLogs = ref([
   <div class="page">
     <NavBar />
 
-    <div class="sub-tabs">
-      <button class="sub-tab sub-tab--active">Control Room</button>
-      <button class="sub-tab">Harvesters</button>
-      <button class="sub-tab">Jobs DB</button>
-      <button class="sub-tab">Settings</button>
-    </div>
-
     <main class="main">
       <!-- Admin Identity Header -->
       <section class="profile-header box">
