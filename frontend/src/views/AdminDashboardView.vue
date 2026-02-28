@@ -1,22 +1,61 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import api from '@/services/api';
 
 const userName = (localStorage.getItem('username') || 'Admin').toUpperCase();
 const userRole = (localStorage.getItem('role') || 'System Admin').toUpperCase();
 
-// Mock stats for now until Task 6 connects the database perfectly
-const stats = ref({
-  students: 1240,
-  companies: 34,
-  jobs: 42091
+const stats = ref({ students: '...', companies: '...', jobs: '...' });
+const systemLogs = ref(["> [SYSTEM] Connecting to database..."]);
+const harvesting = ref(false);
+
+const loadStats = async () => {
+  try {
+    const res = await api.get('/admin/stats');
+    stats.value = res.data;
+  } catch {
+    systemLogs.value.push('> [ERROR] Failed to load platform stats.');
+  }
+};
+
+const loadLogs = async () => {
+  try {
+    const res = await api.get('/admin/logs');
+    if (res.data.length === 0) {
+      systemLogs.value = ['> [SYSTEM] No harvest runs yet. Trigger one below.'];
+      return;
+    }
+    systemLogs.value = res.data.map(l =>
+      `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${new Date(l.timestamp).toLocaleString()}`
+    );
+  } catch {
+    systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
+  }
+};
+
+const triggerHarvest = async () => {
+  if (harvesting.value) return;
+  harvesting.value = true;
+  systemLogs.value.push('> [SYSTEM] Harvest triggered — running in background...');
+  try {
+    await api.post('/admin/harvest');
+    systemLogs.value.push('> [SYSTEM] Harvest started. Refreshing logs in 10s...');
+    setTimeout(async () => {
+      await loadLogs();
+      await loadStats();
+      harvesting.value = false;
+    }, 10000);
+  } catch {
+    systemLogs.value.push('> [ERROR] Failed to trigger harvest.');
+    harvesting.value = false;
+  }
+};
+
+onMounted(async () => {
+  await loadStats();
+  await loadLogs();
 });
-
-const systemLogs = ref([
-  "> [SYSTEM] Database securely linked in production mode.",
-  "> [SYSTEM] Awaiting Harvester trigger...",
-]);
-
 </script>
 
 <template>
@@ -84,9 +123,9 @@ const systemLogs = ref([
       <!-- Triggers Grid -->
       <h3 class="section-title" style="margin-top: 20px;">▤ HARVESTER TRIGGERS</h3>
       <div class="grid trigger-grid">
-         <button class="box trigger-btn remotive-btn">
+         <button class="box trigger-btn remotive-btn" @click="triggerHarvest" :disabled="harvesting">
             <span class="trigger-title">⚡ RUN REMOTIVE HARVEST</span>
-            <span class="trigger-sub">(Tier A - Rapid Fetch)</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Tier A - Rapid Fetch)' }}</span>
          </button>
          
          <button class="box trigger-btn proxy-btn">
