@@ -84,8 +84,8 @@ const systemLogs = ref([
       <!-- Triggers Grid -->
       <h3 class="section-title" style="margin-top: 20px;">▤ HARVESTER TRIGGERS</h3>
       <div class="grid trigger-grid">
-         <button class="box trigger-btn adzuna-btn">
-            <span class="trigger-title">⚡ RUN ADZUNA HARVEST</span>
+         <button class="box trigger-btn remotive-btn">
+            <span class="trigger-title">⚡ RUN REMOTIVE HARVEST</span>
             <span class="trigger-sub">(Tier A - Rapid Fetch)</span>
          </button>
          
@@ -157,7 +157,7 @@ const systemLogs = ref([
 .trigger-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
 .trigger-title { font-size: 18px; font-weight: 900; }
 .trigger-sub { font-size: 12px; font-weight: 600; opacity: 0.7; }
-.adzuna-btn { background: #ffeaa7; }
+.remotive-btn { background: #ffeaa7; }
 .proxy-btn { background: #dfe6e9; opacity: 0.7; }
 
 @media (max-width: 860px) {

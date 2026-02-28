@@ -32,7 +32,3 @@ class Config:
     if not HF_TOKEN:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
 
-    # Adzuna API credentials (https://developer.adzuna.com/)
-    ADZUNA_APP_ID  = os.getenv('ADZUNA_APP_ID', '')
-    ADZUNA_APP_KEY = os.getenv('ADZUNA_APP_KEY', '')
-
