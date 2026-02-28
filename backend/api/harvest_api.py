@@ -1,5 +1,6 @@
 from flask import current_app, request
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required, get_jwt
 from api.admin_api import admin_required
 from models import db
 from models.user import User
@@ -91,6 +92,52 @@ class AdminJobsList(Resource):
                     'location': j.location,
                     'source':   j.source,
                     'url':      j.url,
+                }
+                for j in paginated.items
+            ]
+        }, 200
+
+
+class JobsList(Resource):
+    @jwt_required()
+    def get(self):
+        # We need to ensure that the user accessing this endpoint is indeed a student
+        claims = get_jwt()
+        if claims.get('role') != 'student':
+            return {'message': 'Only students can view the job feed.'}, 403
+
+        page     = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search   = request.args.get('q', '', type=str).strip()
+
+        query = Job.query
+        if search:
+            like = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Job.title.ilike(like),
+                    Job.company.ilike(like),
+                    Job.location.ilike(like),
+                )
+            )
+
+        paginated = query.order_by(Job.job_id.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        return {
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'page':  paginated.page,
+            'jobs':  [
+                {
+                    'job_id':   j.job_id,
+                    'title':    j.title,
+                    'company':  j.company,
+                    'location': j.location,
+                    'source':   j.source,
+                    'url':      j.url,
+                    'description': j.description
                 }
                 for j in paginated.items
             ]
