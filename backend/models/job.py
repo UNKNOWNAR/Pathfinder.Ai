@@ -22,9 +22,10 @@ class HarvestLog(db.Model):
     __tablename__ = 'harvest_log'
 
     log_id     = db.Column(db.Integer, primary_key=True)
+    source     = db.Column(db.String(80), nullable=False, default='all')  # 'all', 'Remotive', 'Arbeitnow', 'Glassdoor', 'LinkedIn'
     status     = db.Column(db.String(20), nullable=False, default='running')  # 'running', 'completed', 'failed'
     jobs_added = db.Column(db.Integer, nullable=False, default=0)
     timestamp  = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<HarvestLog {self.log_id} — {self.status}>'
+        return f'<HarvestLog {self.log_id} — {self.source} — {self.status}>'
