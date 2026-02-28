@@ -9,6 +9,7 @@ const defaultProfile = () => ({
   github:     '',
   linkedin:   '',
   portfolio:  '',
+  leetcode_username: '',
   email:      '',
   phone:      '',
   location:   '',
@@ -182,6 +183,10 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
             <div class="link-field">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               <input v-model="profile.portfolio" placeholder="yourportfolio.com" class="link-input" />
+            </div>
+            <div class="link-field" title="LeetCode Username">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.102 17.93l-2.697 2.607c-.466.467-1.111.662-1.823.662s-1.357-.195-1.824-.662l-4.332-4.363c-.467-.467-.702-1.15-.702-1.863s.235-1.357.702-1.824l4.319-4.38c.467-.467 1.125-.645 1.837-.645s1.357.195 1.823.662l2.697 2.606c.514.515 1.365.497 1.9-.038.535-.536.553-1.387.039-1.901l-2.609-2.636a5.055 5.055 0 0 0-2.445-1.337l2.467-2.503c.516-.514.498-1.366-.037-1.901-.535-.535-1.387-.552-1.902-.038l-10.1 10.101c-.981.982-1.469 2.406-1.469 3.896 0 1.486.487 2.915 1.469 3.897l5.622 5.623c.982.982 2.364 1.536 3.846 1.536 1.486 0 2.868-.554 3.846-1.536l2.898-2.896c.515-.515.533-1.367-.038-1.901-.536-.535-1.387-.553-1.902-.038z"/></svg>
+              <input v-model="profile.leetcode_username" placeholder="leetcode_username" class="link-input" />
             </div>
           </div>
         </div>

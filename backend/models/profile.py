@@ -12,6 +12,7 @@ class Profile(db.Model):
     github = db.Column(db.String(255), nullable=True)
     linkedin = db.Column(db.String(255), nullable=True)
     portfolio = db.Column(db.String(255), nullable=True)
+    leetcode_username = db.Column(db.String(255), nullable=True)
     skills = db.Column(db.JSON, nullable=True)
     experience = db.Column(db.JSON, nullable=True)
     education = db.Column(db.JSON, nullable=True)
@@ -34,6 +35,7 @@ class Profile(db.Model):
             'github': self.github,
             'linkedin': self.linkedin,
             'portfolio': self.portfolio,
+            'leetcode_username': self.leetcode_username,
             'skills': self.skills,
             'experience': self.experience,
             'education': self.education,
@@ -41,8 +43,8 @@ class Profile(db.Model):
             'achievements': self.achievements
         }
 
-    ALLOWED_FIELDS = {'name', 'headline', 'photo', 'location', 'phone', 
-                  'summary', 'github', 'linkedin', 'portfolio',
+    ALLOWED_FIELDS = {'name', 'headline', 'photo', 'location', 'phone',
+                  'summary', 'github', 'linkedin', 'portfolio', 'leetcode_username',
                   'skills', 'experience', 'education', 'projects', 'achievements'}
 
     def updateData(self, data):
