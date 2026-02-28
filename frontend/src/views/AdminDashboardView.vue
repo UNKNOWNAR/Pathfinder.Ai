@@ -7,61 +7,18 @@ const userName = (localStorage.getItem('username') || 'Admin').toUpperCase();
 const userRole = (localStorage.getItem('role') || 'System Admin').toUpperCase();
 
 const stats = ref({ students: '...', companies: '...', jobs: '...', sources: {} });
-const systemLogs = ref(["> [SYSTEM] Connecting to database..."]);
-const harvesting = ref(false);
 
 const loadStats = async () => {
   try {
     const res = await api.get('/admin/stats');
     stats.value = res.data;
   } catch {
-    systemLogs.value.push('> [ERROR] Failed to load platform stats.');
-  }
-};
-
-const loadLogs = async () => {
-  try {
-    const res = await api.get('/admin/logs');
-    if (res.data.length === 0) {
-      systemLogs.value = ['> [SYSTEM] No harvest runs yet. Trigger one below.'];
-      return;
-    }
-    systemLogs.value = res.data.map(l => {
-      const dateObj = new Date(l.timestamp + 'Z');
-      const istTime = dateObj.toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        dateStyle: 'short',
-        timeStyle: 'medium'
-      });
-      return `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${istTime} (IST)`;
-    });
-  } catch {
-    systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
-  }
-};
-
-const triggerHarvest = async (sourceTarget = 'all') => {
-  if (harvesting.value) return;
-  harvesting.value = true;
-  const label = sourceTarget === 'all' ? 'ALL SOURCES' : sourceTarget;
-  systemLogs.value.push(`> [SYSTEM] Harvest triggered for ${label} — running in background...`);
-  try {
-    await api.post('/admin/harvest', { source: sourceTarget });
-    systemLogs.value.push(`> [SYSTEM] ${label} harvest started. Refreshing logs in 10s...`);
-    setTimeout(async () => {
-      await loadLogs();
-      await loadStats();
-      harvesting.value = false;
-    }, 10000);
-  } catch {
-    systemLogs.value.push('> [ERROR] Failed to trigger harvest.');
-    harvesting.value = false;
+    console.error('[ERROR] Failed to load platform stats.');
   }
 };
 
 onMounted(async () => {
   await loadStats();
-  await loadLogs();
 });
 </script>
 
@@ -74,7 +31,6 @@ onMounted(async () => {
       <section class="profile-header box">
         <div class="profile-left">
           <div class="avatar admin-avatar">
-            <!-- Shield/Server Icon -->
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
@@ -86,12 +42,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- IIFR BAR BANNER -->
-      <div class="banner">
-         ================= IIFR BAR: HARVESTER ENGINE ==========================
-      </div>
-
-      <!-- Main Two Column Grid -->
+      <!-- Main Two Column Grid (Now acting as 2 layout columns) -->
       <div class="grid">
         
         <!-- Left Col: Platform Stats -->
@@ -112,9 +63,12 @@ onMounted(async () => {
               <p class="stat-value">{{ stats.jobs.toLocaleString() }}</p>
             </div>
           </div>
+        </div>
 
-          <!-- SOURCE BREAKDOWN GRID -->
-          <h3 class="section-title" style="margin-top: 20px;">▤ JOB SOURCES</h3>
+        <!-- Right Col: Job Sources Grid -->
+        <div class="col">
+          <h3 class="section-title">▤ JOB SOURCES</h3>
+          
           <div class="source-grid" v-if="stats.sources && Object.keys(stats.sources).length">
             <div class="box source-card" v-for="(count, sourceName) in stats.sources" :key="sourceName">
               <span class="source-name">{{ sourceName }}</span>
@@ -126,41 +80,6 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Right Col: Live Logs -->
-        <div class="col">
-           <h3 class="section-title">▤ LIVE HARVESTER LOGS</h3>
-           
-           <div class="box terminal-box">
-             <div v-for="(log, idx) in systemLogs" :key="idx" class="terminal-line">
-               {{ log }}
-             </div>
-             <div class="terminal-line cursor">_</div>
-           </div>
-        </div>
-      </div>
-
-      <!-- Triggers Grid -->
-      <h3 class="section-title" style="margin-top: 20px;">▤ HARDWARE / API CONFIGURATION</h3>
-      <div class="grid trigger-grid">
-         <button class="box trigger-btn remotive-btn" @click="triggerHarvest('Remotive')" :disabled="harvesting">
-            <span class="trigger-title">⚡ FETCH REMOTIVE</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Tier A - Rapid Fetch)' }}</span>
-         </button>
-
-         <button class="box trigger-btn jsearch-btn" @click="triggerHarvest('LinkedIn')" :disabled="harvesting">
-            <span class="trigger-title">⚡ FETCH JSEARCH</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(LinkedIn via RapidAPI)' }}</span>
-         </button>
-
-         <button class="box trigger-btn activejobs-btn" @click="triggerHarvest('ActiveJobsDB')" :disabled="harvesting">
-            <span class="trigger-title">⚡ FETCH ACTIVE JOBS DB</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Active Jobs RapidAPI)' }}</span>
-         </button>
-
-         <button class="box trigger-btn master-btn" @click="triggerHarvest('all')" :disabled="harvesting">
-            <span class="trigger-title">🚀 RUN MASTER HARVEST</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(All Sources Combined)' }}</span>
-         </button>
       </div>
 
     </main>
@@ -220,24 +139,7 @@ onMounted(async () => {
 .source-name { font-weight: 800; font-size: 13px; text-transform: uppercase; }
 .source-count { font-weight: 900; font-size: 16px; color: var(--accent); }
 
-.terminal-box { background: var(--ink); color: #00ff00; padding: 20px; font-family: monospace; font-size: 13px; min-height: 250px; flex: 1; display: flex; flex-direction: column; gap: 8px;}
-.terminal-line { word-wrap: break-word;}
-.cursor { animation: blink 1s step-end infinite;}
-@keyframes blink { 50% { opacity: 0; } }
-
-.trigger-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
-.trigger-btn { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: transform 0.1s;}
-.trigger-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
-.trigger-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.trigger-title { font-size: 18px; font-weight: 900; }
-.trigger-sub { font-size: 12px; font-weight: 600; opacity: 0.7; }
-.remotive-btn { background: #ffeaa7; }
-.jsearch-btn { background: #74b9ff; }
-.activejobs-btn { background: #a29bfe; }
-.master-btn { background: var(--admin-accent); color: white; }
-
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; }
-  .trigger-grid { grid-template-columns: 1fr; }
 }
 </style>
