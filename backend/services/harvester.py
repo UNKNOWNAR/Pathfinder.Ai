@@ -7,6 +7,30 @@ from models.job import Job, HarvestLog
 REMOTIVE_URL   = "https://remotive.com/api/remote-jobs"
 ARBEITNOW_URL  = "https://arbeitnow.com/api/job-board-api"
 
+# --- Realistic mock dataset simulating a LinkedIn headless scrape ---
+LINKEDIN_MOCK = [
+    {"title": "Software Engineer, Backend",          "company": "Meta",              "location": "Menlo Park, CA",    "url": "https://linkedin.com/jobs"},
+    {"title": "Senior Frontend Engineer",            "company": "Netflix",           "location": "Los Gatos, CA",     "url": "https://linkedin.com/jobs"},
+    {"title": "Staff Software Engineer",             "company": "Google",            "location": "Mountain View, CA", "url": "https://linkedin.com/jobs"},
+    {"title": "Principal Engineer, Platform",        "company": "Amazon",            "location": "Seattle, WA",       "url": "https://linkedin.com/jobs"},
+    {"title": "Software Development Engineer",       "company": "Microsoft",         "location": "Redmond, WA",       "url": "https://linkedin.com/jobs"},
+    {"title": "Full Stack Engineer",                 "company": "Airbnb",            "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "ML Infrastructure Engineer",          "company": "Apple",             "location": "Cupertino, CA",     "url": "https://linkedin.com/jobs"},
+    {"title": "Senior Data Engineer",               "company": "Uber",              "location": "San Francisco, CA", "url": "https://linkedin.com/jobs"},
+    {"title": "Cloud Solutions Architect",           "company": "Salesforce",        "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Backend Engineer, Growth",            "company": "LinkedIn",          "location": "Sunnyvale, CA",     "url": "https://linkedin.com/jobs"},
+    {"title": "DevOps / Platform Engineer",          "company": "Twitter / X",       "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Software Engineer, Infra",            "company": "Snap Inc.",         "location": "Santa Monica, CA",  "url": "https://linkedin.com/jobs"},
+    {"title": "Senior Engineer, Payments",           "company": "PayPal",            "location": "San Jose, CA",      "url": "https://linkedin.com/jobs"},
+    {"title": "Data Platform Engineer",              "company": "Adobe",             "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "React Native Engineer",               "company": "Pinterest",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Applied Scientist, NLP",              "company": "Grammarly",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Site Reliability Engineer",           "company": "Dropbox",           "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Engineering Lead, Search",            "company": "Elastic",           "location": "Remote",            "url": "https://linkedin.com/jobs"},
+    {"title": "Senior Software Engineer, AI",        "company": "Zoom",              "location": "San Jose, CA",      "url": "https://linkedin.com/jobs"},
+    {"title": "Software Engineer, Distributed Sys.", "company": "Confluent",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
+]
+
 # --- Realistic mock dataset simulating a Glassdoor headless scrape ---
 GLASSDOOR_MOCK = [
     {"title": "Senior Software Engineer",        "company": "Stripe",          "location": "San Francisco, CA", "url": "https://glassdoor.com"},
@@ -108,6 +132,17 @@ def _run_harvest(app):
                     location    = item["location"],
                     description = "",
                     source      = "Glassdoor",
+                    url         = item["url"],
+                )
+
+            # --- LinkedIn (mock scrape) ---
+            for item in LINKEDIN_MOCK:
+                jobs_added += _insert_job(
+                    title       = item["title"],
+                    company     = item["company"],
+                    location    = item["location"],
+                    description = "",
+                    source      = "LinkedIn",
                     url         = item["url"],
                 )
 
