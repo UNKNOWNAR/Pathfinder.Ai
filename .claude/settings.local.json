@@ -10,7 +10,10 @@
       "Bash(source:*)",
       "Bash(E:/WorkSpace/Projects/\"Electronics Store Q&A System\"/venv/Scripts/python.exe:*)",
       "Bash(dir:*)",
-      "Bash(\"E:/WorkSpace/Projects/Pathfinder.Ai/venv/Scripts/python.exe\":*)"
+      "Bash(\"E:/WorkSpace/Projects/Pathfinder.Ai/venv/Scripts/python.exe\":*)",
+      "Bash(\"E:\\\\WorkSpace\\\\Projects\\\\Electronics Store Q&A System\\\\venv\\\\Scripts\\\\python\":*)",
+      "Bash(python:*)",
+      "Bash(python3:*)"
     ]
   }
 }
