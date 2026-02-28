@@ -19,4 +19,4 @@ def init_routes(api):
     api.add_resource(AdminCompanies, '/admin/companies')
     api.add_resource(AdminCompanyApprove, '/admin/companies/<int:company_id>/approve')
     api.add_resource(CompanyJobs, '/company/jobs')
-    api.add_resource(JobsList, '/jobs')
+    api.add_resource(JobsList, '/api/jobs')
