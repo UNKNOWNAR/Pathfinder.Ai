@@ -7,16 +7,11 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default-dev-secret-key')
     SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT', 'default-dev-password-salt')
 
-    # Database Configuration: Smart Fallback
+    # Database Configuration: Strict PostgreSQL Requirement
     _db_url = os.getenv('DATABASE_URL')
     
-    # If we are in Production (DEBUG=False) and there is no Postgres URL, CRASH. 
-    if not _db_url and not DEBUG:
-        raise ValueError("CRITICAL: DATABASE_URL is missing! PostgreSQL is strictly required in production.")
-        
-    # If we are in Development (DEBUG=True) and there is no Postgres URL, safely fallback to SQLite.
-    if not _db_url and DEBUG:
-        _db_url = 'sqlite:///project.db'
+    if not _db_url:
+        raise ValueError("CRITICAL: DATABASE_URL is missing! PostgreSQL is strictly required across all environments.")
         
     # Heroku/AWS sometimes returns 'postgres://' which SQLAlchemy 1.4+ requires as 'postgresql://'
     if _db_url.startswith('postgres://'):

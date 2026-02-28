@@ -14,7 +14,8 @@ const signupData = reactive({ username: '', email: '', password: '', role: 'stud
 const handleLogin = async () => {
   try {
     const res = await api.post('/login', loginData);
-    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('token', res.data.access_token);
+    // Role is not returned in your login response currently, but let's leave it so it grabs undefined safely, or you can add role in backend later
     localStorage.setItem('role', res.data.role);
     router.push('/dashboard');
   } catch (err) {
