@@ -40,9 +40,6 @@ const systemLogs = ref([
             <p class="profile-role">{{ userRole }} • Superuser Tier</p>
           </div>
         </div>
-        <button class="outline-btn" @click="router.push('/dashboard')">
-          ✦ BACK TO MAIN
-        </button>
       </section>
 
       <!-- IIFR BAR BANNER -->

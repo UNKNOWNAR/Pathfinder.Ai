@@ -39,7 +39,7 @@ const logout = () => {
 <template>
   <header class="navbar">
     <!-- Left: Logo + name -->
-    <div class="navbar-brand" @click="router.push('/dashboard')">
+    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : '/dashboard')">
       <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
       <span class="nav-title">Pathfinder.Ai</span>
     </div>
