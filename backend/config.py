@@ -7,8 +7,11 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default-dev-secret-key')
     SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT', 'default-dev-password-salt')
 
-    # PostgreSQL via DATABASE_URL; falls back to local SQLite for development
-    _db_url = os.getenv('DATABASE_URL', 'sqlite:///project.db')
+    # Strict PostgreSQL requirement
+    _db_url = os.getenv('DATABASE_URL')
+    if not _db_url:
+        raise ValueError("DATABASE_URL is missing in the .env file. PostgreSQL is required.")
+        
     # Heroku/AWS sometimes returns 'postgres://' which SQLAlchemy 1.4+ requires as 'postgresql://'
     if _db_url.startswith('postgres://'):
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
