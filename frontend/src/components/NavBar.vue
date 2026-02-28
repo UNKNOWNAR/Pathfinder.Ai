@@ -9,14 +9,26 @@ const route  = useRoute();
 const userName = computed(() => localStorage.getItem('username') || 'User');
 const isAdmin  = computed(() => localStorage.getItem('role') === 'admin');
 
-const navLinks = [
+const studentLinks = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Jobs',      to: '/jobs'      },
   { label: 'LeetCode',  to: '/leetcode'  },
   { label: 'Profile',   to: '/profile'   },
 ];
 
-const isActive = (path) => route.path === path;
+const adminLinks = [
+  { label: 'Control Room', to: '/admin' },
+  { label: 'Harvesters',   to: '/admin/harvesters' },
+  { label: 'Jobs DB',      to: '/admin/jobs' },
+  { label: 'Settings',     to: '/admin/settings' },
+];
+
+const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
+
+const isActive = (path) => {
+  if (path === '/admin') return route.path === '/admin';
+  return route.path.startsWith(path);
+};
 
 const logout = () => {
   localStorage.clear();
@@ -38,18 +50,13 @@ const logout = () => {
         v-for="link in navLinks"
         :key="link.to"
         class="nav-link"
-        :class="{ 'nav-link--active': isActive(link.to) }"
+        :class="[
+          { 'nav-link--active': isActive(link.to) },
+          isAdmin ? 'admin-nav-link' : ''
+        ]"
         @click="router.push(link.to)"
       >
         {{ link.label }}
-      </button>
-      <button
-        v-if="isAdmin"
-        class="nav-link nav-link--admin"
-        :class="{ 'nav-link--active': isActive('/admin') }"
-        @click="router.push('/admin')"
-      >
-        Admin
       </button>
     </nav>
 
@@ -143,17 +150,8 @@ const logout = () => {
   box-shadow: 3px 3px 0 #111;
 }
 
-.nav-link--admin {
-  background: #111;
-  color: #fff;
-  border: 2px solid #111;
-  box-shadow: 3px 3px 0 #555;
-}
-.nav-link--admin:hover {
-  background: #333;
-}
-.nav-link--admin.nav-link--active {
-  background: #2d8cf0;
+.admin-nav-link.nav-link--active {
+  background: #ff4757; /* Red admin accent */
 }
 
 /* ── Right ─────────────────────────────────────────────── */
