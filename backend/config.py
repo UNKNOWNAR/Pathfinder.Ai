@@ -3,13 +3,19 @@ import os
 load_dotenv()
 
 class Config:
-    DEBUG = True
-    SECRET_KEY = 'your-secret-key'
-    SECURITY_PASSWORD_SALT = 'your-password-salt'
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default-dev-secret-key')
+    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT', 'default-dev-password-salt')
 
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # PostgreSQL via DATABASE_URL; falls back to local SQLite for development
+    _db_url = os.getenv('DATABASE_URL', 'sqlite:///project.db')
+    # Heroku/AWS sometimes returns 'postgres://' which SQLAlchemy 1.4+ requires as 'postgresql://'
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = 'your-jwt-secret-key'
+
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default-dev-jwt-secret-key')
 
     # Disable CSRF — this is a REST API using token-based auth, not forms
     WTF_CSRF_ENABLED = False
@@ -18,7 +24,7 @@ class Config:
     # Move Flask-Security's built-in routes away from /login so our API can use it
     SECURITY_URL_PREFIX = '/security'
 
-    HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    HF_TOKEN = os.getenv('HUGGINGFACEHUB_API_TOKEN')
     if not HF_TOKEN:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
 
