@@ -1,41 +1,40 @@
 import hashlib
 import threading
 import requests
-from flask import current_app
 from models import db
 from models.job import Job, HarvestLog
 
-REMOTIVE_URL    = "https://remotive.com/api/remote-jobs"
-ARBEITNOW_URL   = "https://arbeitnow.com/api/job-board-api"
-JSEARCH_URL     = "https://jsearch.p.rapidapi.com/search"
-JSEARCH_HOST    = "jsearch.p.rapidapi.com"
+REMOTIVE_URL  = "https://remotive.com/api/remote-jobs"
+ARBEITNOW_URL = "https://arbeitnow.com/api/job-board-api"
+JSEARCH_URL   = "https://jsearch.p.rapidapi.com/search"
+JSEARCH_HOST  = "jsearch.p.rapidapi.com"
 
-# ── Shared utilities ──────────────────────────────────────────────────────────
+# --- Glassdoor mock (no public API) ---
 GLASSDOOR_MOCK = [
-    {"title": "Senior Software Engineer",        "company": "Stripe",          "location": "San Francisco, CA", "url": "https://glassdoor.com"},
-    {"title": "Backend Engineer (Python)",        "company": "Notion",          "location": "New York, NY",      "url": "https://glassdoor.com"},
-    {"title": "Full Stack Developer",             "company": "Figma",           "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Machine Learning Engineer",        "company": "OpenAI",          "location": "San Francisco, CA", "url": "https://glassdoor.com"},
-    {"title": "DevOps Engineer",                  "company": "HashiCorp",       "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Data Engineer",                    "company": "Databricks",      "location": "Amsterdam, NL",     "url": "https://glassdoor.com"},
-    {"title": "Frontend Engineer (Vue/React)",    "company": "Linear",          "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Cloud Infrastructure Engineer",   "company": "Cloudflare",      "location": "Austin, TX",        "url": "https://glassdoor.com"},
-    {"title": "Site Reliability Engineer",        "company": "PagerDuty",       "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "iOS Engineer",                     "company": "Duolingo",        "location": "Pittsburgh, PA",    "url": "https://glassdoor.com"},
-    {"title": "Android Engineer",                 "company": "Discord",         "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Security Engineer",                "company": "Crowdstrike",     "location": "Sunnyvale, CA",     "url": "https://glassdoor.com"},
-    {"title": "Platform Engineer",                "company": "Vercel",          "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Staff Engineer, Infrastructure",  "company": "Shopify",         "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Engineering Manager",             "company": "Atlassian",       "location": "Sydney, AU",        "url": "https://glassdoor.com"},
-    {"title": "Product Engineer",                 "company": "Loom",            "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Distributed Systems Engineer",    "company": "Cockroach Labs",  "location": "New York, NY",      "url": "https://glassdoor.com"},
-    {"title": "API Platform Engineer",           "company": "Twilio",          "location": "Remote",            "url": "https://glassdoor.com"},
-    {"title": "Data Scientist",                  "company": "Spotify",         "location": "Stockholm, SE",     "url": "https://glassdoor.com"},
-    {"title": "Software Engineer, Payments",     "company": "Brex",            "location": "Remote",            "url": "https://glassdoor.com"},
+    {"title": "Senior Software Engineer",       "company": "Stripe",         "location": "San Francisco, CA"},
+    {"title": "Backend Engineer (Python)",       "company": "Notion",         "location": "New York, NY"},
+    {"title": "Full Stack Developer",            "company": "Figma",          "location": "Remote"},
+    {"title": "Machine Learning Engineer",       "company": "OpenAI",         "location": "San Francisco, CA"},
+    {"title": "DevOps Engineer",                 "company": "HashiCorp",      "location": "Remote"},
+    {"title": "Data Engineer",                   "company": "Databricks",     "location": "Amsterdam, NL"},
+    {"title": "Frontend Engineer (Vue/React)",   "company": "Linear",         "location": "Remote"},
+    {"title": "Cloud Infrastructure Engineer",  "company": "Cloudflare",     "location": "Austin, TX"},
+    {"title": "Site Reliability Engineer",       "company": "PagerDuty",      "location": "Remote"},
+    {"title": "iOS Engineer",                    "company": "Duolingo",       "location": "Pittsburgh, PA"},
+    {"title": "Android Engineer",                "company": "Discord",        "location": "Remote"},
+    {"title": "Security Engineer",               "company": "Crowdstrike",    "location": "Sunnyvale, CA"},
+    {"title": "Platform Engineer",               "company": "Vercel",         "location": "Remote"},
+    {"title": "Staff Engineer, Infrastructure", "company": "Shopify",        "location": "Remote"},
+    {"title": "Engineering Manager",            "company": "Atlassian",      "location": "Sydney, AU"},
+    {"title": "Product Engineer",                "company": "Loom",           "location": "Remote"},
+    {"title": "Distributed Systems Engineer",   "company": "Cockroach Labs", "location": "New York, NY"},
+    {"title": "API Platform Engineer",          "company": "Twilio",         "location": "Remote"},
+    {"title": "Data Scientist",                 "company": "Spotify",        "location": "Stockholm, SE"},
+    {"title": "Software Engineer, Payments",    "company": "Brex",           "location": "Remote"},
 ]
 
 
-# ── Shared utilities ──────────────────────────────────────────────────────────
+# ── Shared utilities ───────────────────────────────────────────────────────────
 
 def _make_hash(title: str, company: str) -> str:
     raw = f"{title.strip().lower()}|{company.strip().lower()}"
@@ -43,7 +42,6 @@ def _make_hash(title: str, company: str) -> str:
 
 
 def _insert_job(title, company, location, description, source, url):
-    """Insert a single job if its hash doesn't already exist. Returns 1 if added, 0 if skipped."""
     if not title or not company:
         return 0
     job_hash = _make_hash(title, company)
@@ -56,7 +54,7 @@ def _insert_job(title, company, location, description, source, url):
     return 1
 
 
-# ── Source fetchers ───────────────────────────────────────────────────────────
+# ── Per-source fetch functions ─────────────────────────────────────────────────
 
 def _fetch_remotive() -> list:
     res = requests.get(REMOTIVE_URL, timeout=15)
@@ -76,27 +74,81 @@ def _fetch_jsearch(api_key: str) -> list:
         return []
     res = requests.get(
         JSEARCH_URL,
-        headers={
-            "X-RapidAPI-Key":  api_key,
-            "X-RapidAPI-Host": JSEARCH_HOST,
-        },
-        params={
-            "query":     "software engineer",
-            "num_pages": "2",
-            "page":      "1",
-            "date_posted": "month",
-        },
+        headers={"X-RapidAPI-Key": api_key, "X-RapidAPI-Host": JSEARCH_HOST},
+        params={"query": "software engineer", "num_pages": "2", "page": "1", "date_posted": "month"},
         timeout=15,
     )
     res.raise_for_status()
     return res.json().get("data", [])
 
 
-# ── Core harvest runner ───────────────────────────────────────────────────────
+# ── Source processors ──────────────────────────────────────────────────────────
 
-def _run_harvest(app):
+def _process_remotive():
+    count = 0
+    for item in _fetch_remotive():
+        count += _insert_job(
+            title       = (item.get("title") or "").strip(),
+            company     = (item.get("company_name") or "").strip(),
+            location    = item.get("candidate_required_location") or "Remote",
+            description = item.get("description") or "",
+            source      = "Remotive",
+            url         = item.get("url") or "",
+        )
+    return count
+
+
+def _process_arbeitnow():
+    count = 0
+    for item in _fetch_arbeitnow():
+        count += _insert_job(
+            title       = (item.get("title") or "").strip(),
+            company     = (item.get("company_name") or "").strip(),
+            location    = item.get("location") or "Remote",
+            description = item.get("description") or "",
+            source      = "Arbeitnow",
+            url         = item.get("url") or "",
+        )
+    return count
+
+
+def _process_glassdoor():
+    count = 0
+    for item in GLASSDOOR_MOCK:
+        count += _insert_job(
+            title=item["title"], company=item["company"],
+            location=item["location"], description="",
+            source="Glassdoor", url="https://glassdoor.com",
+        )
+    return count
+
+
+def _process_linkedin(jsearch_key):
+    count = 0
+    for item in _fetch_jsearch(jsearch_key):
+        count += _insert_job(
+            title       = (item.get("job_title") or "").strip(),
+            company     = (item.get("employer_name") or "").strip(),
+            location    = item.get("job_city") or item.get("job_country") or "Remote",
+            description = item.get("job_description") or "",
+            source      = "LinkedIn",
+            url         = item.get("job_apply_link") or "",
+        )
+    return count
+
+
+# ── Core runner (supports single source or all) ────────────────────────────────
+
+SOURCE_MAP = {
+    "Remotive":  _process_remotive,
+    "Arbeitnow": _process_arbeitnow,
+    "Glassdoor": _process_glassdoor,
+}
+
+
+def _run_harvest(app, source="all"):
     with app.app_context():
-        log = HarvestLog(status="running", jobs_added=0)
+        log = HarvestLog(source=source, status="running", jobs_added=0)
         db.session.add(log)
         db.session.commit()
 
@@ -104,49 +156,17 @@ def _run_harvest(app):
             jobs_added = 0
             jsearch_key = app.config.get("JSEARCH_API_KEY", "")
 
-            # --- Remotive ---
-            for item in _fetch_remotive():
-                jobs_added += _insert_job(
-                    title       = (item.get("title") or "").strip(),
-                    company     = (item.get("company_name") or "").strip(),
-                    location    = item.get("candidate_required_location") or "Remote",
-                    description = item.get("description") or "",
-                    source      = "Remotive",
-                    url         = item.get("url") or "",
-                )
-
-            # --- Arbeitnow ---
-            for item in _fetch_arbeitnow():
-                jobs_added += _insert_job(
-                    title       = (item.get("title") or "").strip(),
-                    company     = (item.get("company_name") or "").strip(),
-                    location    = item.get("location") or "Remote",
-                    description = item.get("description") or "",
-                    source      = "Arbeitnow",
-                    url         = item.get("url") or "",
-                )
-
-            # --- Glassdoor (mock scrape) ---
-            for item in GLASSDOOR_MOCK:
-                jobs_added += _insert_job(
-                    title       = item["title"],
-                    company     = item["company"],
-                    location    = item["location"],
-                    description = "",
-                    source      = "Glassdoor",
-                    url         = item["url"],
-                )
-
-            # --- LinkedIn via JSearch (RapidAPI) ---
-            for item in _fetch_jsearch(jsearch_key):
-                jobs_added += _insert_job(
-                    title       = (item.get("job_title") or "").strip(),
-                    company     = (item.get("employer_name") or "").strip(),
-                    location    = item.get("job_city") or item.get("job_country") or "Remote",
-                    description = item.get("job_description") or "",
-                    source      = "LinkedIn",
-                    url         = item.get("job_apply_link") or "",
-                )
+            if source == "all":
+                jobs_added += _process_remotive()
+                jobs_added += _process_arbeitnow()
+                jobs_added += _process_glassdoor()
+                jobs_added += _process_linkedin(jsearch_key)
+            elif source == "LinkedIn":
+                jobs_added += _process_linkedin(jsearch_key)
+            elif source in SOURCE_MAP:
+                jobs_added += SOURCE_MAP[source]()
+            else:
+                raise ValueError(f"Unknown source: {source}")
 
             db.session.commit()
             log.status     = "completed"
@@ -157,25 +177,18 @@ def _run_harvest(app):
             db.session.rollback()
             log.status = "failed"
             db.session.commit()
-            print(f"[Harvester] Harvest failed: {e}")
+            print(f"[Harvester] '{source}' harvest failed: {e}")
 
 
-# ── Public entry points ───────────────────────────────────────────────────────
-
-def harvest_remotive_jobs(app):
-    thread = threading.Thread(target=_run_harvest, args=(app,), daemon=True)
-    thread.start()
-    return thread
-
-
-def harvest_arbeitnow_jobs(app):
-    thread = threading.Thread(target=_run_harvest, args=(app,), daemon=True)
-    thread.start()
-    return thread
-
+# ── Public entry points ────────────────────────────────────────────────────────
 
 def harvest_all(app):
-    """Single entry point that runs all three sources in one background thread."""
-    thread = threading.Thread(target=_run_harvest, args=(app,), daemon=True)
+    thread = threading.Thread(target=_run_harvest, args=(app, "all"), daemon=True)
+    thread.start()
+    return thread
+
+
+def harvest_source(app, source: str):
+    thread = threading.Thread(target=_run_harvest, args=(app, source), daemon=True)
     thread.start()
     return thread
