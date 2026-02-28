@@ -1,37 +1,16 @@
 import hashlib
 import threading
 import requests
+from flask import current_app
 from models import db
 from models.job import Job, HarvestLog
 
-REMOTIVE_URL   = "https://remotive.com/api/remote-jobs"
-ARBEITNOW_URL  = "https://arbeitnow.com/api/job-board-api"
+REMOTIVE_URL    = "https://remotive.com/api/remote-jobs"
+ARBEITNOW_URL   = "https://arbeitnow.com/api/job-board-api"
+JSEARCH_URL     = "https://jsearch.p.rapidapi.com/search"
+JSEARCH_HOST    = "jsearch.p.rapidapi.com"
 
-# --- Realistic mock dataset simulating a LinkedIn headless scrape ---
-LINKEDIN_MOCK = [
-    {"title": "Software Engineer, Backend",          "company": "Meta",              "location": "Menlo Park, CA",    "url": "https://linkedin.com/jobs"},
-    {"title": "Senior Frontend Engineer",            "company": "Netflix",           "location": "Los Gatos, CA",     "url": "https://linkedin.com/jobs"},
-    {"title": "Staff Software Engineer",             "company": "Google",            "location": "Mountain View, CA", "url": "https://linkedin.com/jobs"},
-    {"title": "Principal Engineer, Platform",        "company": "Amazon",            "location": "Seattle, WA",       "url": "https://linkedin.com/jobs"},
-    {"title": "Software Development Engineer",       "company": "Microsoft",         "location": "Redmond, WA",       "url": "https://linkedin.com/jobs"},
-    {"title": "Full Stack Engineer",                 "company": "Airbnb",            "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "ML Infrastructure Engineer",          "company": "Apple",             "location": "Cupertino, CA",     "url": "https://linkedin.com/jobs"},
-    {"title": "Senior Data Engineer",               "company": "Uber",              "location": "San Francisco, CA", "url": "https://linkedin.com/jobs"},
-    {"title": "Cloud Solutions Architect",           "company": "Salesforce",        "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Backend Engineer, Growth",            "company": "LinkedIn",          "location": "Sunnyvale, CA",     "url": "https://linkedin.com/jobs"},
-    {"title": "DevOps / Platform Engineer",          "company": "Twitter / X",       "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Software Engineer, Infra",            "company": "Snap Inc.",         "location": "Santa Monica, CA",  "url": "https://linkedin.com/jobs"},
-    {"title": "Senior Engineer, Payments",           "company": "PayPal",            "location": "San Jose, CA",      "url": "https://linkedin.com/jobs"},
-    {"title": "Data Platform Engineer",              "company": "Adobe",             "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "React Native Engineer",               "company": "Pinterest",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Applied Scientist, NLP",              "company": "Grammarly",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Site Reliability Engineer",           "company": "Dropbox",           "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Engineering Lead, Search",            "company": "Elastic",           "location": "Remote",            "url": "https://linkedin.com/jobs"},
-    {"title": "Senior Software Engineer, AI",        "company": "Zoom",              "location": "San Jose, CA",      "url": "https://linkedin.com/jobs"},
-    {"title": "Software Engineer, Distributed Sys.", "company": "Confluent",         "location": "Remote",            "url": "https://linkedin.com/jobs"},
-]
-
-# --- Realistic mock dataset simulating a Glassdoor headless scrape ---
+# ── Shared utilities ──────────────────────────────────────────────────────────
 GLASSDOOR_MOCK = [
     {"title": "Senior Software Engineer",        "company": "Stripe",          "location": "San Francisco, CA", "url": "https://glassdoor.com"},
     {"title": "Backend Engineer (Python)",        "company": "Notion",          "location": "New York, NY",      "url": "https://glassdoor.com"},
@@ -91,6 +70,28 @@ def _fetch_arbeitnow() -> list:
     return res.json().get("data", [])
 
 
+def _fetch_jsearch(api_key: str) -> list:
+    if not api_key:
+        print("[Harvester] JSEARCH_API_KEY not set — skipping LinkedIn source.")
+        return []
+    res = requests.get(
+        JSEARCH_URL,
+        headers={
+            "X-RapidAPI-Key":  api_key,
+            "X-RapidAPI-Host": JSEARCH_HOST,
+        },
+        params={
+            "query":     "software engineer",
+            "num_pages": "2",
+            "page":      "1",
+            "date_posted": "month",
+        },
+        timeout=15,
+    )
+    res.raise_for_status()
+    return res.json().get("data", [])
+
+
 # ── Core harvest runner ───────────────────────────────────────────────────────
 
 def _run_harvest(app):
@@ -101,6 +102,7 @@ def _run_harvest(app):
 
         try:
             jobs_added = 0
+            jsearch_key = app.config.get("JSEARCH_API_KEY", "")
 
             # --- Remotive ---
             for item in _fetch_remotive():
@@ -135,15 +137,15 @@ def _run_harvest(app):
                     url         = item["url"],
                 )
 
-            # --- LinkedIn (mock scrape) ---
-            for item in LINKEDIN_MOCK:
+            # --- LinkedIn via JSearch (RapidAPI) ---
+            for item in _fetch_jsearch(jsearch_key):
                 jobs_added += _insert_job(
-                    title       = item["title"],
-                    company     = item["company"],
-                    location    = item["location"],
-                    description = "",
+                    title       = (item.get("job_title") or "").strip(),
+                    company     = (item.get("employer_name") or "").strip(),
+                    location    = item.get("job_city") or item.get("job_country") or "Remote",
+                    description = item.get("job_description") or "",
                     source      = "LinkedIn",
-                    url         = item["url"],
+                    url         = item.get("job_apply_link") or "",
                 )
 
             db.session.commit()

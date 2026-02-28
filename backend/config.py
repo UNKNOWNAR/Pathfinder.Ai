@@ -35,3 +35,6 @@ class Config:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
 
     RAPIDAPI_GLASSDOOR_KEY = os.getenv('RAPIDAPI_GLASSDOOR_KEY', '')
+
+    # JSearch API (RapidAPI) — used for LinkedIn-sourced job results
+    JSEARCH_API_KEY = os.getenv('JSEARCH_API_KEY', '')
