@@ -1,8 +1,9 @@
 # --- Core Framework ---
 Flask==3.0.3
 
-# --- Database (Local SQLite) ---
+# --- Database ---
 Flask-SQLAlchemy==3.1.1
+psycopg2-binary==2.9.9
 
 # --- Authentication (JWT & Security) ---
 Flask-JWT-Extended==4.6.0
