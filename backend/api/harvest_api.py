@@ -10,13 +10,20 @@ from services.harvester import harvest_all
 class AdminStats(Resource):
     @admin_required
     def get(self):
+        from sqlalchemy import func
         students  = User.query.filter_by(role='student').count()
         companies = User.query.filter_by(role='company').count()
         jobs      = Job.query.count()
+
+        # Group jobs by source
+        sources_query = db.session.query(Job.source, func.count(Job.job_id)).group_by(Job.source).all()
+        sources_breakdown = {s: c for s, c in sources_query}
+
         return {
             'students':  students,
             'companies': companies,
             'jobs':      jobs,
+            'sources':   sources_breakdown,
         }, 200
 
 
