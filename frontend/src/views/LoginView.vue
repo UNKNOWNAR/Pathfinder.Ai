@@ -22,7 +22,7 @@ const handleLogin = async () => {
     if (res.data.role === 'admin') {
       router.push('/admin');
     } else {
-      router.push('/dashboard');
+      router.push('/student');
     }
   } catch (err) {
     alert(err.response?.data?.message || 'Login failed');

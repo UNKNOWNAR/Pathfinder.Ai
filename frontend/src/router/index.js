@@ -2,15 +2,15 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 
 const routes = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', redirect: '/student' },
   {
     path: '/login',
     name: 'login',
     component: LoginView
   },
   {
-    path: '/dashboard',
-    name: 'dashboard',
+    path: '/student',
+    name: 'student',
     component: () => import('../views/DashboardView.vue')
   },
   {
@@ -50,7 +50,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.requiresAdmin && role !== 'admin') {
-    return next('/dashboard');
+    return next('/student');
   }
 
   // Prevent admins from accidentally landing on student pages
@@ -60,7 +60,7 @@ router.beforeEach((to, from, next) => {
 
   // Prevent students from landing on admin wrapper implicitly
   if (role === 'student' && to.path === '/') {
-    return next('/dashboard');
+    return next('/student');
   }
 
   next();
