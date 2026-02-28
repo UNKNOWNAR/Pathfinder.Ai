@@ -8,7 +8,7 @@ REMOTIVE_URL  = "https://remotive.com/api/remote-jobs"
 ARBEITNOW_URL = "https://arbeitnow.com/api/job-board-api"
 JSEARCH_URL   = "https://jsearch.p.rapidapi.com/search"
 JSEARCH_HOST  = "jsearch.p.rapidapi.com"
-ACTIVE_JOBS_URL  = "https://active-jobs-db.p.rapidapi.com/active-rss"
+ACTIVE_JOBS_URL  = "https://active-jobs-db.p.rapidapi.com/active-ats-7d"
 ACTIVE_JOBS_HOST = "active-jobs-db.p.rapidapi.com"
 
 # --- Glassdoor mock (no public API) ---
