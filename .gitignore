@@ -25,14 +25,14 @@ build/
 # ==================================================
 # Node / Vue Frontend
 # ==================================================
-pathfinder-frontend/node_modules/
-pathfinder-frontend/dist/
-pathfinder-frontend/.env.local
-pathfinder-frontend/.env.*.local
-pathfinder-frontend/npm-debug.log*
-pathfinder-frontend/yarn-debug.log*
-pathfinder-frontend/yarn-error.log*
-pathfinder-frontend/pnpm-debug.log*
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
 
 # ==================================================
 # OS / System
@@ -60,3 +60,11 @@ logs/
 *.pid
 *.seed
 *.pid.lock
+
+# ==================================================
+# AI / Agent Workflow Files
+# ==================================================
+claude*
+.cursorrules
+.cursor/
+
