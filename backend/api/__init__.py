@@ -1,7 +1,7 @@
 from api.auth_apis import LoginUser, SignUpUser, LogoutUser
 from api.profile_api import ProfileAPI
 from api.generate_resume import GenerateResume
-from api.harvest_api import AdminStats, AdminHarvest, AdminLogs
+from api.harvest_api import AdminStats, AdminHarvest, AdminLogs, AdminJobsList
 
 
 def init_routes(api):
@@ -13,3 +13,4 @@ def init_routes(api):
     api.add_resource(AdminStats,   '/admin/stats')
     api.add_resource(AdminHarvest, '/admin/harvest')
     api.add_resource(AdminLogs,    '/admin/logs')
+    api.add_resource(AdminJobsList, '/admin/jobs')
