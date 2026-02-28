@@ -27,7 +27,7 @@ const loadLogs = async () => {
       return;
     }
     systemLogs.value = res.data.map(l =>
-      `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${new Date(l.timestamp).toLocaleString()}`
+      `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${new Date(l.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
     );
   } catch {
     systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
@@ -121,7 +121,7 @@ onMounted(async () => {
       </div>
 
       <!-- Triggers Grid -->
-      <h3 class="section-title" style="margin-top: 20px;">▤ HARVESTER TRIGGERS</h3>
+      <h3 class="section-title" style="margin-top: 20px;">▤ HARDWARE / API CONFIGURATION</h3>
       <div class="grid trigger-grid">
          <button class="box trigger-btn remotive-btn" @click="triggerHarvest" :disabled="harvesting">
             <span class="trigger-title">⚡ RUN REMOTIVE HARVEST</span>
