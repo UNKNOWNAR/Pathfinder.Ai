@@ -27,7 +27,7 @@ const loadLogs = async () => {
       return;
     }
     systemLogs.value = res.data.map(l => {
-      const dateObj = new Date(l.timestamp);
+      const dateObj = new Date(l.timestamp + 'Z');
       const istTime = dateObj.toLocaleString('en-IN', {
         timeZone: 'Asia/Kolkata',
         dateStyle: 'short',
@@ -40,13 +40,14 @@ const loadLogs = async () => {
   }
 };
 
-const triggerHarvest = async () => {
+const triggerHarvest = async (sourceTarget = 'all') => {
   if (harvesting.value) return;
   harvesting.value = true;
-  systemLogs.value.push('> [SYSTEM] Harvest triggered — running in background...');
+  const label = sourceTarget === 'all' ? 'ALL SOURCES' : sourceTarget;
+  systemLogs.value.push(`> [SYSTEM] Harvest triggered for ${label} — running in background...`);
   try {
-    await api.post('/admin/harvest');
-    systemLogs.value.push('> [SYSTEM] Harvest started. Refreshing logs in 10s...');
+    await api.post('/admin/harvest', { source: sourceTarget });
+    systemLogs.value.push(`> [SYSTEM] ${label} harvest started. Refreshing logs in 10s...`);
     setTimeout(async () => {
       await loadLogs();
       await loadStats();
@@ -141,14 +142,24 @@ onMounted(async () => {
       <!-- Triggers Grid -->
       <h3 class="section-title" style="margin-top: 20px;">▤ HARDWARE / API CONFIGURATION</h3>
       <div class="grid trigger-grid">
-         <button class="box trigger-btn remotive-btn" @click="triggerHarvest" :disabled="harvesting">
-            <span class="trigger-title">⚡ RUN REMOTIVE HARVEST</span>
+         <button class="box trigger-btn remotive-btn" @click="triggerHarvest('Remotive')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH REMOTIVE</span>
             <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Tier A - Rapid Fetch)' }}</span>
          </button>
-         
-         <button class="box trigger-btn proxy-btn">
-            <span class="trigger-title">⚡ RUN PROXY SCRAPE</span>
-            <span class="trigger-sub">(Tier B - Headless Playwright)</span>
+
+         <button class="box trigger-btn jsearch-btn" @click="triggerHarvest('LinkedIn')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH JSEARCH</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(LinkedIn via RapidAPI)' }}</span>
+         </button>
+
+         <button class="box trigger-btn activejobs-btn" @click="triggerHarvest('ActiveJobsDB')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH ACTIVE JOBS DB</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Active Jobs RapidAPI)' }}</span>
+         </button>
+
+         <button class="box trigger-btn master-btn" @click="triggerHarvest('all')" :disabled="harvesting">
+            <span class="trigger-title">🚀 RUN MASTER HARVEST</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(All Sources Combined)' }}</span>
          </button>
       </div>
 
@@ -217,10 +228,13 @@ onMounted(async () => {
 .trigger-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
 .trigger-btn { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: transform 0.1s;}
 .trigger-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
+.trigger-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .trigger-title { font-size: 18px; font-weight: 900; }
 .trigger-sub { font-size: 12px; font-weight: 600; opacity: 0.7; }
 .remotive-btn { background: #ffeaa7; }
-.proxy-btn { background: #dfe6e9; opacity: 0.7; }
+.jsearch-btn { background: #74b9ff; }
+.activejobs-btn { background: #a29bfe; }
+.master-btn { background: var(--admin-accent); color: white; }
 
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; }
