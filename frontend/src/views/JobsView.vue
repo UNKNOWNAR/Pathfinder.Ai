@@ -68,25 +68,30 @@
                 </div>
 
                 <div class="topic-comparison">
-                  <div class="topic-row topic-header-row">
-                    <span class="topic-col-name">TOPIC</span>
-                    <span class="topic-col-asked">ASKED</span>
-                    <span class="topic-col-solved">YOU</span>
-                    <span class="topic-col-bar"></span>
-                  </div>
-                  <div v-for="(t, i) in readinessData.topics" :key="i" class="topic-row">
-                    <span class="topic-col-name">{{ t.topic }}</span>
-                    <span class="topic-col-asked">{{ t.asked }}</span>
-                    <span class="topic-col-solved" :class="{ zero: t.solved === 0 }">{{ t.solved }}</span>
-                    <span class="topic-col-bar">
-                      <span class="bar-track">
-                        <span
-                          class="bar-fill"
-                          :class="barColor(t.solved, t.asked)"
-                          :style="{ width: barWidth(t.solved, t.asked) }"
-                        ></span>
-                      </span>
-                    </span>
+                  <h3 class="topic-section-title">Topic Coverage & Recommendations</h3>
+                  <div class="topic-cards-grid">
+                    <div v-for="(t, i) in readinessData.topics" :key="i" class="topic-card" :class="{ 'is-missing': t.is_missing }">
+                      <div class="topic-card-header">
+                        <span class="topic-name">{{ t.topic }}</span>
+                        <span class="topic-badge" :class="t.is_missing ? 'weak' : 'strong'">
+                          {{ t.is_missing ? 'NEEDS PRACTICE' : 'STRONG' }} ({{ t.solved }} solved)
+                        </span>
+                      </div>
+                      
+                      <div v-if="t.is_missing && t.recommended_questions && t.recommended_questions.length > 0" class="recommended-qs">
+                        <p class="rq-title">Top <span>{{ readinessData.company }}</span> {{ t.topic }} Questions:</p>
+                        <ul class="rq-list">
+                          <li v-for="(q, j) in t.recommended_questions" :key="j">
+                            <a v-if="q.url" :href="q.url" target="_blank">{{ q.title }}</a>
+                            <span v-else>{{ q.title }}</span>
+                            <span class="q-diff" :class="q.difficulty.toLowerCase()">{{ q.difficulty[0] }}</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div v-else-if="!t.is_missing" class="strong-status">
+                        <p>Solid experience! Keep it up.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </template>
@@ -179,19 +184,7 @@ const toggleReadiness = async (job) => {
   }
 };
 
-const barWidth = (solved, asked) => {
-  if (!asked || asked === 0) return '0%';
-  const pct = Math.min((solved / asked) * 100, 100);
-  return pct + '%';
-};
 
-const barColor = (solved, asked) => {
-  if (solved === 0) return 'red';
-  const ratio = solved / asked;
-  if (ratio >= 0.6) return 'green';
-  if (ratio >= 0.3) return 'yellow';
-  return 'red';
-};
 
 const readinessColor = (pct) => {
   if (pct >= 70) return 'high';
@@ -460,64 +453,126 @@ onMounted(() => {
   font-weight: 900;
 }
 
-/* ── Topic Comparison Table ───────────────────────────────────── */
+/* ── Topic Cards & Recommendations ───────────────────────────────────── */
 .topic-comparison {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  margin-top: 24px;
 }
-
-.topic-row {
-  display: grid;
-  grid-template-columns: 1fr 60px 60px 1fr;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e5e7eb;
-  gap: 12px;
-}
-.topic-row:last-child { border-bottom: none; }
-
-.topic-header-row {
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 8px;
-  margin-bottom: 4px;
-}
-.topic-header-row span {
-  font-size: 10px;
+.topic-section-title {
+  font-size: 16px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.5;
+  margin-bottom: 16px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
 }
 
-.topic-col-name {
+.topic-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.topic-card {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  padding: 16px;
+  box-shadow: 3px 3px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+.topic-card.is-missing {
+  background: #fef2f2; /* extremely light red */
+}
+
+.topic-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.topic-name {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.topic-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border: 2px solid var(--ink);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.topic-badge.strong {
+  background: #bbf7d0;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.topic-badge.weak {
+  background: #fca5a5;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.recommended-qs {
+  margin-top: 4px;
+}
+.rq-title {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.rq-title span {
+  font-style: italic;
+}
+.rq-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rq-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid var(--ink);
+  padding: 6px 10px;
+}
+.rq-list a {
+  color: #2563eb;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.rq-list a:hover {
+  text-decoration: underline;
+}
+
+.q-diff {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+}
+.q-diff.easy { color: #16a34a; }
+.q-diff.medium { color: #d97706; }
+.q-diff.hard { color: #dc2626; }
+
+.strong-status {
   font-size: 13px;
   font-weight: 700;
+  color: #16a34a;
+  padding-top: 10px;
 }
-.topic-col-asked, .topic-col-solved {
-  font-size: 14px;
-  font-weight: 800;
-  text-align: center;
-}
-.topic-col-solved.zero {
-  color: #ef4444;
-}
-
-.bar-track {
-  display: block;
-  width: 100%;
-  height: 12px;
-  background: #e5e7eb;
-  border: 1px solid var(--ink);
-}
-.bar-fill {
-  display: block;
-  height: 100%;
-  transition: width 0.3s;
-}
-.bar-fill.green  { background: #22c55e; }
-.bar-fill.yellow { background: #f59e0b; }
-.bar-fill.red    { background: #ef4444; }
 
 /* ── Pagination ───────────────────────────────────────────────── */
 .pagination {
