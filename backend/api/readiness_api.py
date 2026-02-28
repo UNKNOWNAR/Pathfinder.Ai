@@ -57,16 +57,38 @@ class JobReadiness(Resource):
             if stats:
                 student_topics = stats.get('topics', {})
 
+        # Pre-group questions by topic so we can surface them
+        questions_by_topic = {}
+        for q in questions:
+            for t in (q.topics or []):
+                if t not in questions_by_topic:
+                    questions_by_topic[t] = []
+                questions_by_topic[t].append({
+                    'title': q.problem_title,
+                    'url': q.leetcode_url,
+                    'difficulty': q.difficulty,
+                    'frequency': q.frequency
+                })
+
         # Build the comparison: for each company topic, show how many the student solved
         comparison = []
         total_company = 0
         total_student = 0
         for topic, asked_count in sorted_topics.items():
             solved = student_topics.get(topic, 0)
+            
+            # Sort topic questions by frequency
+            topic_qs = sorted(questions_by_topic.get(topic, []), key=lambda x: x['frequency'], reverse=True)
+            
+            # Flag as missing if they have barely practiced this topic globally
+            is_missing = solved < 10
+            
             comparison.append({
                 'topic': topic,
                 'asked': asked_count,
                 'solved': solved,
+                'is_missing': is_missing,
+                'recommended_questions': list({v["title"]: v for v in topic_qs}.values())[:3] # unique top 3 questions
             })
             total_company += asked_count
             total_student += solved
