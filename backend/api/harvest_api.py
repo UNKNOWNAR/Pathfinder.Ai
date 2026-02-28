@@ -4,7 +4,7 @@ from api.admin_api import admin_required
 from models import db
 from models.user import User
 from models.job import Job, HarvestLog
-from services.harvester import harvest_remotive_jobs
+from services.harvester import harvest_all
 
 
 class AdminStats(Resource):
@@ -23,7 +23,7 @@ class AdminStats(Resource):
 class AdminHarvest(Resource):
     @admin_required
     def post(self):
-        harvest_remotive_jobs(current_app._get_current_object())
+        harvest_all(current_app._get_current_object())
         return {'message': 'Harvest started in background.'}, 202
 
 
