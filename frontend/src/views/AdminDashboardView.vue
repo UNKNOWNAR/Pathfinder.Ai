@@ -6,7 +6,7 @@ import api from '@/services/api';
 const userName = (localStorage.getItem('username') || 'Admin').toUpperCase();
 const userRole = (localStorage.getItem('role') || 'System Admin').toUpperCase();
 
-const stats = ref({ students: '...', companies: '...', jobs: '...' });
+const stats = ref({ students: '...', companies: '...', jobs: '...', sources: {} });
 const systemLogs = ref(["> [SYSTEM] Connecting to database..."]);
 const harvesting = ref(false);
 
@@ -26,9 +26,15 @@ const loadLogs = async () => {
       systemLogs.value = ['> [SYSTEM] No harvest runs yet. Trigger one below.'];
       return;
     }
-    systemLogs.value = res.data.map(l =>
-      `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${new Date(l.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
-    );
+    systemLogs.value = res.data.map(l => {
+      const dateObj = new Date(l.timestamp);
+      const istTime = dateObj.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      });
+      return `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${istTime} (IST)`;
+    });
   } catch {
     systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
   }
@@ -90,7 +96,7 @@ onMounted(async () => {
         <!-- Left Col: Platform Stats -->
         <div class="col">
           <h3 class="section-title">▤ PLATFORM STATISTICS</h3>
-          
+
           <div class="stat-col">
             <div class="box stat-card">
               <p class="stat-label">TOTAL STUDENTS REG.</p>
@@ -104,6 +110,18 @@ onMounted(async () => {
               <p class="stat-label">JOBS IN DATABASE</p>
               <p class="stat-value">{{ stats.jobs.toLocaleString() }}</p>
             </div>
+          </div>
+
+          <!-- SOURCE BREAKDOWN GRID -->
+          <h3 class="section-title" style="margin-top: 20px;">▤ JOB SOURCES</h3>
+          <div class="source-grid" v-if="stats.sources && Object.keys(stats.sources).length">
+            <div class="box source-card" v-for="(count, sourceName) in stats.sources" :key="sourceName">
+              <span class="source-name">{{ sourceName }}</span>
+              <span class="source-count">{{ count.toLocaleString() }}</span>
+            </div>
+          </div>
+          <div v-else class="box source-card">
+            <span class="source-name" style="opacity:0.5;">Awaiting initial harvest...</span>
           </div>
         </div>
 
@@ -185,6 +203,11 @@ onMounted(async () => {
 .highlight-card .stat-label { color: #ccc;}
 .stat-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; }
 .stat-value { font-size: 28px; font-weight: 900; }
+
+.source-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.source-card { padding: 12px; display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; }
+.source-name { font-weight: 800; font-size: 13px; text-transform: uppercase; }
+.source-count { font-weight: 900; font-size: 16px; color: var(--accent); }
 
 .terminal-box { background: var(--ink); color: #00ff00; padding: 20px; font-family: monospace; font-size: 13px; min-height: 250px; flex: 1; display: flex; flex-direction: column; gap: 8px;}
 .terminal-line { word-wrap: break-word;}
