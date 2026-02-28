@@ -27,13 +27,33 @@ const routes = [
     path: '/leetcode',
     name: 'leetcode',
     component: () => import('../views/LeetCodeView.vue')
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminDashboardView.vue'),
+    meta: { requiresAdmin: true }
   }
-
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+});
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  if (to.path !== '/login' && !token) {
+    return next('/login');
+  }
+
+  if (to.meta.requiresAdmin && role !== 'admin') {
+    return next('/dashboard');
+  }
+
+  next();
 });
 
 export default router;

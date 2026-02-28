@@ -7,6 +7,7 @@ const router = useRouter();
 const route  = useRoute();
 
 const userName = computed(() => localStorage.getItem('username') || 'User');
+const isAdmin  = computed(() => localStorage.getItem('role') === 'admin');
 
 const navLinks = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -41,6 +42,14 @@ const logout = () => {
         @click="router.push(link.to)"
       >
         {{ link.label }}
+      </button>
+      <button
+        v-if="isAdmin"
+        class="nav-link nav-link--admin"
+        :class="{ 'nav-link--active': isActive('/admin') }"
+        @click="router.push('/admin')"
+      >
+        Admin
       </button>
     </nav>
 
@@ -132,6 +141,19 @@ const logout = () => {
   color: #fff;
   border: 2px solid #111;
   box-shadow: 3px 3px 0 #111;
+}
+
+.nav-link--admin {
+  background: #111;
+  color: #fff;
+  border: 2px solid #111;
+  box-shadow: 3px 3px 0 #555;
+}
+.nav-link--admin:hover {
+  background: #333;
+}
+.nav-link--admin.nav-link--active {
+  background: #2d8cf0;
 }
 
 /* ── Right ─────────────────────────────────────────────── */
