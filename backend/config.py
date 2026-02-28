@@ -38,3 +38,6 @@ class Config:
 
     # JSearch API (RapidAPI) — used for LinkedIn-sourced job results
     JSEARCH_API_KEY = os.getenv('JSEARCH_API_KEY', '')
+
+    # Active Jobs DB (RapidAPI)
+    ACTIVE_JOBS_DB_KEY = os.getenv('ACTIVE_JOBS_DB_KEY', '')
