@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 
 const stats = ref(null);
+const advice = ref('');
 const loading = ref(false);
 const error = ref('');
 const noUsername = ref(false);
@@ -42,6 +43,7 @@ const fetchStats = async () => {
     }
 
     stats.value = data.stats;
+    advice.value = data.advice || '';
   } catch (err) {
     error.value = 'Network error. Could not reach the server.';
   } finally {
@@ -89,6 +91,15 @@ onMounted(() => {
         <div class="box username-banner">
           <span class="username-label">LEETCODE USER</span>
           <span class="username-value">{{ stats.username }}</span>
+        </div>
+
+        <!-- AI Advice Card -->
+        <div v-if="advice" class="box advice-card">
+          <div class="advice-header">
+            <span class="advice-icon">&#10023;</span>
+            <span class="advice-label">AI STUDY ADVICE</span>
+          </div>
+          <p class="advice-text">{{ advice }}</p>
         </div>
 
         <!-- Stat Cards Row: Total / Easy / Medium / Hard -->
@@ -396,6 +407,35 @@ onMounted(() => {
   padding: 1px 6px;
   font-size: 10px;
   font-weight: 900;
+}
+
+/* ── AI Advice Card ─────────────────────────────────────────── */
+.advice-card {
+  padding: 22px 28px;
+  border-left: 6px solid var(--accent);
+  background: #f0f7ff;
+}
+.advice-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.advice-icon {
+  font-size: 18px;
+  color: var(--accent);
+}
+.advice-label {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.advice-text {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
 .empty-text {
