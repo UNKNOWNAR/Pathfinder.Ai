@@ -2,13 +2,17 @@ from flask_restful import Resource
 from flask import request
 from models import db
 from models.user import User
+from models.job import Job
 from models.company import Company
 from user_datastore import user_datastore
 from sqlalchemy import or_
 from api.admin_api import admin_required
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from services.harvester import _make_hash
 
 
 class CompanyRegister(Resource):
+
     def post(self):
         data = request.get_json()
 
@@ -80,4 +84,59 @@ class AdminCompanyApprove(Resource):
         company.is_approved = True
         db.session.commit()
         return {'message': f'Company {company.name} approved successfully.'}, 200
+
+
+class CompanyJobs(Resource):
+    @jwt_required()
+    def post(self):
+        claims = get_jwt()
+        if claims.get('role') != 'company':
+            return {'message': 'Only companies can post jobs.'}, 403
+
+        user_id = get_jwt_identity()
+        company = Company.query.filter_by(user_id=user_id).first()
+
+        if not company:
+            return {'message': 'Company profile not found.'}, 404
+
+        if not company.is_approved:
+            return {'message': 'Your company account is pending approval by an admin. You cannot post jobs yet.'}, 403
+
+        data = request.get_json()
+        required_fields = ['title', 'description']
+        if not data or not all(k in data for k in required_fields):
+            return {'message': 'title and description are required fields.'}, 400
+
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
+        location = data.get('location', '').strip() or 'Remote'
+        url = data.get('url', '').strip()
+
+        if not title or not description:
+            return {'message': 'title and description cannot be empty.'}, 400
+
+        # Use deduplication logic (from harvester)
+        job_hash = _make_hash(title, company.name)
+
+        existing = Job.query.filter_by(hash=job_hash).first()
+        if existing:
+            return {'message': 'You have already posted this job (duplicate title).'}, 409
+
+        new_job = Job(
+            title=title,
+            company=company.name,
+            location=location,
+            description=description,
+            source="Direct",
+            url=url,
+            hash=job_hash
+        )
+
+        db.session.add(new_job)
+        db.session.commit()
+
+        return {
+            'message': 'Job posted successfully.',
+            'job_id': new_job.job_id
+        }, 201
 
