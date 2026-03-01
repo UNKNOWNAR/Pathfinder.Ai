@@ -82,6 +82,17 @@ SOURCES = {
             "url": "link"
         }
     },
+    "FaangWatch": {
+        "url": "https://faang.watch/api/search",
+        "type": "direct",
+        "mapping": {
+            "title": "title",
+            "company": "company",
+            "location": lambda item: (item.get("parsed_locations") or item.get("locations") or ["Remote"])[0],
+            "description": "description",
+            "url": "company_url"
+        }
+    },
 }
 
 # ── Fetching Logic ─────────────────────────────────────────────────────────────
@@ -160,6 +171,29 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                 batch = res.json()
                 if not batch: break
                 raw_jobs.extend(batch)
+
+        elif source_id == "FaangWatch":
+            for loc in active_locations:
+                for role in active_roles:
+                    params = {
+                        "text": role,
+                        "location": loc,
+                        "min_years_of_experience": 0,
+                        "seniority": "junior",
+                        "page_size": 20
+                    }
+                    try:
+                        res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
+                        api_calls += 1
+                        res.raise_for_status()
+                        data = res.json()
+                        if isinstance(data, list):
+                            raw_jobs.extend(data)
+                        elif isinstance(data, dict):
+                            raw_jobs.extend(data.get("hits", data.get("jobs", data.get("data", []))))
+                        time.sleep(1)
+                    except Exception as e:
+                        logger.error(f"FaangWatch sub-query '{role}' at '{loc}' failed: {e}")
 
         else:
             # Standard GET request for public APIs
