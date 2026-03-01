@@ -31,8 +31,13 @@ const handleLogin = async () => {
 
 const handleSignup = async () => {
   try {
-    await api.post('/signup', signupData);
-    alert('Account created! Please log in.');
+    if (signupData.role === 'company') {
+      await api.post('/company/register', signupData);
+      alert('Company account created! Please wait for admin approval before logging in.');
+    } else {
+      await api.post('/signup', signupData);
+      alert('Account created! Please log in.');
+    }
     isSignUp.value = false;
   } catch (err) {
     alert(err.response?.data?.message || 'Signup failed');
