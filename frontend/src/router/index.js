@@ -15,11 +15,6 @@ const routes = [
     component: LoginView
   },
   {
-    path: '/student',
-    name: 'student',
-    component: () => import('../views/DashboardView.vue')
-  },
-  {
     path: '/profile',
     name: 'profile',
     component: () => import('../views/ProfileView.vue')
@@ -78,7 +73,7 @@ router.beforeEach((to, from, next) => {
   if (to.path === '/' || to.path === '/login') {
     if (token) {
       if (role === 'admin') return next('/admin');
-      if (role === 'student') return next('/student');
+      if (role === 'student') return next('/jobs');
       if (role === 'company') return next('/company');
     }
     return next();
@@ -108,7 +103,7 @@ router.beforeEach((to, from, next) => {
 
   // Prevent students from landing on admin wrapper implicitly
   if (role === 'student' && (to.path.startsWith('/admin') || to.path.startsWith('/company'))) {
-    return next('/student');
+    return next('/jobs');
   }
 
   next();

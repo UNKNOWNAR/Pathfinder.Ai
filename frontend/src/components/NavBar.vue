@@ -11,7 +11,6 @@ const isAdmin  = computed(() => localStorage.getItem('role') === 'admin');
 const isCompany = computed(() => localStorage.getItem('role') === 'company');
 
 const studentLinks = [
-  { label: 'Dashboard', to: '/student' },
   { label: 'Jobs',      to: '/jobs'      },
   { label: 'LeetCode',  to: '/leetcode'  },
   { label: 'Profile',   to: '/profile'   },
@@ -48,7 +47,7 @@ const logout = () => {
 <template>
   <header class="navbar">
     <!-- Left: Logo + name -->
-    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : isCompany ? '/company' : '/student')">
+    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : isCompany ? '/company' : '/jobs')">
       <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
       <span class="nav-title">Pathfinder.Ai</span>
     </div>
