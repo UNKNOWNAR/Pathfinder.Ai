@@ -57,6 +57,12 @@ const routes = [
     name: 'admin-companies',
     component: () => import('../views/AdminCompaniesView.vue'),
     meta: { requiresAdmin: true }
+  },
+  {
+    path: '/company',
+    name: 'company',
+    component: () => import('../views/CompanyDashboardView.vue'),
+    meta: { requiresCompany: true }
   }
 ];
 
@@ -83,17 +89,26 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.requiresAdmin && role !== 'admin') {
-    return next('/student');
+    return next(`/${role}`);
   }
 
-  // Prevent admins from accidentally landing on student pages
+  if (to.meta.requiresCompany && role !== 'company') {
+    return next(`/${role}`);
+  }
+
+  // Prevent admins from accidentally landing on student/company pages
   if (role === 'admin' && !to.path.startsWith('/admin')) {
     return next('/admin');
   }
 
-  // Prevent students/companies from landing on admin wrapper implicitly
-  if (role !== 'admin' && to.path.startsWith('/admin')) {
-    return next(`/${role}`);
+  // Prevent companies from accidentally landing on student/admin pages
+  if (role === 'company' && !to.path.startsWith('/company')) {
+    return next('/company');
+  }
+
+  // Prevent students from landing on admin wrapper implicitly
+  if (role === 'student' && (to.path.startsWith('/admin') || to.path.startsWith('/company'))) {
+    return next('/student');
   }
 
   next();
