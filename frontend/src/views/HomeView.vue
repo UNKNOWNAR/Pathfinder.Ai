@@ -96,21 +96,7 @@ const goLogin = () => router.push('/login');
 
 <style scoped>
 .page {
-  --ink:     #111111;
-  --bg:      #DEDEDE;
-  --surface: #FFFFFF;
-  --accent:  #2d8cf0;
-  --border:  2px solid var(--ink);
-  --shadow:  4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-  display: flex;
-  flex-direction: column;
-}
-
+  display: flex;  flex-direction: column;}
 /* ── Navbar ─────────────────────────────────────────────── */
 .navbar {
   position: sticky;
@@ -125,44 +111,23 @@ const goLogin = () => router.push('/login');
   border-bottom: 2px solid #111;
   box-shadow: 0 4px 0 #111;
 }
-
 .navbar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
-
 .nav-logo {
   height: 48px;
   width: 48px;
   object-fit: contain;
 }
-
 .nav-title {
   font-weight: 900;
   font-size: 20px;
   letter-spacing: -0.5px;
   text-transform: uppercase;
 }
-
-.brutal-btn {
-  padding: 8px 16px;
-  background: #fff;
-  border: 2px solid #111;
-  box-shadow: 3px 3px 0 #111;
-  font-weight: 900;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  color: #111;
-  transition: box-shadow 0.1s, transform 0.1s;
-}
-
-.brutal-btn:hover { background: #f5f5f5; }
-.brutal-btn:active { box-shadow: 1px 1px 0 #111; transform: translate(2px, 2px); }
-
 /* ── Main Layout ────────────────────────────────────────── */
 .main {
   flex: 1;
@@ -174,7 +139,6 @@ const goLogin = () => router.push('/login');
   flex-direction: column;
   gap: 80px;
 }
-
 /* ── Hero Section ───────────────────────────────────────── */
 .hero-section {
   display: grid;
@@ -182,13 +146,11 @@ const goLogin = () => router.push('/login');
   gap: 40px;
   align-items: center;
 }
-
 .hero-content {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
-
 .hero-title {
   font-size: 54px;
   font-weight: 900;
@@ -196,7 +158,6 @@ const goLogin = () => router.push('/login');
   letter-spacing: -1.5px;
   text-transform: uppercase;
 }
-
 .highlight {
   background: #ffeaa7;
   padding: 0 8px;
@@ -205,7 +166,6 @@ const goLogin = () => router.push('/login');
   display: inline-block;
   transform: rotate(-1deg);
 }
-
 .hero-subtitle {
   font-size: 18px;
   font-weight: 600;
@@ -213,27 +173,7 @@ const goLogin = () => router.push('/login');
   opacity: 0.85;
   max-width: 90%;
 }
-
-.primary-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--accent);
-  color: white;
-  border: 3px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: 16px 32px;
-  font-weight: 900;
-  font-size: 18px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: box-shadow 0.1s, transform 0.1s;
-}
-
-.primary-btn:hover { background: #1b6fc2; }
-.primary-btn:active { box-shadow: 2px 2px 0 var(--ink); transform: translate(4px, 4px); }
-
+.primary-btn { display: inline-flex; align-items: center; gap: 12px; }
 .hero-graphic {
   position: relative;
   height: 400px;
@@ -241,17 +181,9 @@ const goLogin = () => router.push('/login');
   align-items: center;
   justify-content: center;
 }
-
-.box {
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: var(--shadow);
-}
-
 .shape {
   position: absolute;
 }
-
 .shape-1 {
   width: 250px;
   height: 250px;
@@ -260,7 +192,6 @@ const goLogin = () => router.push('/login');
   top: 20px;
   left: 40px;
 }
-
 .shape-2 {
   width: 200px;
   height: 200px;
@@ -269,7 +200,6 @@ const goLogin = () => router.push('/login');
   right: 60px;
   transform: rotate(15deg);
 }
-
 .shape-3 {
   width: 180px;
   height: 120px;
@@ -280,7 +210,6 @@ const goLogin = () => router.push('/login');
   justify-content: center;
   transform: rotate(-10deg);
 }
-
 .shape-text {
   font-size: 28px;
   font-weight: 900;
@@ -288,14 +217,12 @@ const goLogin = () => router.push('/login');
   color: var(--ink);
   line-height: 1;
 }
-
 /* ── Features Section ───────────────────────────────────── */
 .features-section {
   display: flex;
   flex-direction: column;
   gap: 32px;
 }
-
 .section-heading {
   font-size: 24px;
   font-weight: 900;
@@ -305,13 +232,11 @@ const goLogin = () => router.push('/login');
   text-decoration-thickness: 3px;
   text-align: center;
 }
-
 .features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
-
 .feature-card {
   padding: 24px;
   display: flex;
@@ -319,17 +244,14 @@ const goLogin = () => router.push('/login');
   gap: 16px;
   transition: transform 0.2s;
 }
-
 .feature-card:hover {
   transform: translateY(-5px);
   box-shadow: 6px 8px 0 var(--ink);
 }
-
 .bg-blue { background: #74b9ff; }
 .bg-purple { background: #a29bfe; }
 .bg-green { background: #55efc4; }
 .bg-yellow { background: #ffeaa7; }
-
 .feature-icon {
   width: 48px;
   height: 48px;
@@ -340,20 +262,17 @@ const goLogin = () => router.push('/login');
   align-items: center;
   justify-content: center;
 }
-
 .feature-title {
   font-size: 18px;
   font-weight: 900;
   line-height: 1.2;
 }
-
 .feature-desc {
   font-size: 14px;
   font-weight: 600;
   opacity: 0.9;
   line-height: 1.4;
 }
-
 /* ── Footer ─────────────────────────────────────────────── */
 .footer {
   border-top: 2px solid var(--ink);
@@ -361,25 +280,22 @@ const goLogin = () => router.push('/login');
   padding: 24px;
   text-align: center;
 }
-
 .footer-text {
   font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .hero-section { grid-template-columns: 1fr; text-align: center; }
-  .hero-content { align-items: center; }
-  .hero-graphic { display: none; }
-  .features-grid { grid-template-columns: repeat(2, 1fr); }
+.hero-content { align-items: center; }
+.hero-graphic { display: none; }
+.features-grid { grid-template-columns: repeat(2, 1fr); }
 }
-
 @media (max-width: 600px) {
   .hero-title { font-size: 40px; }
-  .features-grid { grid-template-columns: 1fr; }
-  .navbar { padding: 0 16px; }
+.features-grid { grid-template-columns: 1fr; }
+.navbar { padding: 0 16px; }
 }
 </style>

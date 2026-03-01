@@ -111,27 +111,10 @@ onMounted(fetchJobs);
 </template>
 
 <style scoped>
-.page {
-  --ink:     #111111;
-  --bg:      #DEDEDE;
-  --surface: #FFFFFF;
-  --accent:  #ff4757;
-  --border:  2px solid var(--ink);
-  --shadow:  4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-}
-
 .main { max-width: 1100px; width: 100%; margin: 0 auto; padding: 28px 28px 60px; display: flex; flex-direction: column; gap: 20px; }
-.box  { background: var(--surface); border: var(--border); box-shadow: var(--shadow); }
-
 .page-header  { padding: 20px 24px; }
 .page-title   { font-size: 28px; font-weight: 900; text-transform: uppercase; }
 .page-sub     { font-size: 13px; font-weight: 600; opacity: 0.6; margin-top: 4px; }
-
 .search-row   { display: flex; gap: 12px; }
 .search-input {
   flex: 1;
@@ -145,16 +128,13 @@ onMounted(fetchJobs);
   outline: none;
 }
 .search-input:focus { box-shadow: 6px 6px 0 var(--ink); }
-
 .error-box   { padding: 16px; color: var(--accent); font-weight: 700; }
 .loading-box { text-align: center; font-weight: 700; padding: 40px; opacity: 0.5; }
-
 .jobs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
-
 .job-card    { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
 .job-top     { display: flex; justify-content: flex-end; }
 .job-source  { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; background: var(--ink); color: #fff; padding: 2px 8px; }
@@ -179,9 +159,7 @@ onMounted(fetchJobs);
 }
 .job-link:hover  { background: #f5f5f5; }
 .job-link:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px, 2px); }
-
 .empty-box { padding: 40px; text-align: center; font-weight: 700; opacity: 0.5; }
-
 .pagination      { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .page-btn {
   padding: 8px 20px;
@@ -196,7 +174,6 @@ onMounted(fetchJobs);
 .page-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
 .page-btn:not(:disabled):active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px, 2px); }
 .page-indicator { font-weight: 800; font-size: 13px; }
-
 @media (max-width: 640px) {
   .jobs-grid { grid-template-columns: 1fr; }
 }

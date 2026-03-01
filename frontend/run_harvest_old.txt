@@ -1,0 +1,21 @@
+-def _run_harvest(app, source="all"):
++# ── Fetching Logic ─────────────────────────────────────────────────────────────
++
++def _get_headers(source_conf, api_key):
++    headers = {"Accept": "application/json"}
++    if source_conf["type"].startswith("rapidapi"):
++        headers.update({
++            "X-RapidAPI-Key": api_key,
++            "X-RapidAPI-Host": source_conf["host"]
++        })
++    return headers
++
++def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
++    """Fetches raw data from a source, generating dynamic queries based on inputs."""
++    conf = SOURCES[source_id]
++    api_key = app_config.get(conf.get("config_key", ""), "") if conf.get("config_key") else None
++
++    if conf.get("config_key") and not api_key:
++        logger.warning(f"{conf['config_key']} not set — skipping {source_id}.")
++        return [], 0 # return jobs and api_calls made
++

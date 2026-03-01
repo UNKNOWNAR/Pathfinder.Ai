@@ -1,0 +1,145 @@
+-def harvest_all(app):
+-    thread = threading.Thread(target=_run_harvest, args=(app, "all"), daemon=True)
++def harvest_all(app, roles=None, locations=None):
++    thread = threading.Thread(target=_run_harvest, args=(app, "all", roles, locations), daemon=True)
+     thread.start()
+     return thread
+ 
+-
+-def harvest_source(app, source: str):
+-    thread = threading.Thread(target=_run_harvest, args=(app, source), daemon=True)
++def harvest_source(app, source: str, roles=None, locations=None):
++    thread = threading.Thread(target=_run_harvest, args=(app, source, roles, locations), daemon=True)
+     thread.start()
+     return thread
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index 1808ee7..d86596c 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -9,8 +9,10 @@
+       "version": "0.1.0",
+       "dependencies": {
+         "axios": "^1.13.5",
++        "chart.js": "^4.5.1",
+         "core-js": "^3.8.3",
+         "vue": "^3.2.13",
++        "vue-chartjs": "^5.3.3",
+         "vue-router": "^4.0.3"
+       },
+       "devDependencies": {
+@@ -1920,6 +1922,12 @@
+         "@jridgewell/sourcemap-codec": "^1.4.14"
+       }
+     },
++    "node_modules/@kurkle/color": {
++      "version": "0.3.4",
++      "resolved": "https://registry.npmjs.org/@kurkle/color/-/color-0.3.4.tgz",
++      "integrity": "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==",
++      "license": "MIT"
++    },
+     "node_modules/@leichtgewicht/ip-codec": {
+       "version": "2.0.5",
+       "resolved": "https://registry.npmjs.org/@leichtgewicht/ip-codec/-/ip-codec-2.0.5.tgz",
+@@ -4036,6 +4044,18 @@
+         "node": ">=8"
+       }
+     },
++    "node_modules/chart.js": {
++      "version": "4.5.1",
++      "resolved": "https://registry.npmjs.org/chart.js/-/chart.js-4.5.1.tgz",
++      "integrity": "sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==",
++      "license": "MIT",
++      "dependencies": {
++        "@kurkle/color": "^0.3.0"
++      },
++      "engines": {
++        "pnpm": ">=8"
++      }
++    },
+     "node_modules/chokidar": {
+       "version": "3.6.0",
+       "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-3.6.0.tgz",
+@@ -11356,6 +11376,16 @@
+         }
+       }
+     },
++    "node_modules/vue-chartjs": {
++      "version": "5.3.3",
++      "resolved": "https://registry.npmjs.org/vue-chartjs/-/vue-chartjs-5.3.3.tgz",
++      "integrity": "sha512-jqxtL8KZ6YJ5NTv6XzrzLS7osyegOi28UGNZW0h9OkDL7Sh1396ht4Dorh04aKrl2LiSalQ84WtqiG0RIJb0tA==",
++      "license": "MIT",
++      "peerDependencies": {
++        "chart.js": "^4.1.1",
++        "vue": "^3.0.0-0 || ^2.7.0"
++      }
++    },
+     "node_modules/vue-eslint-parser": {
+       "version": "8.3.0",
+       "resolved": "https://registry.npmjs.org/vue-eslint-parser/-/vue-eslint-parser-8.3.0.tgz",
+diff --git a/frontend/package.json b/frontend/package.json
+index 09cc41c..e4c67e2 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -9,8 +9,10 @@
+   },
+   "dependencies": {
+     "axios": "^1.13.5",
++    "chart.js": "^4.5.1",
+     "core-js": "^3.8.3",
+     "vue": "^3.2.13",
++    "vue-chartjs": "^5.3.3",
+     "vue-router": "^4.0.3"
+   },
+   "devDependencies": {
+diff --git a/frontend/src/components/NavBar.vue b/frontend/src/components/NavBar.vue
+index f314bc1..1575d13 100644
+--- a/frontend/src/components/NavBar.vue
++++ b/frontend/src/components/NavBar.vue
+@@ -20,7 +20,6 @@ const adminLinks = [
+   { label: 'Dashboard',  to: '/admin' },
+   { label: 'Harvesters',   to: '/admin/harvesters' },
+   { label: 'Jobs DB',      to: '/admin/jobs' },
+-  { label: 'Settings',     to: '/admin/settings' },
+ ];
+ 
+ const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
+diff --git a/frontend/src/views/AdminDashboardView.vue b/frontend/src/views/AdminDashboardView.vue
+index e632b47..7a4c178 100644
+--- a/frontend/src/views/AdminDashboardView.vue
++++ b/frontend/src/views/AdminDashboardView.vue
+@@ -1,14 +1,32 @@
+ <script setup>
+-import { ref, onMounted } from 'vue';
++import { ref, onMounted, computed } from 'vue';
+ import NavBar from '@/components/NavBar.vue';
+ import api from '@/services/api';
+-
+-const stats = ref({ students: '...', companies: '...', jobs: '...', sources: {} });
++import {
++  Chart as ChartJS,
++  Title,
++  Tooltip,
++  Legend,
++  BarElement,
++  CategoryScale,
++  LinearScale,
++  ArcElement,
++  PointElement,
++  LineElement,
++  Filler
++} from 'chart.js';
++import { Doughnut, Bar } from 'vue-chartjs';
++
++ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler);
++
++const stats = ref({ students: 0, companies: 0, jobs: 0, sources: {}, roles: {} });
++const loaded = ref(false);
+ 
+ const loadStats = async () => {
+   try {
+     const res = await api.get('/admin/stats');
+     stats.value = res.data;
++    loaded.value = true;
+   } catch {
+     console.error('[ERROR] Failed to load platform stats.');
+   }

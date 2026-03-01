@@ -13,7 +13,23 @@
       "Bash(\"E:/WorkSpace/Projects/Pathfinder.Ai/venv/Scripts/python.exe\":*)",
       "Bash(\"E:\\\\WorkSpace\\\\Projects\\\\Electronics Store Q&A System\\\\venv\\\\Scripts\\\\python\":*)",
       "Bash(python:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebSearch",
+      "Bash(gh search:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(where python:*)",
+      "Bash(\"E:/WorkSpace/Projects/Electronics Store Q&A System/venv/Scripts/python.exe\":*)",
+      "Bash(# liquidslr/interview-company-wise-problems - look inside a company directory\ncurl -s \"https://api.github.com/repos/liquidslr/interview-company-wise-problems/contents/Google\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
+      "Bash(# hxu296/leetcode-company-wise-problems-2022 - check companies directory and data directory\ncurl -s \"https://api.github.com/repos/hxu296/leetcode-company-wise-problems-2022/contents/companies\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:5]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
+      "Bash(# hxu296/leetcode-company-wise-problems-2022 - check data directory\ncurl -s \"https://api.github.com/repos/hxu296/leetcode-company-wise-problems-2022/contents/data\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
+      "Bash(# snehasishroy/leetcode-companywise-interview-questions - explore structure\ncurl -s \"https://api.github.com/repos/snehasishroy/leetcode-companywise-interview-questions/contents/google\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
+      "Bash(# krishnadey30/LeetCode-Questions-CompanyWise - try different filenames\ncurl -s \"https://api.github.com/repos/krishnadey30/LeetCode-Questions-CompanyWise/git/trees/main?recursive=1\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\npaths = [t['path'] for t in data.get\\('tree',[]\\) if t['path'].endswith\\('.csv'\\)]\nfor p in paths[:10]:\n    print\\(p\\)\n\" 2>&1)",
+      "Bash(# snehasishroy - check default branch\ncurl -s \"https://api.github.com/repos/snehasishroy/leetcode-companywise-interview-questions\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nprint\\(f\\\\\"Default branch: {data.get\\('default_branch'\\)}\\\\\"\\)\nprint\\(f\\\\\"Stars: {data.get\\('stargazers_count'\\)}\\\\\"\\)\nprint\\(f\\\\\"Updated: {data.get\\('updated_at'\\)}\\\\\"\\)\nprint\\(f\\\\\"Pushed: {data.get\\('pushed_at'\\)}\\\\\"\\)\nprint\\(f\\\\\"Description: {data.get\\('description'\\)}\\\\\"\\)\n\" 2>&1)",
+      "Bash(../venv/Scripts/python:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(backend/venv/Scripts/python:*)"
     ]
   }
 }

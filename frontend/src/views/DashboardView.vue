@@ -131,20 +131,6 @@ const savedPaths = [
 </template>
 
 <style scoped>
-.page {
-  --ink:     #111111;
-  --bg:      #DEDEDE;
-  --surface: #FFFFFF;
-  --accent:  #2d8cf0;
-  --border:  2px solid var(--ink);
-  --shadow:  4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-}
-
 /* ── Sub-tab strip ──────────────────────────────────────────────────── */
 .sub-tabs {
   display: flex;
@@ -153,7 +139,6 @@ const savedPaths = [
   border-bottom: var(--border);
   padding: 0 28px;
 }
-
 .sub-tab {
   padding: 14px 22px;
   font-weight: 800;
@@ -173,7 +158,6 @@ const savedPaths = [
   border-bottom: 3px solid var(--ink);
   background: var(--accent);
 }
-
 /* ── Main content ───────────────────────────────────────────────────── */
 .main {
   max-width: 1100px;
@@ -184,13 +168,7 @@ const savedPaths = [
   flex-direction: column;
   gap: 24px;
 }
-
 /* ── Shared ─────────────────────────────────────────────────────────── */
-.box {
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: var(--shadow);
-}
 
 .outline-btn {
   display: inline-flex;
@@ -210,9 +188,7 @@ const savedPaths = [
 }
 .outline-btn:hover  { background: #f5f5f5; }
 .outline-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
-
 .small-btn { padding: 5px 10px; font-size: 10px; box-shadow: 2px 2px 0 var(--ink); }
-
 /* ── Profile header ─────────────────────────────────────────────────── */
 .profile-header {
   padding: 20px 24px;
@@ -222,9 +198,7 @@ const savedPaths = [
   flex-wrap: wrap;
   gap: 16px;
 }
-
 .profile-left { display: flex; align-items: center; gap: 18px; }
-
 .avatar {
   width: 72px; height: 72px;
   background: var(--accent);
@@ -233,26 +207,16 @@ const savedPaths = [
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-
 .profile-name { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
 .profile-role { font-size: 13px; font-weight: 600; opacity: 0.65; font-style: italic; margin-top: 2px; }
-
 /* ── Grid ───────────────────────────────────────────────────────────── */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .col  { display: flex; flex-direction: column; gap: 14px; }
-
-.section-title {
-  font-size: 18px; font-weight: 900; text-transform: uppercase;
-  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px;
-}
-
 /* ── Stat cards ─────────────────────────────────────────────────────── */
 .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
 .stat-card { padding: 20px 16px; }
 .stat-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; }
 .stat-value { font-size: 36px; font-weight: 900; margin-top: 4px; }
-
 /* ── Activity ───────────────────────────────────────────────────────── */
 .activity-box { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .activity-top { display: flex; align-items: center; justify-content: space-between; }
@@ -260,7 +224,6 @@ const savedPaths = [
 .activity-list { display: flex; flex-direction: column; gap: 8px; }
 .activity-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: var(--border); background: var(--surface); font-weight: 700; font-size: 12px; }
 .activity-dot { width: 12px; height: 12px; background: var(--ink); flex-shrink: 0; }
-
 /* ── Paths ──────────────────────────────────────────────────────────── */
 .paths-top { display: flex; align-items: center; justify-content: space-between; }
 .path-list { display: flex; flex-direction: column; gap: 10px; }
@@ -271,11 +234,10 @@ const savedPaths = [
 .path-title { font-weight: 900; font-size: 12px; letter-spacing: 0.03em; }
 .path-date  { font-size: 11px; font-weight: 600; opacity: 0.6; margin-top: 2px; }
 .archive-btn { width: 100%; justify-content: center; padding: 16px; font-size: 13px; margin-top: auto; }
-
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; }
-  .main { padding: 16px; }
-  .sub-tabs { padding: 0 12px; overflow-x: auto; }
+.main { padding: 16px; }
+.sub-tabs { padding: 0 12px; overflow-x: auto; }
 }
 </style>

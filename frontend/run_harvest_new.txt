@@ -1,0 +1,32 @@
++def _run_harvest(app, source="all", roles=None, locations=None):
++    """Core harvest loop. Can be run for a single source or all."""
+     with app.app_context():
+-        log = HarvestLog(source=source, status="running", jobs_added=0)
++        log = HarvestLog(source=source, status="running", jobs_added=0, api_calls=0)
+         db.session.add(log)
+         db.session.commit()
+ 
+         try:
+-            jobs_added = 0
+-            jsearch_key = app.config.get("JSEARCH_API_KEY", "")
+-            active_jobs_key = app.config.get("ACTIVE_JOBS_DB_KEY", "")
++            logger.info("Pre-fetching existing job hashes...")
++            existing_hashes = {h[0] for h in db.session.query(Job.hash).all()}
++            total_added = 0
++            total_api_calls = 0
+ 
+-            if source == "all":
+-                jobs_added += _process_remotive()
+-                jobs_added += _process_arbeitnow()
+-                jobs_added += _process_glassdoor()
+-                jobs_added += _process_linkedin(jsearch_key)
+-                jobs_added += _process_active_jobs_db(active_jobs_key)
+-            elif source == "LinkedIn":
+-                jobs_added += _process_linkedin(jsearch_key)
+-            elif source == "ActiveJobsDB":
+-                jobs_added += _process_active_jobs_db(active_jobs_key)
+-            elif source in SOURCE_MAP:
+-                jobs_added += SOURCE_MAP[source]()
+-            else:
++            sources_to_run = list(SOURCES.keys()) if source == "all" else ([source] if source in SOURCES else [])
++            if not sources_to_run:

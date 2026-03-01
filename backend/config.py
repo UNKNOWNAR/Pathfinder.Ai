@@ -34,13 +34,19 @@ class Config:
     if not HF_TOKEN:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
 
-    RAPIDAPI_GLASSDOOR_KEY = os.getenv('RAPIDAPI_GLASSDOOR_KEY', '')
-
     # JSearch API (RapidAPI) — used for LinkedIn-sourced job results
     JSEARCH_API_KEY = os.getenv('JSEARCH_API_KEY', '')
 
-    # Active Jobs DB (RapidAPI)
-    ACTIVE_JOBS_DB_KEY = os.getenv('ACTIVE_JOBS_DB_KEY', '')
+    # Internships API (RapidAPI) — internship & fresher job listings
+    INTERNSHIPS_API_KEY = os.getenv('INTERNSHIPS_API_KEY', '')
+
+    # Google Jobs API (RapidAPI) — aggregates LinkedIn, Indeed, Glassdoor etc.
+    GOOGLE_JOBS_API_KEY = os.getenv('GOOGLE_JOBS_API_KEY', '')
+
+    # Bebity Google Jobs Scraper (RapidAPI)
+    BEBITY_API_KEY = os.getenv('BEBITY_API_KEY', '')
+
+
 
 
 

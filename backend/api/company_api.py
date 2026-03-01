@@ -8,7 +8,7 @@ from user_datastore import user_datastore
 from sqlalchemy import or_
 from api.admin_api import admin_required
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from services.harvester import _make_hash
+from services.utils import make_job_hash
 
 
 class CompanyRegister(Resource):
@@ -116,7 +116,7 @@ class CompanyJobs(Resource):
             return {'message': 'title and description cannot be empty.'}, 400
 
         # Use deduplication logic (from harvester)
-        job_hash = _make_hash(title, company.name)
+        job_hash = make_job_hash(title, company.name)
 
         existing = Job.query.filter_by(hash=job_hash).first()
         if existing:

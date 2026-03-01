@@ -419,20 +419,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 
 <style scoped>
 /* ── Tokens ─────────────────────────────────────────────────────────── */
-.page {
-  --ink:     #111111;
-  --bg:      #DEDEDE;
-  --surface: #FFFFFF;
-  --accent:  #2d8cf0;
-  --border:  2px solid var(--ink);
-  --shadow:  4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-}
-
 /* ── Content ─────────────────────────────────────────────────────────── */
 .content {
   width: 100%;
@@ -441,14 +427,7 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   flex-direction: column;
   gap: 16px;
 }
-
 /* ── Shared box / button ─────────────────────────────────────────────── */
-.box {
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: var(--shadow);
-}
-
 .outline-btn {
   display: inline-flex;
   align-items: center;
@@ -467,7 +446,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 }
 .outline-btn:hover  { background: #f0f0f0; }
 .outline-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
-
 /* ── Hero ────────────────────────────────────────────────────────────── */
 .hero {
   display: flex;
@@ -476,7 +454,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   padding: 24px;
   flex-wrap: wrap;
 }
-
 .photo-wrap {
   width: 110px;
   height: 110px;
@@ -499,7 +476,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 }
 .photo-wrap:hover { opacity: 0.85; }
 .photo-img { width: 100%; height: 100%; object-fit: cover; }
-
 .hero-info {
   flex: 1;
   min-width: 240px;
@@ -507,7 +483,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   flex-direction: column;
   gap: 10px;
 }
-
 .name-input {
   font-size: 26px;
   font-weight: 900;
@@ -521,7 +496,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   padding: 2px 0;
 }
 .name-input::placeholder { color: #aaa; }
-
 .headline-input {
   font-size: 14px;
   font-weight: 600;
@@ -535,14 +509,12 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   color: #555;
 }
 .headline-input::placeholder { color: #bbb; }
-
 .link-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-top: 4px;
 }
-
 .link-field {
   display: flex;
   align-items: center;
@@ -551,7 +523,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   padding: 5px 10px;
   background: #fafafa;
 }
-
 .link-input {
   border: none;
   background: transparent;
@@ -562,14 +533,12 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   color: var(--ink);
 }
 .link-input::placeholder { color: #bbb; }
-
 .hero-actions {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   gap: 10px;
 }
-
 .save-btn {
   background: var(--accent);
   border: var(--border);
@@ -585,7 +554,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   white-space: nowrap;
 }
 .save-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
-
 /* ── Accordion ───────────────────────────────────────────────────────── */
 .accord-head {
   width: 100%;
@@ -604,14 +572,12 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   text-align: left;
 }
 .accord-head:hover { background: #fafafa; }
-
 .chevron {
   font-size: 11px;
   transition: transform 0.2s;
   display: inline-block;
 }
 .chevron.open { transform: rotate(180deg); }
-
 .accord-body {
   border-top: var(--border);
   padding: 20px;
@@ -619,21 +585,18 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   flex-direction: column;
   gap: 16px;
 }
-
 /* ── Form fields ─────────────────────────────────────────────────────── */
 .field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 14px;
 }
-
 .field {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 .field.full { grid-column: 1 / -1; }
-
 .field label {
   font-size: 10px;
   font-weight: 900;
@@ -641,7 +604,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   letter-spacing: 0.07em;
   opacity: 0.6;
 }
-
 .field input,
 .field textarea,
 .accord-body input,
@@ -662,7 +624,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 .field textarea:focus,
 .accord-body input:focus,
 .accord-body textarea:focus { background: #fffdf0; }
-
 /* ── Skills chips ────────────────────────────────────────────────────── */
 .skill-input-row {
   display: flex;
@@ -686,7 +647,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   transition: box-shadow 0.1s, transform 0.1s;
 }
 .add-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
-
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -714,13 +674,11 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   padding: 0;
   color: var(--ink);
 }
-
 .empty-hint {
   font-size: 12px;
   opacity: 0.5;
   font-style: italic;
 }
-
 /* ── Repeater cards ──────────────────────────────────────────────────── */
 .repeater-card {
   border: var(--border);
@@ -730,14 +688,12 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   gap: 12px;
   background: #fafafa;
 }
-
 .repeater-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
 }
-
 .remove-btn {
   background: none;
   border: 1px solid #ccc;
@@ -749,7 +705,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   transition: color 0.15s, border-color 0.15s;
 }
 .remove-btn:hover { color: var(--ink); border-color: var(--ink); }
-
 .add-entry-btn {
   border: 2px dashed var(--ink);
   background: transparent;
@@ -764,7 +719,6 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   transition: background 0.15s;
 }
 .add-entry-btn:hover { background: #f5f5f5; }
-
 /* ── Generate Resume ─────────────────────────────────────────────────── */
 .generate-btn {
   width: 100%;
@@ -783,18 +737,16 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 .generate-btn:hover:not(:disabled) { background: #222; }
 .generate-btn:active:not(:disabled) { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
 .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
 .generate-note {
   font-size: 11px;
   opacity: 0.5;
   text-align: center;
   font-style: italic;
 }
-
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .hero { flex-direction: column; }
-  .topbar { padding: 12px 16px; }
-  .content { padding: 16px 12px 40px; }
+.topbar { padding: 12px 16px; }
+.content { padding: 16px 12px 40px; }
 }
 </style>
