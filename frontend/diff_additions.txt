@@ -1,0 +1,698 @@
++++ b/.claude/settings.local.json
++      "Bash(python3:*)",
++      "WebSearch",
++      "Bash(gh search:*)",
++      "WebFetch(domain:github.com)",
++      "Bash(where python:*)",
++      "Bash(\"E:/WorkSpace/Projects/Electronics Store Q&A System/venv/Scripts/python.exe\":*)",
++      "Bash(# liquidslr/interview-company-wise-problems - look inside a company directory\ncurl -s \"https://api.github.com/repos/liquidslr/interview-company-wise-problems/contents/Google\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
++      "Bash(# hxu296/leetcode-company-wise-problems-2022 - check companies directory and data directory\ncurl -s \"https://api.github.com/repos/hxu296/leetcode-company-wise-problems-2022/contents/companies\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:5]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
++      "Bash(# hxu296/leetcode-company-wise-problems-2022 - check data directory\ncurl -s \"https://api.github.com/repos/hxu296/leetcode-company-wise-problems-2022/contents/data\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
++      "Bash(# snehasishroy/leetcode-companywise-interview-questions - explore structure\ncurl -s \"https://api.github.com/repos/snehasishroy/leetcode-companywise-interview-questions/contents/google\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nfor item in data[:10]:\n    print\\(f\\\\\"{item['type']:6s} {item['name']}\\\\\"\\)\n\" 2>&1)",
++      "Bash(# krishnadey30/LeetCode-Questions-CompanyWise - try different filenames\ncurl -s \"https://api.github.com/repos/krishnadey30/LeetCode-Questions-CompanyWise/git/trees/main?recursive=1\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\npaths = [t['path'] for t in data.get\\('tree',[]\\) if t['path'].endswith\\('.csv'\\)]\nfor p in paths[:10]:\n    print\\(p\\)\n\" 2>&1)",
++      "Bash(# snehasishroy - check default branch\ncurl -s \"https://api.github.com/repos/snehasishroy/leetcode-companywise-interview-questions\" | /c/Users/amiar/AppData/Local/Programs/Python/Python312/python.exe -c \"\nimport sys, json\ndata = json.load\\(sys.stdin\\)\nprint\\(f\\\\\"Default branch: {data.get\\('default_branch'\\)}\\\\\"\\)\nprint\\(f\\\\\"Stars: {data.get\\('stargazers_count'\\)}\\\\\"\\)\nprint\\(f\\\\\"Updated: {data.get\\('updated_at'\\)}\\\\\"\\)\nprint\\(f\\\\\"Pushed: {data.get\\('pushed_at'\\)}\\\\\"\\)\nprint\\(f\\\\\"Description: {data.get\\('description'\\)}\\\\\"\\)\n\" 2>&1)",
++      "Bash(../venv/Scripts/python:*)",
++      "Bash(npm run:*)",
++      "Bash(npm install:*)"
++++ b/backend/api/__init__.py
++from api.harvest_api import AdminStats, AdminHarvest, AdminLogs, AdminJobsList, JobsList, AdminQuotas
++    api.add_resource(AdminQuotas,  '/admin/quotas')
++++ b/backend/api/company_api.py
++from services.utils import make_job_hash
++        job_hash = make_job_hash(title, company.name)
++++ b/backend/api/harvest_api.py
++        # Extract job roles dynamically
++        roles_query = db.session.execute(db.text("""
++            SELECT
++                CASE
++                    WHEN LOWER(title) LIKE '%software engineer%' THEN 'Software Engineer'
++                    WHEN LOWER(title) LIKE '%data scientist%' THEN 'Data Scientist'
++                    WHEN LOWER(title) LIKE '%data engineer%' THEN 'Data Engineer'
++                    WHEN LOWER(title) LIKE '%machine learning%' THEN 'ML Engineer'
++                    WHEN LOWER(title) LIKE '%frontend%' THEN 'Frontend'
++                    WHEN LOWER(title) LIKE '%backend%' THEN 'Backend'
++                    WHEN LOWER(title) LIKE '%full stack%' THEN 'Full Stack'
++                    WHEN LOWER(title) LIKE '%intern%' THEN 'Internship'
++                    ELSE 'Other'
++                END as role_type,
++                COUNT(*) as count
++            FROM job
++            GROUP BY role_type
++        """)).fetchall()
++
++        roles_breakdown = {row[0]: row[1] for row in roles_query}
++
++            'roles':     roles_breakdown
++        roles = data.get('roles', [])
++        locations = data.get('locations', [])
++
++            harvest_all(app, roles, locations)
++            harvest_source(app, source, roles, locations)
++class AdminQuotas(Resource):
++    @admin_required
++    def get(self):
++        from sqlalchemy import func
++        from datetime import datetime, timezone, timedelta
++
++        # Calculate start of current month in UTC
++        now = datetime.now(timezone.utc)
++        start_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
++
++        # Get sum of api_calls per source for this month
++        usage_query = db.session.query(
++            HarvestLog.source,
++            func.sum(HarvestLog.api_calls)
++        ).filter(
++            HarvestLog.timestamp >= start_of_month
++        ).group_by(HarvestLog.source).all()
++
++        usage = {s: int(c or 0) for s, c in usage_query}
++
++        # Monthly limits based on RapidAPI plans
++        limits = {
++            "LinkedIn": 200,
++            "Internships": 200,
++            "GoogleJobs": 100,
++            "Remotive": -1, # Unlimited
++            "Arbeitnow": -1 # Unlimited
++        }
++
++        return {
++            "usage": usage,
++            "limits": limits
++        }, 200
++
++
++                'source':     l.source,
++++ b/backend/config.py
++    # Internships API (RapidAPI) — internship & fresher job listings
++    INTERNSHIPS_API_KEY = os.getenv('INTERNSHIPS_API_KEY', '')
++
++    # Google Jobs API (RapidAPI) — aggregates LinkedIn, Indeed, Glassdoor etc.
++    GOOGLE_JOBS_API_KEY = os.getenv('GOOGLE_JOBS_API_KEY', '')
++
++    # Bebity Google Jobs Scraper (RapidAPI)
++    BEBITY_API_KEY = os.getenv('BEBITY_API_KEY', '')
++
++
++++ b/backend/models/job.py
++    api_calls  = db.Column(db.Integer, nullable=False, default=1)  # Tracks how many API requests were made during this run
++++ b/backend/services/harvester.py
++import logging
++import threading
++import time
++from concurrent.futures import ThreadPoolExecutor, as_completed
++from datetime import datetime, timezone
++from services.utils import make_job_hash, is_fresher_role, get_day_based_toggle
++
++# ── Configuration & Logging ────────────────────────────────────────────────────
++
++logger = logging.getLogger(__name__)
++
++# Base roles if none are provided
++DEFAULT_ROLES = ["software engineer", "data engineer", "machine learning engineer"]
++DEFAULT_LOCATIONS = ["India", "United States", "Remote"]
++
++# Source Registry: Centralizing URLs, hosts, and mapping logic
++SOURCES = {
++    "Remotive": {
++        "url": "https://remotive.com/api/remote-jobs",
++        "params": {"search": "junior entry level fresher"},
++        "type": "direct",
++        "mapping": {
++            "title": "title",
++            "company": "company_name",
++            "location": "candidate_required_location",
++            "description": "description",
++            "url": "url"
++        }
++    },
++    "Arbeitnow": {
++        "url": "https://arbeitnow.com/api/job-board-api",
++        "type": "direct",
++        "mapping": {
++            "title": "title",
++            "company": "company_name",
++            "location": "location",
++            "description": "description",
++            "url": "url"
++        },
++        "filter_fresher": True
++    },
++    "LinkedIn": {
++        "url": "https://jsearch.p.rapidapi.com/search",
++        "host": "jsearch.p.rapidapi.com",
++        "type": "rapidapi",
++        "config_key": "JSEARCH_API_KEY",
++        "timeout": 60,
++        "mapping": {
++            "title": "job_title",
++            "company": "employer_name",
++            "location": lambda item: item.get("job_city") or item.get("job_country") or "Remote",
++            "description": "job_description",
++            "url": "job_apply_link"
++        }
++    },
++    "Internships": {
++        "url": "https://internships-api.p.rapidapi.com/active-jb-7d",
++        "host": "internships-api.p.rapidapi.com",
++        "type": "rapidapi",
++        "config_key": "INTERNSHIPS_API_KEY",
++        "mapping": {
++            "title": "title",
++            "company": "organization",
++            "location": lambda item: (item.get("locations_derived") or ["Remote"])[0],
++            "description": "description_text",
++            "url": "url"
++        }
++    },
++    "GoogleJobs": {
++        "url": "https://google-jobs-api.p.rapidapi.com/google-jobs",
++        "host": "google-jobs-api.p.rapidapi.com",
++        "type": "rapidapi",
++        "config_key": "GOOGLE_JOBS_API_KEY",
++        "mapping": {
++            "title": "title",
++            "company": "company",
++            "location": "location",
++            "description": "snippet",
++            "url": "link"
++        }
++    },
++# ── Fetching Logic ─────────────────────────────────────────────────────────────
++
++def _get_headers(source_conf, api_key):
++    headers = {"Accept": "application/json"}
++    if source_conf["type"].startswith("rapidapi"):
++        headers.update({
++            "X-RapidAPI-Key": api_key,
++            "X-RapidAPI-Host": source_conf["host"]
++        })
++    return headers
++
++def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
++    """Fetches raw data from a source, generating dynamic queries based on inputs."""
++    conf = SOURCES[source_id]
++    api_key = app_config.get(conf.get("config_key", ""), "") if conf.get("config_key") else None
++
++    if conf.get("config_key") and not api_key:
++        logger.warning(f"{conf['config_key']} not set — skipping {source_id}.")
++        return [], 0 # return jobs and api_calls made
++
++    headers = _get_headers(conf, api_key)
++    timeout = conf.get("timeout", 30)
++    raw_jobs = []
++    api_calls = 0
++
++    # Use provided roles/locations or fallback to defaults
++    active_roles = roles if roles and len(roles) > 0 else DEFAULT_ROLES
++    active_locations = locations if locations and len(locations) > 0 else DEFAULT_LOCATIONS
++
++    try:
++        if source_id == "GoogleJobs":
++            for loc in active_locations:
++                for role in active_roles:
++                    q = f"{role} fresher entry level"
++                    try:
++                        res = requests.get(conf["url"], headers=headers, params={
++                            "query": q, "location": loc, "experience": "Entry",
++                            "language": "English", "pageSize": 10
++                        }, timeout=timeout)
++                        api_calls += 1
++                        res.raise_for_status()
++                        raw_jobs.extend(res.json().get("jobs", []))
++                        time.sleep(1) # Safety delay for Rate Limits (429)
++                    except Exception as e:
++                        logger.error(f"Google Jobs sub-query '{q}' at '{loc}' failed: {e}")
++
++        elif source_id == "LinkedIn":
++            for loc in active_locations:
++                for role in active_roles:
++                    q = f"entry level junior fresher {role} {loc}"
++                    try:
++                        res = requests.get(conf["url"], headers=headers, params={
++                            "query": q,
++                            "num_pages": "1",
++                            "page": "1",
++                            "date_posted": "week" # Changed from month to week for fresher jobs
++                        }, timeout=timeout)
++                        api_calls += 1
++                        res.raise_for_status()
++                        data = res.json()
++                        raw_jobs.extend(data.get("data", []))
++                        time.sleep(1)
++                    except Exception as e:
++                        logger.error(f"LinkedIn sub-query '{q}' failed: {e}")
++
++        elif source_id == "Internships":
++            # Internships API doesn't take complex query strings as easily, just title filter
++            for offset in [0, 10]:
++                res = requests.get(conf["url"], headers=headers, params={
++                    "title_filter": "intern OR internship", "description_type": "text", "offset": offset
++                }, timeout=timeout)
++                api_calls += 1
++                res.raise_for_status()
++                batch = res.json()
++                if not batch: break
++                raw_jobs.extend(batch)
++
++        else:
++            # Standard GET request for public APIs
++            # We can try to append roles to the search param for remotive
++            params = conf.get("params", {}).copy()
++            if "search" in params and active_roles:
++                params["search"] = f"junior entry level fresher {active_roles[0]}"
++
++            res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
++            api_calls += 1
++            res.raise_for_status()
++            data = res.json()
++            raw_jobs = data.get("jobs") or data.get("data") or (data if isinstance(data, list) else [])
++
++    except Exception as e:
++        logger.error(f"Fetch failed for {source_id}: {e}")
++        return raw_jobs, api_calls
++
++    return raw_jobs, api_calls
++
++# ── Processing & Orchestration ─────────────────────────────────────────────────
++
++def _process_job_items(source_id, raw_items, existing_hashes):
++    """Maps raw items to Job models and returns a list of new Job instances."""
++    conf = SOURCES[source_id]
++    mapping = conf["mapping"]
++    new_jobs = []
++
++    for item in raw_items:
++        try:
++            fields = {}
++            for target, source in mapping.items():
++                fields[target] = source(item) if callable(source) else item.get(source)
++
++            title = (fields["title"] or "").strip()
++            company = (fields["company"] or "").strip()
++
++            if not title or not company or company.lower() == "unknown":
++                continue
++
++            if conf.get("filter_fresher") and not is_fresher_role(title):
++                continue
++
++            job_hash = make_job_hash(title, company)
++            if job_hash in existing_hashes:
++                continue
++
++            new_jobs.append(Job(
++                title=title,
++                company=company,
++                location=fields.get("location") or "Remote",
++                description=fields.get("description") or "",
++                source=source_id,
++                url=fields.get("url") or "",
++                hash=job_hash
++            ))
++            existing_hashes.add(job_hash) # Local dedup within the run
++        except Exception:
++            continue
++
++    return new_jobs
++
++def _run_harvest(app, source="all", roles=None, locations=None):
++    """Core harvest loop. Can be run for a single source or all."""
++        log = HarvestLog(source=source, status="running", jobs_added=0, api_calls=0)
++            logger.info("Pre-fetching existing job hashes...")
++            existing_hashes = {h[0] for h in db.session.query(Job.hash).all()}
++            total_added = 0
++            total_api_calls = 0
++            sources_to_run = list(SOURCES.keys()) if source == "all" else ([source] if source in SOURCES else [])
++            if not sources_to_run:
++            # Note: We run fetches in sequence when using custom parameters to avoid
++            # blowing through rate limits entirely in a few seconds.
++            # However, for pure speed, we can keep the ThreadPool.
++            def fetch_and_map(name):
++                raw, calls = _fetch_source_raw(name, app.config, roles, locations)
++                return name, raw, calls
++
++            if source == "all":
++                logger.info(f"Starting parallel fetch for {len(sources_to_run)} sources...")
++                with ThreadPoolExecutor(max_workers=len(sources_to_run)) as executor:
++                    futures = {executor.submit(fetch_and_map, name): name for name in sources_to_run}
++
++                    for future in as_completed(futures):
++                        name, raw_data, calls = future.result()
++                        total_api_calls += calls
++                        new_jobs = _process_job_items(name, raw_data, existing_hashes)
++
++                        added = len(new_jobs)
++                        if added > 0:
++                            db.session.bulk_save_objects(new_jobs)
++                            db.session.commit()
++                            total_added += added
++                        logger.info(f"Completed {name}: added {added} jobs from {calls} API calls.")
++            else:
++                raw_data, calls = _fetch_source_raw(source, app.config, roles, locations)
++                total_api_calls += calls
++                new_jobs = _process_job_items(source, raw_data, existing_hashes)
++                total_added = len(new_jobs)
++                if total_added > 0:
++                    db.session.bulk_save_objects(new_jobs)
++                    db.session.commit()
++                logger.info(f"Completed {source}: added {total_added} jobs from {calls} API calls.")
++
++            log.status = "completed"
++            log.jobs_added = total_added
++            log.api_calls = total_api_calls
++            logger.info(f"Total jobs added: {total_added}")
++            logger.error(f"'{source}' harvest failed: {e}")
++# ── Public Entry Points ────────────────────────────────────────────────────────
++def harvest_all(app, roles=None, locations=None):
++    thread = threading.Thread(target=_run_harvest, args=(app, "all", roles, locations), daemon=True)
++def harvest_source(app, source: str, roles=None, locations=None):
++    thread = threading.Thread(target=_run_harvest, args=(app, source, roles, locations), daemon=True)
++++ b/frontend/package-lock.json
++        "chart.js": "^4.5.1",
++        "vue-chartjs": "^5.3.3",
++    "node_modules/@kurkle/color": {
++      "version": "0.3.4",
++      "resolved": "https://registry.npmjs.org/@kurkle/color/-/color-0.3.4.tgz",
++      "integrity": "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==",
++      "license": "MIT"
++    },
++    "node_modules/chart.js": {
++      "version": "4.5.1",
++      "resolved": "https://registry.npmjs.org/chart.js/-/chart.js-4.5.1.tgz",
++      "integrity": "sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==",
++      "license": "MIT",
++      "dependencies": {
++        "@kurkle/color": "^0.3.0"
++      },
++      "engines": {
++        "pnpm": ">=8"
++      }
++    },
++    "node_modules/vue-chartjs": {
++      "version": "5.3.3",
++      "resolved": "https://registry.npmjs.org/vue-chartjs/-/vue-chartjs-5.3.3.tgz",
++      "integrity": "sha512-jqxtL8KZ6YJ5NTv6XzrzLS7osyegOi28UGNZW0h9OkDL7Sh1396ht4Dorh04aKrl2LiSalQ84WtqiG0RIJb0tA==",
++      "license": "MIT",
++      "peerDependencies": {
++        "chart.js": "^4.1.1",
++        "vue": "^3.0.0-0 || ^2.7.0"
++      }
++    },
++++ b/frontend/package.json
++    "chart.js": "^4.5.1",
++    "vue-chartjs": "^5.3.3",
++++ b/frontend/src/components/NavBar.vue
++++ b/frontend/src/views/AdminDashboardView.vue
++import { ref, onMounted, computed } from 'vue';
++import {
++  Chart as ChartJS,
++  Title,
++  Tooltip,
++  Legend,
++  BarElement,
++  CategoryScale,
++  LinearScale,
++  ArcElement,
++  PointElement,
++  LineElement,
++  Filler
++} from 'chart.js';
++import { Doughnut, Bar } from 'vue-chartjs';
++
++ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler);
++
++const stats = ref({ students: 0, companies: 0, jobs: 0, sources: {}, roles: {} });
++const loaded = ref(false);
++    loaded.value = true;
++
++// Chart Configurations
++const userChartData = computed(() => ({
++  labels: ['Students', 'Companies'],
++  datasets: [
++    {
++      backgroundColor: ['#2d8cf0', '#ff4757'],
++      data: [stats.value.students, stats.value.companies],
++      borderWidth: 2,
++      borderColor: '#111111'
++    }
++  ]
++}));
++
++const userChartOptions = {
++  responsive: true,
++  maintainAspectRatio: false,
++  plugins: {
++    legend: {
++      position: 'bottom',
++      labels: { font: { family: "'Segoe UI', sans-serif", weight: 'bold' }, color: '#111111' }
++    }
++  }
++};
++
++const sourceChartData = computed(() => {
++    const labels = Object.keys(stats.value.sources);
++    const data = Object.values(stats.value.sources);
++    return {
++        labels,
++        datasets: [{
++            label: 'Jobs Harvested',
++            backgroundColor: '#00b894',
++            borderColor: '#111111',
++            borderWidth: 2,
++            data
++        }]
++    };
++});
++
++const sourceChartOptions = {
++    responsive: true,
++    maintainAspectRatio: false,
++    plugins: {
++        legend: { display: false }
++    },
++    scales: {
++        y: { beginAtZero: true, grid: { color: 'rgba(17, 17, 17, 0.1)' } },
++        x: { grid: { display: false } }
++    }
++};
++
++const roleChartData = computed(() => {
++    const labels = Object.keys(stats.value.roles).filter(k => k !== 'Other');
++    const data = labels.map(l => stats.value.roles[l]);
++
++    // Custom colors for different roles
++    const colors = ['#ffeaa7', '#74b9ff', '#55efc4', '#fab1a0', '#a29bfe', '#81ecec', '#fdcb6e'];
++
++    return {
++        labels,
++        datasets: [{
++            backgroundColor: colors,
++            borderColor: '#111111',
++            borderWidth: 2,
++            data
++        }]
++    };
++});
++      <h3 class="section-title">▤ PLATFORM ANALYTICS DASHBOARD</h3>
++
++      <!-- Top Overview Metrics -->
++      <div class="metrics-grid">
++        <div class="box metric-box bg-blue">
++            <span class="metric-title">TOTAL USERS</span>
++            <span class="metric-value">{{ (stats.students + stats.companies).toLocaleString() }}</span>
++        </div>
++        <div class="box metric-box bg-green">
++            <span class="metric-title">ACTIVE JOBS</span>
++            <span class="metric-value">{{ stats.jobs.toLocaleString() }}</span>
++        </div>
++        <div class="box metric-box bg-purple">
++            <span class="metric-title">JOB SOURCES</span>
++            <span class="metric-value">{{ Object.keys(stats.sources).length }}</span>
++        </div>
++      </div>
++
++      <!-- Main Two Column Grid -->
++      <div class="grid" v-if="loaded">
++
++        <!-- Left Col: Demographics & Roles -->
++          <div class="box chart-card">
++              <h4 class="chart-title">User Demographics</h4>
++              <div class="chart-container" style="height: 250px;">
++                  <Doughnut :data="userChartData" :options="userChartOptions" />
++              </div>
++          </div>
++
++          <div class="box chart-card">
++              <h4 class="chart-title">Job Role Distribution</h4>
++              <div class="chart-container" style="height: 280px;">
++                  <Doughnut :data="roleChartData" :options="userChartOptions" />
++              </div>
++        <!-- Right Col: API Sourcing -->
++          <div class="box chart-card" style="flex: 1;">
++              <h4 class="chart-title">Harvesting Source Yield</h4>
++              <div class="chart-container" style="height: 100%; min-height: 400px;">
++                  <Bar :data="sourceChartData" :options="sourceChartOptions" />
++              </div>
++.section-title { font-size: 18px; font-weight: 900; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
++/* Metrics Banner */
++.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
++.metric-box { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: transform 0.1s; cursor: default; }
++.metric-box:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
++.metric-title { font-weight: 900; font-size: 12px; letter-spacing: 0.1em; opacity: 0.9; }
++.metric-value { font-weight: 900; font-size: 32px; letter-spacing: -1px; }
++.bg-blue { background: #74b9ff; color: var(--ink); }
++.bg-green { background: #55efc4; color: var(--ink); }
++.bg-purple { background: #a29bfe; color: var(--ink); }
++/* Grid Layouts */
++.col  { display: flex; flex-direction: column; gap: 24px; }
++/* Charts */
++.chart-card { padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #fafafa; }
++.chart-title { font-size: 14px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin: 0; }
++.chart-container { position: relative; width: 100%; }
++  .metrics-grid { grid-template-columns: 1fr; }
++</style>
++++ b/frontend/src/views/AdminHarvestersView.vue
++const roles = ref('software engineer'); // default selection
++const locations = ref('');
++
++const quotas = ref({
++  usage: {},
++  limits: {}
++});
++
++const loadQuotas = async () => {
++  try {
++    const res = await api.get('/admin/quotas');
++    quotas.value = res.data;
++  } catch {
++    systemLogs.value.push('> [ERROR] Failed to load quotas.');
++  }
++};
++
++const getRemainingStr = (source) => {
++  const limit = quotas.value.limits[source];
++  if (limit === undefined) return '';
++  if (limit === -1) return '(Unlimited)';
++
++  const usage = quotas.value.usage[source] || 0;
++  const remaining = Math.max(0, limit - usage);
++  return `[${remaining}/${limit} total requests left]`;
++};
++
++const isQuotaExhausted = (source) => {
++  const limit = quotas.value.limits[source];
++  if (limit === undefined || limit === -1) return false;
++  const usage = quotas.value.usage[source] || 0;
++  return usage >= limit;
++};
++
++  if (sourceTarget !== 'all' && isQuotaExhausted(sourceTarget)) {
++      systemLogs.value.push(`> [ERROR] Total limit exhausted for ${sourceTarget}.`);
++      return;
++  }
++
++
++  const payload = { source: sourceTarget };
++  if (roles.value.trim()) {
++      payload.roles = roles.value.split(',').map(r => r.trim()).filter(r => r);
++  }
++  if (locations.value.trim()) {
++      payload.locations = locations.value.split(',').map(l => l.trim()).filter(l => l);
++  }
++
++    await api.post('/admin/harvest', payload);
++      await loadQuotas();
++  await loadQuotas();
++      <h3 class="section-title">▤ CONFIGURATION</h3>
++      <div class="box config-box">
++          <div class="input-group">
++            <label>ROLES</label>
++            <select v-model="roles" class="brutal-input brutal-select">
++              <option value="software engineer">Software Engineer</option>
++              <option value="data scientist">Data Scientist</option>
++              <option value="data engineer">Data Engineer</option>
++              <option value="machine learning engineer">Machine Learning Engineer</option>
++              <option value="frontend developer">Frontend Developer</option>
++              <option value="backend developer">Backend Developer</option>
++              <option value="full stack developer">Full Stack Developer</option>
++            </select>
++          </div>
++          <div class="input-group">
++            <label>LOCATIONS (comma-separated)</label>
++            <input v-model="locations" type="text" placeholder="e.g. India, Remote, United States" class="brutal-input"/>
++            <small class="helper-text">Leave blank for default locations.</small>
++          </div>
++      </div>
++
++      <h3 class="section-title">▤ HARDWARE / API TRIGGERS</h3>
++            <span class="trigger-quota">{{ getRemainingStr('Remotive') }}</span>
++         <button class="box trigger-btn jsearch-btn" @click="triggerHarvest('LinkedIn')" :disabled="harvesting || isQuotaExhausted('LinkedIn')">
++            <span class="trigger-quota">{{ getRemainingStr('LinkedIn') }}</span>
++         </button>
++
++         <button class="box trigger-btn internships-btn" @click="triggerHarvest('Internships')" :disabled="harvesting || isQuotaExhausted('Internships')">
++            <span class="trigger-title">⚡ FETCH INTERNSHIPS</span>
++            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Internships API)' }}</span>
++            <span class="trigger-quota">{{ getRemainingStr('Internships') }}</span>
++         <button class="box trigger-btn google-btn" @click="triggerHarvest('GoogleJobs')" :disabled="harvesting || isQuotaExhausted('GoogleJobs')">
++            <span class="trigger-title">⚡ FETCH GOOGLE JOBS</span>
++            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Global Aggregator)' }}</span>
++            <span class="trigger-quota">{{ getRemainingStr('GoogleJobs') }}</span>
++.config-box {
++    padding: 20px;
++    display: flex;
++    flex-direction: column;
++    gap: 16px;
++}
++
++.input-group {
++    display: flex;
++    flex-direction: column;
++    gap: 6px;
++}
++
++.input-group label {
++    font-size: 14px;
++    font-weight: 800;
++}
++.brutal-input {
++    padding: 12px;
++    border: 2px solid var(--ink);
++    background: #f8f8f8;
++    font-family: inherit;
++    font-size: 16px;
++    outline: none;
++}
++
++.brutal-select {
++    appearance: none;
++    -webkit-appearance: none;
++    cursor: pointer;
++    background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%),
++                      linear-gradient(135deg, var(--ink) 50%, transparent 50%);
++    background-position: calc(100% - 20px) calc(1em + 2px),
++                         calc(100% - 15px) calc(1em + 2px);
++    background-size: 5px 5px,
++                     5px 5px;
++    background-repeat: no-repeat;
++}
++
++.brutal-input:focus {
++    background: #fff;
++    box-shadow: 2px 2px 0 var(--ink);
++}
++
++.helper-text {
++    font-size: 12px;
++    font-weight: 600;
++    opacity: 0.6;
++}
++.trigger-btn:active:not(:disabled) { box-shadow: 1px 1px 0 var(--ink); transform: translate(3px,3px); }
++.trigger-quota { font-size: 12px; font-weight: 700; color: #d63031; margin-top: 4px; }
++
++.internships-btn { background: #55efc4; }
++.google-btn { background: #fab1a0; }
++.master-btn .trigger-quota { color: #fff; }
++</style>

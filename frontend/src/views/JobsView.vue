@@ -219,18 +219,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page {
-  --ink: #111111;
-  --bg: #DEDEDE;
-  --surface: #FFFFFF;
-  --border: 2px solid var(--ink);
-  --shadow: 4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-}
 .content {
   padding: 40px;
   max-width: 900px;
@@ -250,7 +238,6 @@ onMounted(() => {
   font-weight: 600;
   opacity: 0.7;
 }
-
 .controls {
   display: flex;
   gap: 15px;
@@ -296,15 +283,12 @@ onMounted(() => {
   box-shadow: var(--shadow);
   opacity: 0.7;
 }
-
 .search-btn { background: #34d399; }
-
 .jobs-list {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-
 .job-card {
   background: var(--surface);
   border: var(--border);
@@ -334,7 +318,6 @@ onMounted(() => {
 .source-badge.jsearch { background: #f472b6; }
 .source-badge.activejobsdb { background: #fbbf24; }
 .source-badge.direct { background: #34d399; }
-
 .company-name {
   font-size: 18px;
   font-weight: 700;
@@ -345,45 +328,38 @@ onMounted(() => {
   opacity: 0.8;
   font-style: italic;
 }
-
 .job-desc {
   font-size: 15px;
   line-height: 1.5;
   margin-bottom: 20px;
   color: #333;
 }
-
 .job-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
-
 .readiness-btn {
   background: #a78bfa;
 }
-
 /* ── Readiness Panel ─────────────────────────────────────────── */
 .readiness-panel {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 2px dashed var(--ink);
 }
-
 .readiness-loading, .readiness-empty {
   text-align: center;
   padding: 24px;
   font-weight: 800;
   font-size: 15px;
 }
-
 .readiness-header {
   display: flex;
   gap: 24px;
   align-items: center;
   margin-bottom: 18px;
 }
-
 .readiness-score-box {
   background: var(--surface);
   border: var(--border);
@@ -408,7 +384,6 @@ onMounted(() => {
 .readiness-pct.high { color: #22c55e; }
 .readiness-pct.mid  { color: #f59e0b; }
 .readiness-pct.low  { color: #ef4444; }
-
 .readiness-meta {
   flex: 1;
 }
@@ -424,7 +399,6 @@ onMounted(() => {
   opacity: 0.6;
   margin-bottom: 10px;
 }
-
 .difficulty-pills {
   display: flex;
   gap: 8px;
@@ -439,7 +413,6 @@ onMounted(() => {
 .pill.easy   { background: #bbf7d0; }
 .pill.medium { background: #fde68a; }
 .pill.hard   { background: #fca5a5; }
-
 .readiness-warning {
   background: #fef3c7;
   border: var(--border);
@@ -452,7 +425,6 @@ onMounted(() => {
   color: var(--ink);
   font-weight: 900;
 }
-
 /* ── Topic Cards & Recommendations ───────────────────────────────────── */
 .topic-comparison {
   margin-top: 24px;
@@ -466,13 +438,11 @@ onMounted(() => {
   text-underline-offset: 4px;
   text-decoration-thickness: 2px;
 }
-
 .topic-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
-
 .topic-card {
   background: var(--surface);
   border: 2px solid var(--ink);
@@ -484,7 +454,6 @@ onMounted(() => {
 .topic-card.is-missing {
   background: #fef2f2; /* extremely light red */
 }
-
 .topic-card-header {
   display: flex;
   justify-content: space-between;
@@ -493,12 +462,10 @@ onMounted(() => {
   padding-bottom: 10px;
   border-bottom: 2px solid var(--ink);
 }
-
 .topic-name {
   font-size: 16px;
   font-weight: 900;
 }
-
 .topic-badge {
   font-size: 10px;
   font-weight: 900;
@@ -515,7 +482,6 @@ onMounted(() => {
   background: #fca5a5;
   box-shadow: 2px 2px 0 var(--ink);
 }
-
 .recommended-qs {
   margin-top: 4px;
 }
@@ -557,7 +523,6 @@ onMounted(() => {
 .rq-list a:hover {
   text-decoration: underline;
 }
-
 .q-diff {
   font-size: 10px;
   font-weight: 900;
@@ -566,14 +531,12 @@ onMounted(() => {
 .q-diff.easy { color: #16a34a; }
 .q-diff.medium { color: #d97706; }
 .q-diff.hard { color: #dc2626; }
-
 .strong-status {
   font-size: 13px;
   font-weight: 700;
   color: #16a34a;
   padding-top: 10px;
 }
-
 /* ── Pagination ───────────────────────────────────────────────── */
 .pagination {
   display: flex;
@@ -586,7 +549,6 @@ onMounted(() => {
   font-weight: 800;
   font-size: 16px;
 }
-
 .no-jobs, .loading-state {
   text-align: center;
   padding: 50px;
@@ -596,11 +558,10 @@ onMounted(() => {
   font-weight: 800;
   font-size: 18px;
 }
-
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .content { padding: 16px; }
-  .readiness-header { flex-direction: column; align-items: flex-start; }
-  .topic-row { grid-template-columns: 1fr 50px 50px 80px; }
+.readiness-header { flex-direction: column; align-items: flex-start; }
+.topic-row { grid-template-columns: 1fr 50px 50px 80px; }
 }
 </style>

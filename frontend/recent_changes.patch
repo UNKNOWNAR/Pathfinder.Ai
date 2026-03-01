@@ -1,0 +1,761 @@
+commit af321b92c4fa1ccfb650a82448ecd23c97c2d460
+Author: UNKNOWNAR <amiarinjaysarkar@gmail.com>
+Date:   Sun Mar 1 22:40:31 2026 +0530
+
+    docs: mark phase 8 tasks as complete
+
+diff --git a/claude_tasks.md b/claude_tasks.md
+index f3a3ed2..69fcbae 100644
+--- a/claude_tasks.md
++++ b/claude_tasks.md
+@@ -128,27 +128,27 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
+ 
+ ## Phase 8: Landing Page & Company Portal UI
+ 
+-## Task 16: Public Landing Page (`HomeView.vue`)
++## ~~Task 16: Public Landing Page (`HomeView.vue`)~~ [COMPLETED]
+ **Goal:** Create a stunning front door for the application.
+ - **Action:** Build a new `frontend/src/views/HomeView.vue` component with a bold, beautiful Neo-Brutalist design.
+ - **Action:** Summarize the app's core features on this page (AI-powered resume generation, LeetCode analytics & interview readiness, aggregated job postings, and company direct hiring).
+ - **Action:** Update `frontend/src/router/index.js` to point the root route `/` to `HomeView.vue` instead of immediately redirecting to `/student`. Provide clear links to Login/Signup.
+ - **Commit:** `"feat: build public landing page"`
+ 
+-## Task 17: Update Authentication for Companies
++## ~~Task 17: Update Authentication for Companies~~ [COMPLETED]
+ **Goal:** Allow users to register as a company.
+ - **Action:** Update `frontend/src/views/LoginView.vue` to allow users to toggle between registering as a "Student" or a "Company".
+ - **Action:** When registering as a Company, hit the `POST /api/company/register` endpoint. Inform the user they must wait for admin approval before they can post jobs.
+ - **Commit:** `"feat: add company registration toggle to authentication UI"`
+ 
+-## Task 18: Admin Company Approval UI
++## ~~Task 18: Admin Company Approval UI~~ [COMPLETED]
+ **Goal:** Allow Admins to manage and approve pending company registrations.
+ - **Action:** Create `frontend/src/views/AdminCompaniesView.vue` (accessible only to admins). Add it to `router/index.js` and the admin sidebar/navbar.
+ - **Action:** Fetch all companies from `GET /api/admin/companies`.
+ - **Action:** Display them in a list/grid. Add an "Approve" button next to pending companies that triggers `POST /api/admin/companies/<id>/approve`.
+ - **Commit:** `"feat: build admin company approval UI"`
+ 
+-## Task 19: Company Dashboard (`CompanyDashboardView.vue`)
++## ~~Task 19: Company Dashboard (`CompanyDashboardView.vue`)~~ [COMPLETED]
+ **Goal:** Provide a dedicated portal for approved companies to post jobs.
+ - **Action:** Create `frontend/src/views/CompanyDashboardView.vue`. Secure it so only users with the `company` role can access it.
+ - **Action:** Build a form for posting new jobs (Title, Description, Location, URL).
+
+commit a30d7d517b1d8bceab2e48b43fde96d8c263555e
+Author: UNKNOWNAR <amiarinjaysarkar@gmail.com>
+Date:   Sun Mar 1 22:39:43 2026 +0530
+
+    feat: build company dashboard for direct job posting
+
+diff --git a/frontend/src/components/NavBar.vue b/frontend/src/components/NavBar.vue
+index 4203340..cc105b7 100644
+--- a/frontend/src/components/NavBar.vue
++++ b/frontend/src/components/NavBar.vue
+@@ -8,6 +8,7 @@ const route  = useRoute();
+ 
+ const userName = computed(() => localStorage.getItem('username') || 'User');
+ const isAdmin  = computed(() => localStorage.getItem('role') === 'admin');
++const isCompany = computed(() => localStorage.getItem('role') === 'company');
+ 
+ const studentLinks = [
+   { label: 'Dashboard', to: '/student' },
+@@ -23,7 +24,15 @@ const adminLinks = [
+   { label: 'Companies',    to: '/admin/companies' },
+ ];
+ 
+-const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
++const companyLinks = [
++  { label: 'Dashboard', to: '/company' }
++];
++
++const navLinks = computed(() => {
++  if (isAdmin.value) return adminLinks;
++  if (isCompany.value) return companyLinks;
++  return studentLinks;
++});
+ 
+ const isActive = (path) => {
+   if (path === '/admin') return route.path === '/admin';
+@@ -39,7 +48,7 @@ const logout = () => {
+ <template>
+   <header class="navbar">
+     <!-- Left: Logo + name -->
+-    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : '/student')">
++    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : isCompany ? '/company' : '/student')">
+       <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
+       <span class="nav-title">Pathfinder.Ai</span>
+     </div>
+diff --git a/frontend/src/router/index.js b/frontend/src/router/index.js
+index c0eb824..54422f7 100644
+--- a/frontend/src/router/index.js
++++ b/frontend/src/router/index.js
+@@ -57,6 +57,12 @@ const routes = [
+     name: 'admin-companies',
+     component: () => import('../views/AdminCompaniesView.vue'),
+     meta: { requiresAdmin: true }
++  },
++  {
++    path: '/company',
++    name: 'company',
++    component: () => import('../views/CompanyDashboardView.vue'),
++    meta: { requiresCompany: true }
+   }
+ ];
+ 
+@@ -83,17 +89,26 @@ router.beforeEach((to, from, next) => {
+   }
+ 
+   if (to.meta.requiresAdmin && role !== 'admin') {
+-    return next('/student');
++    return next(`/${role}`);
+   }
+ 
+-  // Prevent admins from accidentally landing on student pages
++  if (to.meta.requiresCompany && role !== 'company') {
++    return next(`/${role}`);
++  }
++
++  // Prevent admins from accidentally landing on student/company pages
+   if (role === 'admin' && !to.path.startsWith('/admin')) {
+     return next('/admin');
+   }
+ 
+-  // Prevent students/companies from landing on admin wrapper implicitly
+-  if (role !== 'admin' && to.path.startsWith('/admin')) {
+-    return next(`/${role}`);
++  // Prevent companies from accidentally landing on student/admin pages
++  if (role === 'company' && !to.path.startsWith('/company')) {
++    return next('/company');
++  }
++
++  // Prevent students from landing on admin wrapper implicitly
++  if (role === 'student' && (to.path.startsWith('/admin') || to.path.startsWith('/company'))) {
++    return next('/student');
+   }
+ 
+   next();
+diff --git a/frontend/src/views/CompanyDashboardView.vue b/frontend/src/views/CompanyDashboardView.vue
+new file mode 100644
+index 0000000..1c85623
+--- /dev/null
++++ b/frontend/src/views/CompanyDashboardView.vue
+@@ -0,0 +1,311 @@
++<script setup>
++import { reactive, ref, computed } from 'vue';
++import NavBar from '@/components/NavBar.vue';
++import api from '@/services/api';
++
++const userName = computed(() => localStorage.getItem('username') || 'Company');
++const isSubmitting = ref(false);
++const message = ref('');
++const isError = ref(false);
++
++const jobData = reactive({
++  title: '',
++  location: '',
++  url: '',
++  description: ''
++});
++
++const submitJob = async () => {
++  if (isSubmitting.value) return;
++  isSubmitting.value = true;
++  message.value = '';
++  isError.value = false;
++
++  try {
++    const res = await api.post('/company/jobs', jobData);
++    message.value = 'Job posted successfully!';
++    isError.value = false;
++
++    // Reset form
++    jobData.title = '';
++    jobData.location = '';
++    jobData.url = '';
++    jobData.description = '';
++  } catch (err) {
++    message.value = err.response?.data?.message || 'Failed to post job. Make sure you are an approved company.';
++    isError.value = true;
++  } finally {
++    isSubmitting.value = false;
++  }
++};
++</script>
++
++<template>
++  <div class="page">
++    <NavBar />
++
++    <main class="main">
++      <div class="header-section">
++        <h2 class="company-greeting">WELCOME, {{ userName.toUpperCase() }}</h2>
++        <p class="company-sub">Post your open roles directly to our student network.</p>
++      </div>
++
++      <div class="content-wrapper">
++        <div class="form-card box">
++          <h3 class="section-title">▤ CREATE NEW JOB POSTING</h3>
++
++          <form @submit.prevent="submitJob" class="job-form">
++
++            <div class="form-group">
++              <label>JOB TITLE</label>
++              <input type="text" v-model="jobData.title" class="brutal-input" placeholder="e.g. Frontend Developer" required />
++            </div>
++
++            <div class="form-row">
++              <div class="form-group half">
++                <label>LOCATION</label>
++                <input type="text" v-model="jobData.location" class="brutal-input" placeholder="e.g. Remote, San Francisco" required />
++              </div>
++
++              <div class="form-group half">
++                <label>APPLICATION URL</label>
++                <input type="url" v-model="jobData.url" class="brutal-input" placeholder="https://..." required />
++              </div>
++            </div>
++
++            <div class="form-group">
++              <label>JOB DESCRIPTION</label>
++              <textarea v-model="jobData.description" class="brutal-input brutal-textarea" rows="8" placeholder="Enter full job description, requirements, etc..." required></textarea>
++            </div>
++
++            <div class="form-actions">
++              <button type="submit" class="primary-btn" :disabled="isSubmitting">
++                {{ isSubmitting ? 'POSTING...' : 'POST JOB NOW' }}
++              </button>
++            </div>
++
++            <!-- Status Message -->
++            <div v-if="message" class="status-msg" :class="{ 'error-msg': isError, 'success-msg': !isError }">
++              {{ message }}
++            </div>
++
++          </form>
++        </div>
++
++        <div class="side-panel">
++          <div class="info-card box bg-yellow">
++            <h4 class="info-title">POSTING GUIDELINES</h4>
++            <ul class="guidelines-list">
++              <li>Keep titles concise and standard.</li>
++              <li>Include salary bands in the description if possible.</li>
++              <li>Ensure your application URL is valid and publicly accessible.</li>
++              <li>All jobs are instantly visible to our student network once posted.</li>
++            </ul>
++          </div>
++        </div>
++      </div>
++    </main>
++  </div>
++</template>
++
++<style scoped>
++.page {
++  --ink:     #111111;
++  --bg:      #DEDEDE;
++  --surface: #FFFFFF;
++  --accent:  #2d8cf0;
++  --border:  2px solid var(--ink);
++  --shadow:  4px 4px 0 var(--ink);
++
++  min-height: 100vh;
++  background: var(--bg);
++  color: var(--ink);
++  font-family: 'Segoe UI', sans-serif;
++}
++
++.main {
++  max-width: 1000px;
++  width: 100%;
++  margin: 0 auto;
++  padding: 40px 28px 60px;
++  display: flex;
++  flex-direction: column;
++  gap: 32px;
++}
++
++.box {
++  background: var(--surface);
++  border: var(--border);
++  box-shadow: var(--shadow);
++}
++
++/* ── Header ─────────────────────────────────────────────── */
++.header-section {
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++}
++
++.company-greeting {
++  font-size: 32px;
++  font-weight: 900;
++  letter-spacing: -1px;
++  margin: 0;
++}
++
++.company-sub {
++  font-size: 16px;
++  font-weight: 600;
++  opacity: 0.8;
++  margin: 0;
++}
++
++/* ── Layout ─────────────────────────────────────────────── */
++.content-wrapper {
++  display: grid;
++  grid-template-columns: 2fr 1fr;
++  gap: 32px;
++  align-items: start;
++}
++
++.section-title {
++  font-size: 18px;
++  font-weight: 900;
++  text-transform: uppercase;
++  text-decoration: underline;
++  text-underline-offset: 4px;
++  text-decoration-thickness: 2px;
++  margin: 0 0 24px 0;
++}
++
++/* ── Form ───────────────────────────────────────────────── */
++.form-card {
++  padding: 32px;
++}
++
++.job-form {
++  display: flex;
++  flex-direction: column;
++  gap: 20px;
++}
++
++.form-row {
++  display: flex;
++  gap: 20px;
++}
++
++.form-group {
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++}
++
++.half {
++  flex: 1;
++}
++
++.form-group label {
++  font-size: 13px;
++  font-weight: 900;
++  letter-spacing: 0.05em;
++}
++
++.brutal-input {
++  padding: 14px;
++  border: 2px solid var(--ink);
++  background: #f8f8f8;
++  font-family: inherit;
++  font-size: 15px;
++  outline: none;
++  transition: background 0.1s, box-shadow 0.1s;
++}
++
++.brutal-input:focus {
++  background: #fff;
++  box-shadow: 2px 2px 0 var(--ink);
++}
++
++.brutal-textarea {
++  resize: vertical;
++  min-height: 120px;
++}
++
++.form-actions {
++  margin-top: 8px;
++}
++
++.primary-btn {
++  width: 100%;
++  padding: 16px;
++  background: var(--accent);
++  color: white;
++  border: 2px solid var(--ink);
++  box-shadow: 4px 4px 0 var(--ink);
++  font-weight: 900;
++  font-size: 16px;
++  text-transform: uppercase;
++  letter-spacing: 0.05em;
++  cursor: pointer;
++  transition: box-shadow 0.1s, transform 0.1s;
++}
++
++.primary-btn:hover { background: #1b6fc2; }
++.primary-btn:active {
++  box-shadow: 1px 1px 0 var(--ink);
++  transform: translate(3px, 3px);
++}
++.primary-btn:disabled {
++  opacity: 0.7;
++  cursor: not-allowed;
++  transform: none;
++  box-shadow: 4px 4px 0 var(--ink);
++}
++
++/* ── Messages ───────────────────────────────────────────── */
++.status-msg {
++  margin-top: 16px;
++  padding: 16px;
++  font-weight: 800;
++  border: 2px solid var(--ink);
++  box-shadow: 2px 2px 0 var(--ink);
++}
++
++.error-msg { background: #ff7675; }
++.success-msg { background: #55efc4; }
++
++/* ── Side Panel ─────────────────────────────────────────── */
++.info-card {
++  padding: 24px;
++}
++
++.bg-yellow {
++  background: #ffeaa7;
++}
++
++.info-title {
++  font-size: 14px;
++  font-weight: 900;
++  margin: 0 0 16px 0;
++  text-transform: uppercase;
++  border-bottom: 2px solid var(--ink);
++  padding-bottom: 8px;
++}
++
++.guidelines-list {
++  margin: 0;
++  padding-left: 20px;
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++  font-size: 14px;
++  font-weight: 600;
++  line-height: 1.4;
++}
++
++/* ── Responsive ─────────────────────────────────────────── */
++@media (max-width: 860px) {
++  .content-wrapper { grid-template-columns: 1fr; }
++  .form-row { flex-direction: column; gap: 20px; }
++  .side-panel { order: -1; }
++}
++</style>
+\ No newline at end of file
+
+commit 248969535429adce76625f0331ef88ba8f84fb96
+Author: UNKNOWNAR <amiarinjaysarkar@gmail.com>
+Date:   Sun Mar 1 22:36:05 2026 +0530
+
+    feat: build admin company approval UI
+
+diff --git a/frontend/src/components/NavBar.vue b/frontend/src/components/NavBar.vue
+index f314bc1..4203340 100644
+--- a/frontend/src/components/NavBar.vue
++++ b/frontend/src/components/NavBar.vue
+@@ -20,7 +20,7 @@ const adminLinks = [
+   { label: 'Dashboard',  to: '/admin' },
+   { label: 'Harvesters',   to: '/admin/harvesters' },
+   { label: 'Jobs DB',      to: '/admin/jobs' },
+-  { label: 'Settings',     to: '/admin/settings' },
++  { label: 'Companies',    to: '/admin/companies' },
+ ];
+ 
+ const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
+diff --git a/frontend/src/router/index.js b/frontend/src/router/index.js
+index 254b568..c0eb824 100644
+--- a/frontend/src/router/index.js
++++ b/frontend/src/router/index.js
+@@ -51,6 +51,12 @@ const routes = [
+     name: 'admin-harvesters',
+     component: () => import('../views/AdminHarvestersView.vue'),
+     meta: { requiresAdmin: true }
++  },
++  {
++    path: '/admin/companies',
++    name: 'admin-companies',
++    component: () => import('../views/AdminCompaniesView.vue'),
++    meta: { requiresAdmin: true }
+   }
+ ];
+ 
+diff --git a/frontend/src/views/AdminCompaniesView.vue b/frontend/src/views/AdminCompaniesView.vue
+new file mode 100644
+index 0000000..1cd2aa8
+--- /dev/null
++++ b/frontend/src/views/AdminCompaniesView.vue
+@@ -0,0 +1,236 @@
++<script setup>
++import { ref, onMounted } from 'vue';
++import NavBar from '@/components/NavBar.vue';
++import api from '@/services/api';
++
++const companies = ref([]);
++const loading = ref(true);
++const error = ref('');
++
++const loadCompanies = async () => {
++  try {
++    const res = await api.get('/admin/companies');
++    companies.value = res.data;
++  } catch (err) {
++    error.value = 'Failed to load companies.';
++    console.error(err);
++  } finally {
++    loading.value = false;
++  }
++};
++
++const approveCompany = async (companyId) => {
++  try {
++    await api.post(`/admin/companies/${companyId}/approve`);
++    // Update local state without re-fetching
++    const company = companies.value.find(c => c.company_id === companyId);
++    if (company) {
++      company.is_approved = true;
++    }
++  } catch (err) {
++    alert('Failed to approve company.');
++    console.error(err);
++  }
++};
++
++onMounted(() => {
++  loadCompanies();
++});
++</script>
++
++<template>
++  <div class="page">
++    <NavBar />
++
++    <main class="main">
++      <div class="header-row">
++        <h3 class="section-title">▤ COMPANY APPROVALS</h3>
++        <button class="brutal-btn" @click="loadCompanies">REFRESH</button>
++      </div>
++
++      <div v-if="loading" class="status-msg">Loading companies...</div>
++      <div v-else-if="error" class="status-msg error">{{ error }}</div>
++      <div v-else-if="companies.length === 0" class="status-msg">No companies registered yet.</div>
++
++      <div v-else class="companies-grid">
++        <div v-for="company in companies" :key="company.company_id" class="box company-card">
++          <div class="card-header">
++            <h4 class="company-name">{{ company.name.toUpperCase() }}</h4>
++            <span class="status-badge" :class="company.is_approved ? 'approved' : 'pending'">
++              {{ company.is_approved ? 'APPROVED' : 'PENDING' }}
++            </span>
++          </div>
++
++          <div class="card-body">
++            <p class="company-email"><strong>EMAIL:</strong> {{ company.email }}</p>
++            <p class="company-date"><strong>REGISTERED:</strong> {{ new Date(company.created_at).toLocaleDateString() }}</p>
++          </div>
++
++          <div class="card-actions" v-if="!company.is_approved">
++            <button class="primary-btn approve-btn" @click="approveCompany(company.company_id)">
++              APPROVE ACCOUNT
++            </button>
++          </div>
++        </div>
++      </div>
++    </main>
++  </div>
++</template>
++
++<style scoped>
++.page {
++  --ink:     #111111;
++  --bg:      #DEDEDE;
++  --surface: #FFFFFF;
++  --accent:  #2d8cf0;
++  --admin-accent: #ff4757;
++  --border:  2px solid var(--ink);
++  --shadow:  4px 4px 0 var(--ink);
++
++  min-height: 100vh;
++  background: var(--bg);
++  color: var(--ink);
++  font-family: 'Segoe UI', sans-serif;
++}
++
++.main {
++  max-width: 1100px;
++  width: 100%;
++  margin: 0 auto;
++  padding: 28px 28px 60px;
++  display: flex;
++  flex-direction: column;
++  gap: 24px;
++}
++
++.header-row {
++  display: flex;
++  justify-content: space-between;
++  align-items: center;
++}
++
++.section-title {
++  font-size: 18px;
++  font-weight: 900;
++  text-transform: uppercase;
++  text-decoration: underline;
++  text-underline-offset: 4px;
++  text-decoration-thickness: 2px;
++}
++
++.brutal-btn {
++  padding: 8px 16px;
++  background: var(--surface);
++  border: var(--border);
++  box-shadow: 3px 3px 0 var(--ink);
++  font-weight: 900;
++  font-size: 13px;
++  cursor: pointer;
++  transition: transform 0.1s, box-shadow 0.1s;
++}
++
++.brutal-btn:active {
++  box-shadow: 1px 1px 0 var(--ink);
++  transform: translate(2px, 2px);
++}
++
++.status-msg {
++  padding: 24px;
++  background: var(--surface);
++  border: var(--border);
++  box-shadow: var(--shadow);
++  font-weight: 800;
++  text-align: center;
++}
++
++.error {
++  background: #ff7675;
++}
++
++.box {
++  background: var(--surface);
++  border: var(--border);
++  box-shadow: var(--shadow);
++}
++
++.companies-grid {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
++  gap: 24px;
++}
++
++.company-card {
++  display: flex;
++  flex-direction: column;
++}
++
++.card-header {
++  padding: 16px;
++  border-bottom: var(--border);
++  display: flex;
++  justify-content: space-between;
++  align-items: flex-start;
++  gap: 12px;
++  background: #fafafa;
++}
++
++.company-name {
++  font-weight: 900;
++  font-size: 16px;
++  margin: 0;
++  word-break: break-all;
++}
++
++.status-badge {
++  font-size: 10px;
++  font-weight: 900;
++  padding: 4px 8px;
++  border: 2px solid var(--ink);
++  box-shadow: 2px 2px 0 var(--ink);
++}
++
++.status-badge.approved { background: #55efc4; }
++.status-badge.pending { background: #ffeaa7; }
++
++.card-body {
++  padding: 16px;
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++  flex: 1;
++}
++
++.company-email, .company-date {
++  font-size: 13px;
++  margin: 0;
++}
++
++.card-actions {
++  padding: 16px;
++  border-top: 2px dashed var(--ink);
++  background: #fafafa;
++}
++
++.primary-btn {
++  width: 100%;
++  padding: 12px;
++  background: #55efc4;
++  border: var(--border);
++  box-shadow: 3px 3px 0 var(--ink);
++  font-weight: 900;
++  font-size: 14px;
++  cursor: pointer;
++  transition: transform 0.1s, box-shadow 0.1s;
++}
++
++.primary-btn:active {
++  box-shadow: 1px 1px 0 var(--ink);
++  transform: translate(2px, 2px);
++}
++
++@media (max-width: 600px) {
++  .companies-grid {
++    grid-template-columns: 1fr;
++  }
++}
++</style>
+\ No newline at end of file
+
+commit 3eb51ba7008bc1a115a7057ad6e9f891efb34657
+Author: UNKNOWNAR <amiarinjaysarkar@gmail.com>
+Date:   Sun Mar 1 22:34:45 2026 +0530
+
+    feat: add company registration toggle to authentication UI
+
+diff --git a/frontend/src/views/LoginView.vue b/frontend/src/views/LoginView.vue
+index 976d50d..50ea6ba 100644
+--- a/frontend/src/views/LoginView.vue
++++ b/frontend/src/views/LoginView.vue
+@@ -31,8 +31,13 @@ const handleLogin = async () => {
+ 
+ const handleSignup = async () => {
+   try {
+-    await api.post('/signup', signupData);
+-    alert('Account created! Please log in.');
++    if (signupData.role === 'company') {
++      await api.post('/company/register', signupData);
++      alert('Company account created! Please wait for admin approval before logging in.');
++    } else {
++      await api.post('/signup', signupData);
++      alert('Account created! Please log in.');
++    }
+     isSignUp.value = false;
+   } catch (err) {
+     alert(err.response?.data?.message || 'Signup failed');

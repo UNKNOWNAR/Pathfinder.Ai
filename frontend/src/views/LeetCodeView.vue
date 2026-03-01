@@ -174,20 +174,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page {
-  --ink:     #111111;
-  --bg:      #DEDEDE;
-  --surface: #FFFFFF;
-  --accent:  #2d8cf0;
-  --border:  2px solid var(--ink);
-  --shadow:  4px 4px 0 var(--ink);
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Segoe UI', sans-serif;
-}
-
 .main {
   max-width: 1100px;
   width: 100%;
@@ -197,13 +183,6 @@ onMounted(() => {
   flex-direction: column;
   gap: 22px;
 }
-
-.box {
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: var(--shadow);
-}
-
 .outline-btn {
   display: inline-flex;
   align-items: center;
@@ -223,7 +202,6 @@ onMounted(() => {
 }
 .outline-btn:hover  { background: #f5f5f5; }
 .outline-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
-
 /* ── Page Header ───────────────────────────────────────────── */
 .page-header { margin-bottom: 4px; }
 .page-title {
@@ -237,7 +215,6 @@ onMounted(() => {
   font-weight: 600;
   opacity: 0.7;
 }
-
 /* ── Status / Loading / Error boxes ─────────────────────────── */
 .status-box {
   padding: 40px;
@@ -261,7 +238,6 @@ onMounted(() => {
 }
 .status-box.warning { border-left: 6px solid #fbbf24; }
 .status-box.error   { border-left: 6px solid #ef4444; }
-
 /* ── Username Banner ────────────────────────────────────────── */
 .username-banner {
   padding: 16px 24px;
@@ -281,14 +257,12 @@ onMounted(() => {
   font-weight: 900;
   letter-spacing: -0.5px;
 }
-
 /* ── Stat Cards Grid ────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-
 .stat-card {
   padding: 22px 18px;
 }
@@ -308,28 +282,17 @@ onMounted(() => {
 .stat-value.easy   { color: #22c55e; }
 .stat-value.medium { color: #f59e0b; }
 .stat-value.hard   { color: #ef4444; }
-
 /* ── Two-Column Grid ────────────────────────────────────────── */
 .grid-two {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 22px;
 }
-
 /* ── Section Box ────────────────────────────────────────────── */
 .section-box {
   padding: 22px;
 }
-.section-title {
-  font-size: 16px;
-  font-weight: 900;
-  text-transform: uppercase;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 2px;
-  margin-bottom: 16px;
-}
-
+.section-title { margin-bottom: 16px; }
 /* ── Contest Stats ──────────────────────────────────────────── */
 .contest-stats {
   display: flex;
@@ -352,7 +315,6 @@ onMounted(() => {
   font-size: 22px;
   font-weight: 900;
 }
-
 /* ── Tag Lists ──────────────────────────────────────────────── */
 .tag-list {
   display: flex;
@@ -386,7 +348,6 @@ onMounted(() => {
   background: #34d399;
   box-shadow: 2px 2px 0 var(--ink);
 }
-
 .tag-chip {
   display: inline-flex;
   align-items: center;
@@ -408,7 +369,6 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 900;
 }
-
 /* ── AI Advice Card ─────────────────────────────────────────── */
 .advice-card {
   padding: 22px 28px;
@@ -437,7 +397,6 @@ onMounted(() => {
   font-weight: 600;
   line-height: 1.6;
 }
-
 .empty-text {
   font-size: 13px;
   font-weight: 600;
@@ -445,11 +404,10 @@ onMounted(() => {
   font-style: italic;
   padding: 12px 0;
 }
-
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  .grid-two  { grid-template-columns: 1fr; }
-  .main      { padding: 16px; }
+.grid-two  { grid-template-columns: 1fr; }
+.main      { padding: 16px; }
 }
 </style>

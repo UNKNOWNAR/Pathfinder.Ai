@@ -20,11 +20,33 @@ class AdminStats(Resource):
         sources_query = db.session.query(Job.source, func.count(Job.job_id)).group_by(Job.source).all()
         sources_breakdown = {s: c for s, c in sources_query}
 
+        # Extract job roles dynamically
+        roles_query = db.session.execute(db.text("""
+            SELECT
+                CASE
+                    WHEN LOWER(title) LIKE '%software engineer%' THEN 'Software Engineer'
+                    WHEN LOWER(title) LIKE '%data scientist%' THEN 'Data Scientist'
+                    WHEN LOWER(title) LIKE '%data engineer%' THEN 'Data Engineer'
+                    WHEN LOWER(title) LIKE '%machine learning%' THEN 'ML Engineer'
+                    WHEN LOWER(title) LIKE '%frontend%' THEN 'Frontend'
+                    WHEN LOWER(title) LIKE '%backend%' THEN 'Backend'
+                    WHEN LOWER(title) LIKE '%full stack%' THEN 'Full Stack'
+                    WHEN LOWER(title) LIKE '%intern%' THEN 'Internship'
+                    ELSE 'Other'
+                END as role_type,
+                COUNT(*) as count
+            FROM job
+            GROUP BY role_type
+        """)).fetchall()
+
+        roles_breakdown = {row[0]: row[1] for row in roles_query}
+
         return {
             'students':  students,
             'companies': companies,
             'jobs':      jobs,
             'sources':   sources_breakdown,
+            'roles':     roles_breakdown
         }, 200
 
 
@@ -33,14 +55,52 @@ class AdminHarvest(Resource):
     def post(self):
         data = request.get_json(silent=True) or {}
         source = data.get('source', 'all')
+        roles = data.get('roles', [])
+        locations = data.get('locations', [])
+
         app = current_app._get_current_object()
 
         if source == 'all':
-            harvest_all(app)
+            harvest_all(app, roles, locations)
         else:
-            harvest_source(app, source)
+            harvest_source(app, source, roles, locations)
 
         return {'message': f'Harvest started for {source} in background.'}, 202
+
+
+class AdminQuotas(Resource):
+    @admin_required
+    def get(self):
+        from sqlalchemy import func
+        from datetime import datetime, timezone, timedelta
+
+        # Calculate start of current month in UTC
+        now = datetime.now(timezone.utc)
+        start_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+
+        # Get sum of api_calls per source for this month
+        usage_query = db.session.query(
+            HarvestLog.source,
+            func.sum(HarvestLog.api_calls)
+        ).filter(
+            HarvestLog.timestamp >= start_of_month
+        ).group_by(HarvestLog.source).all()
+
+        usage = {s: int(c or 0) for s, c in usage_query}
+
+        # Monthly limits based on RapidAPI plans
+        limits = {
+            "LinkedIn": 200,
+            "Internships": 200,
+            "GoogleJobs": 100,
+            "Remotive": -1, # Unlimited
+            "Arbeitnow": -1 # Unlimited
+        }
+
+        return {
+            "usage": usage,
+            "limits": limits
+        }, 200
 
 
 class AdminLogs(Resource):
@@ -50,6 +110,7 @@ class AdminLogs(Resource):
         return [
             {
                 'log_id':     l.log_id,
+                'source':     l.source,
                 'status':     l.status,
                 'jobs_added': l.jobs_added,
                 'timestamp':  l.timestamp.isoformat(),
