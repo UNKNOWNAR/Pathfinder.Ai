@@ -32,7 +32,8 @@ const handleLogin = async () => {
 const handleSignup = async () => {
   try {
     if (signupData.role === 'company') {
-      await api.post('/company/register', signupData);
+      const payload = { company_name: signupData.username, email: signupData.email, password: signupData.password };
+      await api.post('/company/register', payload);
       alert('Company account created! Please wait for admin approval before logging in.');
     } else {
       await api.post('/signup', signupData);
@@ -109,7 +110,6 @@ const handleSignup = async () => {
   --main-color: #323232;
   --bg-color: #fff;
 }
-
 .wrapper {
   display: flex;
   justify-content: center;
@@ -117,32 +117,27 @@ const handleSignup = async () => {
   min-height: 100vh;
   background-color: #e0e0e0;
 }
-
 .login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 28px;
 }
-
 /* --- Toggle Row --- */
 .toggle-row {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-
 .side-label {
   font-size: 14px;
   font-weight: 600;
   color: #666;
   transition: color 0.3s;
 }
-
 .side-label.active {
   color: #323232;
 }
-
 .switch-toggle {
   position: relative;
   display: inline-block;
@@ -150,13 +145,11 @@ const handleSignup = async () => {
   height: 20px;
   cursor: pointer;
 }
-
 .toggle-input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   inset: 0;
@@ -166,7 +159,6 @@ const handleSignup = async () => {
   background-color: #fff;
   transition: 0.3s;
 }
-
 .slider::before {
   content: '';
   position: absolute;
@@ -181,15 +173,12 @@ const handleSignup = async () => {
   transition: 0.3s;
   box-sizing: border-box;
 }
-
 .toggle-input:checked + .slider {
   background-color: #2d8cf0;
 }
-
 .toggle-input:checked + .slider::before {
   transform: translateX(30px);
 }
-
 /* --- Flip Card --- */
 .flip-card__inner {
   width: 300px;
@@ -199,11 +188,9 @@ const handleSignup = async () => {
   transform-style: preserve-3d;
   transition: transform 0.8s;
 }
-
 .flip-card__inner.flipped {
   transform: rotateY(180deg);
 }
-
 .flip-card__front,
 .flip-card__back {
   position: absolute;
@@ -220,11 +207,9 @@ const handleSignup = async () => {
   box-shadow: 4px 4px #323232;
   backface-visibility: hidden;
 }
-
 .flip-card__back {
   transform: rotateY(180deg);
 }
-
 .flip-card__form {
   display: flex;
   flex-direction: column;
@@ -232,13 +217,11 @@ const handleSignup = async () => {
   gap: 14px;
   width: 100%;
 }
-
 .title {
   font-size: 25px;
   font-weight: 900;
   color: #323232;
 }
-
 .flip-card__input {
   width: 250px;
   height: 40px;
@@ -252,7 +235,6 @@ const handleSignup = async () => {
   outline: none;
   box-sizing: border-box;
 }
-
 .flip-card__btn {
   margin-top: 6px;
   width: 120px;
@@ -266,7 +248,6 @@ const handleSignup = async () => {
   cursor: pointer;
   transition: box-shadow 0.1s, transform 0.1s;
 }
-
 .flip-card__btn:active {
   box-shadow: 0px 0px #323232;
   transform: translate(3px, 3px);
@@ -276,13 +257,11 @@ const handleSignup = async () => {
   position: relative;
   width: 250px;
 }
-
 .password-wrapper .flip-card__input {
   width: 100%;
   padding-right: 62px;
   box-sizing: border-box;
 }
-
 .show-pass-switch {
   position: absolute;
   right: 5px;
@@ -293,14 +272,12 @@ const handleSignup = async () => {
   height: 24px;
   cursor: pointer;
 }
-
 .pass-toggle {
   opacity: 0;
   width: 0;
   height: 0;
   position: absolute;
 }
-
 .pass-slider {
   position: absolute;
   inset: 0;
@@ -311,7 +288,6 @@ const handleSignup = async () => {
   transition: background-color 0.3s;
   box-sizing: border-box;
 }
-
 .pass-slider::before {
   content: "off";
   box-sizing: border-box;
@@ -330,11 +306,9 @@ const handleSignup = async () => {
   line-height: 14px;
   transition: transform 0.3s;
 }
-
 .pass-toggle:checked + .pass-slider {
   background-color: #2d8cf0;
 }
-
 .pass-toggle:checked + .pass-slider::before {
   content: "on";
   transform: translateX(26px);
