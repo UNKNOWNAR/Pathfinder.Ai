@@ -1,7 +1,6 @@
 import os
 from sentence_transformers import SentenceTransformer
 import chromadb
-from chromadb.config import Settings
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,6 @@
 from flask_restful import Resource
 from flask import request
-from flask_jwt_extended import get_jwt_identity,jwt_required
-import json
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from models import db
 from models.profile import Profile
 from services.embedding import store_student_embedding
@@ -12,7 +11,7 @@ class ProfileAPI(Resource):
         user_id = get_jwt_identity()
         student = Profile.query.filter_by(user_id=user_id).first()
         if student:
-            return student.to_dict(),200
+            return student.to_dict(), 200
         else:
             return {'message': 'Student not found'}, 404
 

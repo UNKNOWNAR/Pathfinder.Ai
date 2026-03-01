@@ -3,10 +3,9 @@ import requests
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
 from models import db
 from models.job import Job, HarvestLog
-from services.utils import make_job_hash, is_fresher_role, get_day_based_toggle
+from services.utils import make_job_hash, is_fresher_role
 from services.embedding import store_job_embedding
 
 # ── Configuration & Logging ────────────────────────────────────────────────────

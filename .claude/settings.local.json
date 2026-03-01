@@ -29,7 +29,8 @@
       "Bash(npm run:*)",
       "Bash(npm install:*)",
       "Bash(cat:*)",
-      "Bash(backend/venv/Scripts/python:*)"
+      "Bash(backend/venv/Scripts/python:*)",
+      "Bash(.:*)"
     ]
   }
 }

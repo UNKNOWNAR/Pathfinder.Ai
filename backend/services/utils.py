@@ -1,6 +1,5 @@
 import hashlib
 import logging
-from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +18,3 @@ def is_fresher_role(title: str) -> bool:
     """Checks if a job title matches common fresher/entry-level keywords."""
     title_lower = (title or "").lower()
     return any(kw in title_lower for kw in FRESHER_KEYWORDS)
-
-def get_day_based_toggle(val1, val2):
-    """Returns val1 if the day of the month is odd, otherwise val2."""
-    day = datetime.now(timezone.utc).day
-    return val1 if day % 2 != 0 else val2

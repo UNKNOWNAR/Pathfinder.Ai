@@ -69,7 +69,6 @@ const logout = () => {
       </button>
     </nav>
 
-    <!-- Right: Username + logout -->
     <div class="navbar-right">
       <span class="nav-user">{{ userName }}</span>
       <button class="nav-logout" @click="logout">
