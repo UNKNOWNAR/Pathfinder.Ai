@@ -169,39 +169,60 @@ class JobsList(Resource):
 
         from models.profile import Profile
         from flask_jwt_extended import get_jwt_identity
-        import re
+        from services.embedding import find_similar_jobs
 
         user_id = get_jwt_identity()
         profile = Profile.query.filter_by(user_id=user_id).first()
-        
-        # Build a set of keywords from the student's profile for matching
-        student_keywords = set()
-        if profile:
-            if profile.skills:
-                for skill in profile.skills:
-                    student_keywords.add(str(skill).lower().strip())
-            if profile.headline:
-                words = re.findall(r'\b\w+\b', profile.headline.lower())
-                student_keywords.update([w for w in words if len(w) > 2])
-
-        def calculate_match_score(job):
-            if not student_keywords:
-                return 0
-            
-            job_text = f"{job.title} {job.description}".lower()
-            match_count = sum(1 for kw in student_keywords if kw in job_text)
-            
-            # Simple heuristic: base the score on how many of their skills/keywords appear in the job
-            # A cap at max(len(skills), 5) to prevent artificially high scores for sparse profiles
-            max_possible = max(len(student_keywords), 5)
-            score = int((match_count / max_possible) * 100)
-            return min(score, 99) # Cap at 99 so it doesn't say 100% matched
-
 
         page     = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search   = request.args.get('q', '', type=str).strip()
 
+        # Check if the user has an embedding and we're not explicitly text-searching
+        if not search and profile and profile.embedding:
+            # Vector Database Search
+            matches = find_similar_jobs(profile.embedding, limit=100)
+
+            if matches:
+                # We have semantic matches. Let's fetch those specific jobs and paginate them manually.
+                # In pgvector this will just be a SQL order by, but for ChromaDB we must map IDs back
+                match_dict = {m['job_id']: m['match_score'] for m in matches}
+                job_ids = list(match_dict.keys())
+
+                # Fetch only the matched jobs
+                query = Job.query.filter(Job.job_id.in_(job_ids))
+
+                # Python-side sorting to maintain ChromaDB's semantic distance order
+                all_jobs = query.all()
+                all_jobs.sort(key=lambda j: match_dict.get(j.job_id, 0), reverse=True)
+
+                # Manual pagination
+                total = len(all_jobs)
+                pages = (total + per_page - 1) // per_page
+                start = (page - 1) * per_page
+                end = start + per_page
+                paginated_items = all_jobs[start:end]
+
+                return {
+                    'total': total,
+                    'pages': pages,
+                    'page':  page,
+                    'jobs':  [
+                        {
+                            'job_id':   j.job_id,
+                            'title':    j.title,
+                            'company':  j.company,
+                            'location': j.location,
+                            'source':   j.source,
+                            'url':      j.url,
+                            'description': j.description,
+                            'match_score': match_dict.get(j.job_id, 0)
+                        }
+                        for j in paginated_items
+                    ]
+                }, 200
+
+        # Fallback to standard DB query if no vector exists, or if the user is text searching
         query = Job.query
         if search:
             like = f"%{search}%"
@@ -230,7 +251,7 @@ class JobsList(Resource):
                     'source':   j.source,
                     'url':      j.url,
                     'description': j.description,
-                    'match_score': calculate_match_score(j)
+                    'match_score': 0
                 }
                 for j in paginated.items
             ]

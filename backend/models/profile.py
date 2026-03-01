@@ -18,7 +18,11 @@ class Profile(db.Model):
     education = db.Column(db.JSON, nullable=True)
     projects = db.Column(db.JSON, nullable=True)
     achievements = db.Column(db.JSON, nullable=True)
-    
+
+    # Stores the raw JSON array vector from sentence-transformers for PG compatibility later
+    # 384 dimensions for all-MiniLM-L6-v2
+    embedding = db.Column(db.JSON, nullable=True)
+
     def __repr__(self):
         return f'<Profile {self.name}>'
 

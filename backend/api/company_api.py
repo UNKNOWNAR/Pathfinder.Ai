@@ -9,6 +9,7 @@ from sqlalchemy import or_
 from api.admin_api import admin_required
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from services.utils import make_job_hash
+from services.embedding import store_job_embedding
 
 
 class CompanyRegister(Resource):
@@ -135,8 +136,11 @@ class CompanyJobs(Resource):
         db.session.add(new_job)
         db.session.commit()
 
+        # Generate embedding for the new job
+        store_job_embedding(new_job.id, new_job.title, new_job.description)
+
         return {
             'message': 'Job posted successfully.',
-            'job_id': new_job.job_id
+            'job_id': new_job.id
         }, 201
 
