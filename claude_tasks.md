@@ -161,23 +161,24 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
 
 **Goal:** Shift the application to a 100% AWS-Native Architecture (using your $100 AWS credits) for the Bharat Initiative. This means discarding HuggingFace in favor of **Amazon Bedrock (Titan Embeddings / Claude)** for AI, and migrating our database to **AWS RDS (PostgreSQL with pgvector)**. For local development, we will still use ChromaDB temporarily until the RDS instance is provisioned, but the embedding layer MUST immediately switch to `boto3` and AWS Bedrock.
 
-## Task 20: Switch AI Engine to Amazon Bedrock
+## ~~Task 20: Switch AI Engine to Amazon Bedrock~~ [SKIPPED]
 - **Action:** Install `boto3` into the backend (`pip install boto3`).
 - **Action:** Update `services/embedding.py` and `api/leetcode_api.py`. Instead of the HuggingFace Inference API, use `boto3` to communicate with **Amazon Bedrock**. Use `amazon.titan-embed-text-v2:0` (or v1) to generate embeddings for Job Descriptions and Student Profiles.
 - **Action:** Update `api/leetcode_api.py` to generate AI advice using a Bedrock LLM (like `anthropic.claude-3-haiku-20240307-v1:0` or `amazon.titan-text-lite-v1`).
 - **Commit:** `"feat: migrate AI services to Amazon Bedrock (Titan & Claude)"`
 
-## Task 21: Embedding Pipeline for Job Harvester & Profiles
+## ~~Task 21: Embedding Pipeline for Job Harvester & Profiles~~ [SKIPPED]
 - **Action:** Modify `services/harvester.py` and `api/company_api.py`. Whenever a new Job is saved, generate an embedding for its `title` + `description` via Bedrock.
 - **Action:** Modify `api/profile_api.py`. Whenever a student updates their Profile, generate an embedding using Bedrock.
 - **Action:** Store these embeddings in your local `ChromaDB` folder for now (as a local proxy for RDS). *Note in a `migration_notes.md` file how we will switch to RDS `pgvector` once provisioned.*
 - **Commit:** `"feat: add Bedrock vector embedding pipelines for jobs and profiles"`
 
-## Task 22: Semantic Sorting in the Job Feed
+## ~~Task 22: Semantic Sorting in the Job Feed~~ [SKIPPED]
 - **Action:** Rewrite the matching logic in `api/harvest_api.py` (`JobsList` GET).
 - **Action:** Fetch the student's pre-calculated Bedrock profile embedding vector.
 - **Action:** Perform a cosine similarity search against the Jobs in the local Vector DB to return semantically sorted results to the user with a true `% Match`.
 - **Commit:** `"feat: implement Bedrock semantic job sorting in feed"`
+*(Note: Tasks 20-22 were intentionally skipped. The application was kept entirely local utilizing HuggingFace transformers and a local ChromaDB vector implementation as per user request to rollback AWS architecture changes.)*
 
 ---
 
@@ -185,10 +186,11 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
 
 **Goal:** Deploy the entire stack using AWS exclusively.
 
-## Task 23: Complete AWS Architecture Setup Guide
+## ~~Task 23: Complete AWS Architecture Setup Guide~~ [COMPLETED]
 - **Action:** Before executing code, generate a comprehensive, step-by-step markdown guide (`aws_deployment_guide.md`) detailing exactly how the human should provision:
   1. **AWS RDS (PostgreSQL):** For the relational data and `pgvector`.
   2. **AWS EC2:** For hosting the Python Flask backend and Gunicorn.
   3. **AWS Amplify:** For hosting the Vue.js frontend repository seamlessly.
   4. **AWS IAM:** Detailed steps on creating the IAM user/policies required for `boto3` to access Bedrock securely.
 - **Commit:** `"docs: write definitive AWS native deployment guide"`
+*(Completed. AWS guide updated to reflect standard EC2 architecture with local ChromaDB persisting in the EBS volume, skipping Bedrock and pgvector integrations.)*
