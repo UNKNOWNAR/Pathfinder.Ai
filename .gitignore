@@ -62,11 +62,21 @@ logs/
 *.pid
 *.seed
 *.pid.lock
+test.py
+reembed_jobs.py
 
 # ==================================================
 # AI / Agent Workflow Files
 # ==================================================
 claude*
+.claude/
+aws_deployment_guide.md
+check_db_logs.py
+claude.md
 .cursorrules
 .cursor/
 
+# ==================================================
+# Chroma DB Local Store
+# ==================================================
+backend/chroma_db/
