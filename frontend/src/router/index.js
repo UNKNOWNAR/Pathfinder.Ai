@@ -1,8 +1,14 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 
+import HomeView from '../views/HomeView.vue';
+
 const routes = [
-  { path: '/', redirect: '/student' },
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView
+  },
   {
     path: '/login',
     name: 'login',
@@ -57,7 +63,16 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
-  if (to.path !== '/login' && !token) {
+  if (to.path === '/' || to.path === '/login') {
+    if (token) {
+      if (role === 'admin') return next('/admin');
+      if (role === 'student') return next('/student');
+      if (role === 'company') return next('/company');
+    }
+    return next();
+  }
+
+  if (!token) {
     return next('/login');
   }
 
@@ -70,9 +85,9 @@ router.beforeEach((to, from, next) => {
     return next('/admin');
   }
 
-  // Prevent students from landing on admin wrapper implicitly
-  if (role === 'student' && to.path === '/') {
-    return next('/student');
+  // Prevent students/companies from landing on admin wrapper implicitly
+  if (role !== 'admin' && to.path.startsWith('/admin')) {
+    return next(`/${role}`);
   }
 
   next();
