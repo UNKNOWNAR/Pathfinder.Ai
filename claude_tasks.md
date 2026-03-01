@@ -157,28 +157,38 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
 
 ---
 
-## Phase 9: Semantic Match Engine (Vector Database)
+## Phase 9: AWS-Native Semantic Match Engine (Bedrock + RDS pgvector)
 
-**Goal:** Replace the basic keyword matching algorithm with a true semantic AI matching engine using a Vector Database. The ultimate deployment target is AWS RDS with the `pgvector` extension. For local development, however, we should abstract the logic to use a lightweight local vector store (like ChromaDB or local array/cosine-sim) or connect to a free-tier Pinecone index if easiest. The key is writing robust vector embedding logic that can be easily adapted to `pgvector` later.
+**Goal:** Shift the application to a 100% AWS-Native Architecture (using your $100 AWS credits) for the Bharat Initiative. This means discarding HuggingFace in favor of **Amazon Bedrock (Titan Embeddings / Claude)** for AI, and migrating our database to **AWS RDS (PostgreSQL with pgvector)**. For local development, we will still use ChromaDB temporarily until the RDS instance is provisioned, but the embedding layer MUST immediately switch to `boto3` and AWS Bedrock.
 
-## Task 20: Vector Database Setup & Schema Preparation
-- **Action:** Select a Vector Database approach suitable for local Windows development that conceptually mirrors `pgvector` (e.g., ChromaDB). Note in your comments or a new `migration_notes.md` file exactly how this needs to change for AWS `pgvector`.
-- **Action:** Design the storage schema for job embeddings (vectors mapping to job IDs) and student profile embeddings.
-- **Commit:** `"chore: initialized vector database configuration"`
+## Task 20: Switch AI Engine to Amazon Bedrock
+- **Action:** Install `boto3` into the backend (`pip install boto3`).
+- **Action:** Update `services/embedding.py` and `api/leetcode_api.py`. Instead of the HuggingFace Inference API, use `boto3` to communicate with **Amazon Bedrock**. Use `amazon.titan-embed-text-v2:0` (or v1) to generate embeddings for Job Descriptions and Student Profiles.
+- **Action:** Update `api/leetcode_api.py` to generate AI advice using a Bedrock LLM (like `anthropic.claude-3-haiku-20240307-v1:0` or `amazon.titan-text-lite-v1`).
+- **Commit:** `"feat: migrate AI services to Amazon Bedrock (Titan & Claude)"`
 
-## Task 21: Embedding Pipeline for Job Harvester
-- **Action:** Create a utility (e.g., `services/embedding.py`) that uses an LLM or embedding model endpoint (using the HuggingFace Inference API if available) to convert a block of text into a vector.
-- **Action:** Modify `services/harvester.py` and `api/company_api.py`. Whenever a new Job is saved (either harvested or direct-posted), generate an embedding for its `title` + `description` and save it to the Vector Database.
-- **Commit:** `"feat: add automatic vector embedding generation for new jobs"`
+## Task 21: Embedding Pipeline for Job Harvester & Profiles
+- **Action:** Modify `services/harvester.py` and `api/company_api.py`. Whenever a new Job is saved, generate an embedding for its `title` + `description` via Bedrock.
+- **Action:** Modify `api/profile_api.py`. Whenever a student updates their Profile, generate an embedding using Bedrock.
+- **Action:** Store these embeddings in your local `ChromaDB` folder for now (as a local proxy for RDS). *Note in a `migration_notes.md` file how we will switch to RDS `pgvector` once provisioned.*
+- **Commit:** `"feat: add Bedrock vector embedding pipelines for jobs and profiles"`
 
-## Task 22: Embedding Pipeline for Student Profiles
-- **Action:** Modify `api/profile_api.py`. Whenever a student updates their Profile (skills, headline, summary), re-generate an embedding for their profile and save it.
-- **Commit:** `"feat: add automatic vector embedding generation for student profiles"`
+## Task 22: Semantic Sorting in the Job Feed
+- **Action:** Rewrite the matching logic in `api/harvest_api.py` (`JobsList` GET).
+- **Action:** Fetch the student's pre-calculated Bedrock profile embedding vector.
+- **Action:** Perform a cosine similarity search against the Jobs in the local Vector DB to return semantically sorted results to the user with a true `% Match`.
+- **Commit:** `"feat: implement Bedrock semantic job sorting in feed"`
 
-## Task 23: Semantic Sorting in the Job Feed
-- **Action:** Rewrite the matching logic in `api/harvest_api.py` (`JobsList` GET method).
-- **Action:** Fetch the student's pre-calculated profile embedding vector.
-- **Action:** Perform a cosine similarity search against the Job vectors in the Vector Database.
-- **Action:** Replace the current heuristic `match_score` logic with the true semantic similarity score returned by the Vector DB. Map the cosine similarity score (e.g., 0.0 to 1.0) to a clear percentage (0-100%).
-- **Action:** Ensure the returned jobs map correctly to the paginated API response.
-- **Commit:** `"feat: implement true semantic job matching via vector similarity"`
+---
+
+## Phase 10: The Grand AWS Deployment
+
+**Goal:** Deploy the entire stack using AWS exclusively.
+
+## Task 23: Complete AWS Architecture Setup Guide
+- **Action:** Before executing code, generate a comprehensive, step-by-step markdown guide (`aws_deployment_guide.md`) detailing exactly how the human should provision:
+  1. **AWS RDS (PostgreSQL):** For the relational data and `pgvector`.
+  2. **AWS EC2:** For hosting the Python Flask backend and Gunicorn.
+  3. **AWS Amplify:** For hosting the Vue.js frontend repository seamlessly.
+  4. **AWS IAM:** Detailed steps on creating the IAM user/policies required for `boto3` to access Bedrock securely.
+- **Commit:** `"docs: write definitive AWS native deployment guide"`
