@@ -8,6 +8,7 @@ const route  = useRoute();
 
 const userName = computed(() => localStorage.getItem('username') || 'User');
 const isAdmin  = computed(() => localStorage.getItem('role') === 'admin');
+const isCompany = computed(() => localStorage.getItem('role') === 'company');
 
 const studentLinks = [
   { label: 'Dashboard', to: '/student' },
@@ -23,7 +24,15 @@ const adminLinks = [
   { label: 'Companies',    to: '/admin/companies' },
 ];
 
-const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
+const companyLinks = [
+  { label: 'Dashboard', to: '/company' }
+];
+
+const navLinks = computed(() => {
+  if (isAdmin.value) return adminLinks;
+  if (isCompany.value) return companyLinks;
+  return studentLinks;
+});
 
 const isActive = (path) => {
   if (path === '/admin') return route.path === '/admin';
@@ -39,7 +48,7 @@ const logout = () => {
 <template>
   <header class="navbar">
     <!-- Left: Logo + name -->
-    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : '/student')">
+    <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : isCompany ? '/company' : '/student')">
       <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
       <span class="nav-title">Pathfinder.Ai</span>
     </div>
