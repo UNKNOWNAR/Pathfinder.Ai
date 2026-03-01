@@ -51,6 +51,12 @@ const routes = [
     name: 'admin-harvesters',
     component: () => import('../views/AdminHarvestersView.vue'),
     meta: { requiresAdmin: true }
+  },
+  {
+    path: '/admin/companies',
+    name: 'admin-companies',
+    component: () => import('../views/AdminCompaniesView.vue'),
+    meta: { requiresAdmin: true }
   }
 ];
 
