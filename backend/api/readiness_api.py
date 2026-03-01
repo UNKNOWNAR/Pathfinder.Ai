@@ -36,7 +36,7 @@ class JobReadiness(Resource):
         topic_counts = {}
         difficulty_counts = {'EASY': 0, 'MEDIUM': 0, 'HARD': 0}
         for q in questions:
-            diff = q.difficulty.upper()
+            diff = (q.difficulty or 'EASY').upper()
             if diff in difficulty_counts:
                 difficulty_counts[diff] += 1
             for topic in (q.topics or []):
@@ -76,13 +76,13 @@ class JobReadiness(Resource):
         total_student = 0
         for topic, asked_count in sorted_topics.items():
             solved = student_topics.get(topic, 0)
-            
+
             # Sort topic questions by frequency
             topic_qs = sorted(questions_by_topic.get(topic, []), key=lambda x: x['frequency'], reverse=True)
-            
+
             # Flag as missing if they have barely practiced this topic globally
             is_missing = solved < 10
-            
+
             comparison.append({
                 'topic': topic,
                 'asked': asked_count,
@@ -95,7 +95,7 @@ class JobReadiness(Resource):
 
         # Calculate a simple readiness percentage
         readiness_pct = 0
-        if total_company > 0 and total_student > 0:
+        if total_company > 0 and len(sorted_topics) > 0:
             # Weight it by topic coverage, not raw counts
             covered_topics = sum(1 for t in sorted_topics if student_topics.get(t, 0) > 0)
             readiness_pct = round((covered_topics / len(sorted_topics)) * 100, 1)

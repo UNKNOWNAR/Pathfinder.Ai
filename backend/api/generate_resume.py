@@ -1,6 +1,6 @@
 from flask_restful import Resource
 import io
-from flask import request, jsonify, send_file
+from flask import request, send_file
 from services.llm_service import LLMService
 from services.compiler_service import CompilerService
 from models.profile import Profile

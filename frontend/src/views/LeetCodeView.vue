@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import api from '@/services/api';
 
 const stats = ref(null);
 const advice = ref('');
@@ -27,14 +28,10 @@ const fetchStats = async () => {
   noUsername.value = false;
 
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/leetcode/stats', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await api.get('/api/leetcode/stats');
+    const data = res.data;
 
-    const data = await res.json();
-
-    if (!res.ok) {
+    if (res.status !== 200) {
       if (data.no_username) {
         noUsername.value = true;
       }

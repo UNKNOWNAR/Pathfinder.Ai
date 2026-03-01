@@ -1,11 +1,12 @@
 from flask import current_app, request
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from api.admin_api import admin_required
 from models import db
 from models.user import User
 from models.job import Job, HarvestLog
 from services.harvester import harvest_all, harvest_source
+from services.embedding import find_similar_jobs
 
 
 class AdminStats(Resource):
@@ -72,7 +73,7 @@ class AdminQuotas(Resource):
     @admin_required
     def get(self):
         from sqlalchemy import func
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timezone
 
         # Calculate start of current month in UTC
         now = datetime.now(timezone.utc)
@@ -168,8 +169,6 @@ class JobsList(Resource):
             return {'message': 'Only students can view the job feed.'}, 403
 
         from models.profile import Profile
-        from flask_jwt_extended import get_jwt_identity
-        from services.embedding import find_similar_jobs
 
         user_id = get_jwt_identity()
         profile = Profile.query.filter_by(user_id=user_id).first()

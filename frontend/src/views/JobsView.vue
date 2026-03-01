@@ -125,6 +125,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import api from '@/services/api';
 
 const jobs = ref([]);
 const searchQuery = ref('');
@@ -140,19 +141,14 @@ const readinessLoading = ref(false);
 const fetchJobs = async () => {
   loading.value = true;
   try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`http://localhost:5000/api/jobs?page=${currentPage.value}&q=${encodeURIComponent(searchQuery.value)}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await api.get(`/api/jobs?page=${currentPage.value}&q=${encodeURIComponent(searchQuery.value)}`);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       console.error('Failed to fetch jobs');
       return;
     }
 
-    const data = await response.json();
+    const data = response.data;
     jobs.value = data.jobs;
     totalPages.value = data.pages;
     currentPage.value = data.page;
@@ -175,11 +171,8 @@ const toggleReadiness = async (job) => {
   readinessData.value = null;
 
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:5000/api/jobs/${job.job_id}/readiness`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
+    const res = await api.get(`/api/jobs/${job.job_id}/readiness`);
+    const data = res.data;
     readinessData.value = data;
   } catch (err) {
     console.error('Error fetching readiness:', err);

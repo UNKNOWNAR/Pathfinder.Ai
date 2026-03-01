@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import request
-from models.user import db,User
+from models.user import db, User
 from models.profile import Profile
 from user_datastore import user_datastore
 from sqlalchemy import or_
@@ -30,23 +30,23 @@ class LoginUser(Resource):
                 'status': 'error'
             }
             return result, 404
-        
+
         if not user.check_password(password):
             result = {
                 'message': 'Invalid password',
                 'status': 'error'
             }
             return result, 401
-        
+
         if not user.active:
             result = {
                 'message': 'User is not active',
                 'status': 'error'
             }
             return result, 403
-        
-        access_token = create_access_token(identity=str(user.user_id),additional_claims={'role': user.role})
-        
+
+        access_token = create_access_token(identity=str(user.user_id), additional_claims={'role': user.role})
+
         result = {
             'message': 'Login successful',
             'access_token': access_token,
@@ -66,7 +66,7 @@ class SignUpUser(Resource):
 
         if not register_data or not all(k in register_data for k in ('username', 'email', 'password', 'role')):
             result = {
-                'message': 'No data provided',
+                'message': 'Incomplete data provided',
                 'status': 'error'
             }
             return result, 400
@@ -86,17 +86,17 @@ class SignUpUser(Resource):
         existing_user = User.query.filter(
             or_(User.username == username, User.email == email)
         ).first()
-        
+
         if existing_user:
             conflict_field = "Username" if existing_user.username == username else "Email"
-            
+
             result = {
                 'message': f'{conflict_field} already exists',
                 'status': 'error'
             }
             return result, 409
 
-        active = True if role == 'student' else False
+        active = role == 'student'
         user = user_datastore.create_user(
             username=username,
             email=email,
@@ -104,8 +104,8 @@ class SignUpUser(Resource):
             role=role,
             active=active
         )
-        db.session.flush() #forces SQLite to assign user_id NOW
-        db.session.add(Profile(user_id=user.user_id,name = user.username,email = user.email))
+        db.session.flush() # forces DB to assign user_id NOW
+        db.session.add(Profile(user_id=user.user_id, name=user.username, email=user.email))
         db.session.commit()
         result = {
             'message': 'User registered successfully',
