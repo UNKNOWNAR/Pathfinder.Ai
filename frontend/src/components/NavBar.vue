@@ -20,7 +20,7 @@ const adminLinks = [
   { label: 'Dashboard',  to: '/admin' },
   { label: 'Harvesters',   to: '/admin/harvesters' },
   { label: 'Jobs DB',      to: '/admin/jobs' },
-  { label: 'Settings',     to: '/admin/settings' },
+  { label: 'Companies',    to: '/admin/companies' },
 ];
 
 const navLinks = computed(() => isAdmin.value ? adminLinks : studentLinks);
