@@ -167,6 +167,37 @@ class JobsList(Resource):
         if claims.get('role') != 'student':
             return {'message': 'Only students can view the job feed.'}, 403
 
+        from models.profile import Profile
+        from flask_jwt_extended import get_jwt_identity
+        import re
+
+        user_id = get_jwt_identity()
+        profile = Profile.query.filter_by(user_id=user_id).first()
+        
+        # Build a set of keywords from the student's profile for matching
+        student_keywords = set()
+        if profile:
+            if profile.skills:
+                for skill in profile.skills:
+                    student_keywords.add(str(skill).lower().strip())
+            if profile.headline:
+                words = re.findall(r'\b\w+\b', profile.headline.lower())
+                student_keywords.update([w for w in words if len(w) > 2])
+
+        def calculate_match_score(job):
+            if not student_keywords:
+                return 0
+            
+            job_text = f"{job.title} {job.description}".lower()
+            match_count = sum(1 for kw in student_keywords if kw in job_text)
+            
+            # Simple heuristic: base the score on how many of their skills/keywords appear in the job
+            # A cap at max(len(skills), 5) to prevent artificially high scores for sparse profiles
+            max_possible = max(len(student_keywords), 5)
+            score = int((match_count / max_possible) * 100)
+            return min(score, 99) # Cap at 99 so it doesn't say 100% matched
+
+
         page     = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search   = request.args.get('q', '', type=str).strip()
@@ -198,7 +229,8 @@ class JobsList(Resource):
                     'location': j.location,
                     'source':   j.source,
                     'url':      j.url,
-                    'description': j.description
+                    'description': j.description,
+                    'match_score': calculate_match_score(j)
                 }
                 for j in paginated.items
             ]

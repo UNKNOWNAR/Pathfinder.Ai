@@ -22,7 +22,12 @@
         <div class="job-card" v-for="job in jobs" :key="job.job_id">
           <div class="job-header">
             <h2 class="job-title">{{ job.title }}</h2>
-            <span class="source-badge" :class="job.source.toLowerCase()">{{ job.source }}</span>
+            <div class="badges">
+              <span v-if="job.match_score !== undefined && job.match_score > 0" class="match-badge" :class="getMatchClass(job.match_score)">
+                {{ job.match_score }}% Match
+              </span>
+              <span class="source-badge" :class="job.source.toLowerCase()">{{ job.source }}</span>
+            </div>
           </div>
           <p class="company-name">{{ job.company }} &mdash; <span>{{ job.location || 'Remote' }}</span></p>
           <div class="job-desc" v-html="truncateDesc(job.description)"></div>
@@ -192,6 +197,12 @@ const readinessColor = (pct) => {
   return 'low';
 };
 
+const getMatchClass = (score) => {
+  if (score >= 40) return 'match-high';
+  if (score >= 20) return 'match-med';
+  return 'match-low';
+};
+
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
@@ -306,6 +317,24 @@ onMounted(() => {
   font-weight: 900;
   margin: 0;
 }
+.badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.match-badge {
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid var(--ink);
+  padding: 4px 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.match-high { background-color: #bbf7d0; color: #166534; }
+.match-med { background-color: #fef08a; color: #854d0e; }
+.match-low { background-color: #fca5a5; color: #991b1b; }
+
 .source-badge {
   font-size: 12px;
   font-weight: 800;
