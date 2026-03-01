@@ -154,3 +154,31 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
 - **Action:** Build a form for posting new jobs (Title, Description, Location, URL).
 - **Action:** On submit, hit the `POST /api/company/jobs` endpoint. Show success or error messages (e.g., if they are not yet approved by an admin).
 - **Commit:** `"feat: build company dashboard for direct job posting"`
+
+---
+
+## Phase 9: Semantic Match Engine (Vector Database)
+
+**Goal:** Replace the basic keyword matching algorithm with a true semantic AI matching engine using a Vector Database. The ultimate deployment target is AWS RDS with the `pgvector` extension. For local development, however, we should abstract the logic to use a lightweight local vector store (like ChromaDB or local array/cosine-sim) or connect to a free-tier Pinecone index if easiest. The key is writing robust vector embedding logic that can be easily adapted to `pgvector` later.
+
+## Task 20: Vector Database Setup & Schema Preparation
+- **Action:** Select a Vector Database approach suitable for local Windows development that conceptually mirrors `pgvector` (e.g., ChromaDB). Note in your comments or a new `migration_notes.md` file exactly how this needs to change for AWS `pgvector`.
+- **Action:** Design the storage schema for job embeddings (vectors mapping to job IDs) and student profile embeddings.
+- **Commit:** `"chore: initialized vector database configuration"`
+
+## Task 21: Embedding Pipeline for Job Harvester
+- **Action:** Create a utility (e.g., `services/embedding.py`) that uses an LLM or embedding model endpoint (using the HuggingFace Inference API if available) to convert a block of text into a vector.
+- **Action:** Modify `services/harvester.py` and `api/company_api.py`. Whenever a new Job is saved (either harvested or direct-posted), generate an embedding for its `title` + `description` and save it to the Vector Database.
+- **Commit:** `"feat: add automatic vector embedding generation for new jobs"`
+
+## Task 22: Embedding Pipeline for Student Profiles
+- **Action:** Modify `api/profile_api.py`. Whenever a student updates their Profile (skills, headline, summary), re-generate an embedding for their profile and save it.
+- **Commit:** `"feat: add automatic vector embedding generation for student profiles"`
+
+## Task 23: Semantic Sorting in the Job Feed
+- **Action:** Rewrite the matching logic in `api/harvest_api.py` (`JobsList` GET method).
+- **Action:** Fetch the student's pre-calculated profile embedding vector.
+- **Action:** Perform a cosine similarity search against the Job vectors in the Vector Database.
+- **Action:** Replace the current heuristic `match_score` logic with the true semantic similarity score returned by the Vector DB. Map the cosine similarity score (e.g., 0.0 to 1.0) to a clear percentage (0-100%).
+- **Action:** Ensure the returned jobs map correctly to the paginated API response.
+- **Commit:** `"feat: implement true semantic job matching via vector similarity"`
