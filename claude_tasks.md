@@ -128,27 +128,27 @@ This file contains the immediate tasks for the AI assistant (Claude/Agent) to ex
 
 ## Phase 8: Landing Page & Company Portal UI
 
-## Task 16: Public Landing Page (`HomeView.vue`)
+## ~~Task 16: Public Landing Page (`HomeView.vue`)~~ [COMPLETED]
 **Goal:** Create a stunning front door for the application.
 - **Action:** Build a new `frontend/src/views/HomeView.vue` component with a bold, beautiful Neo-Brutalist design.
 - **Action:** Summarize the app's core features on this page (AI-powered resume generation, LeetCode analytics & interview readiness, aggregated job postings, and company direct hiring).
 - **Action:** Update `frontend/src/router/index.js` to point the root route `/` to `HomeView.vue` instead of immediately redirecting to `/student`. Provide clear links to Login/Signup.
 - **Commit:** `"feat: build public landing page"`
 
-## Task 17: Update Authentication for Companies
+## ~~Task 17: Update Authentication for Companies~~ [COMPLETED]
 **Goal:** Allow users to register as a company.
 - **Action:** Update `frontend/src/views/LoginView.vue` to allow users to toggle between registering as a "Student" or a "Company".
 - **Action:** When registering as a Company, hit the `POST /api/company/register` endpoint. Inform the user they must wait for admin approval before they can post jobs.
 - **Commit:** `"feat: add company registration toggle to authentication UI"`
 
-## Task 18: Admin Company Approval UI
+## ~~Task 18: Admin Company Approval UI~~ [COMPLETED]
 **Goal:** Allow Admins to manage and approve pending company registrations.
 - **Action:** Create `frontend/src/views/AdminCompaniesView.vue` (accessible only to admins). Add it to `router/index.js` and the admin sidebar/navbar.
 - **Action:** Fetch all companies from `GET /api/admin/companies`.
 - **Action:** Display them in a list/grid. Add an "Approve" button next to pending companies that triggers `POST /api/admin/companies/<id>/approve`.
 - **Commit:** `"feat: build admin company approval UI"`
 
-## Task 19: Company Dashboard (`CompanyDashboardView.vue`)
+## ~~Task 19: Company Dashboard (`CompanyDashboardView.vue`)~~ [COMPLETED]
 **Goal:** Provide a dedicated portal for approved companies to post jobs.
 - **Action:** Create `frontend/src/views/CompanyDashboardView.vue`. Secure it so only users with the `company` role can access it.
 - **Action:** Build a form for posting new jobs (Title, Description, Location, URL).
