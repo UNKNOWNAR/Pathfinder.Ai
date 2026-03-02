@@ -305,7 +305,7 @@ def _run_harvest(app, source="all", roles=None, locations=None):
                             total_added += added
                             # Generate embeddings for newly inserted jobs
                             for j in new_jobs:
-                                store_job_embedding(j.id, j.title, j.description)
+                                store_job_embedding(j.job_id, j.title, j.description)
                         logger.info(f"Completed {name}: added {added} jobs from {calls} API calls.")
             else:
                 raw_data, calls = _fetch_source_raw(source, app.config, roles, locations)
@@ -317,7 +317,7 @@ def _run_harvest(app, source="all", roles=None, locations=None):
                     db.session.commit()
                     # Generate embeddings for newly inserted jobs
                     for j in new_jobs:
-                        store_job_embedding(j.id, j.title, j.description)
+                        store_job_embedding(j.job_id, j.title, j.description)
                 logger.info(f"Completed {source}: added {total_added} jobs from {calls} API calls.")
 
             log.status = "completed"
