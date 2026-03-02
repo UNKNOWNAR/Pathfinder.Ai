@@ -29,20 +29,15 @@ const fetchStats = async () => {
 
   try {
     const res = await api.get('/api/leetcode/stats');
-    const data = res.data;
-
-    if (res.status !== 200) {
-      if (data.no_username) {
-        noUsername.value = true;
-      }
-      error.value = data.message || 'Failed to fetch LeetCode stats.';
-      return;
-    }
-
-    stats.value = data.stats;
-    advice.value = data.advice || '';
+    stats.value = res.data.stats;
+    advice.value = res.data.advice || '';
   } catch (err) {
-    error.value = 'Network error. Could not reach the server.';
+    if (err.response?.data?.no_username) {
+      noUsername.value = true;
+      error.value = err.response.data.message;
+    } else {
+      error.value = err.response?.data?.message || 'Network error. Could not reach the server.';
+    }
   } finally {
     loading.value = false;
   }
