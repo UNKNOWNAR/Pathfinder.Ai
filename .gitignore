@@ -76,7 +76,14 @@ claude.md
 .cursorrules
 .cursor/
 
-# ==================================================
 # Chroma DB Local Store
 # ==================================================
 backend/chroma_db/
+
+# ==================================================
+# Migration / Temporary Setup Files
+# ==================================================
+backend/migration_notes.md
+backend/*.md
+migrate_to_aws.py
+fix_sequences.py
