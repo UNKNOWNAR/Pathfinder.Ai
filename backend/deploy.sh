@@ -3,7 +3,7 @@
 # Configuration
 PROJECT_ROOT="/home/ubuntu/Pathfinder.Ai"
 APP_DIR="$PROJECT_ROOT/backend"
-VENV_PATH="$PROJECT_ROOT/venv"
+VENV_PATH="$APP_DIR/venv"
 ACCESS_LOG="/home/ubuntu/access.log"
 ERROR_LOG="/home/ubuntu/error.log"
 
