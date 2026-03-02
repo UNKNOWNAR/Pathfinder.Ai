@@ -21,6 +21,7 @@ const routes = [
   },
   {
     path: '/jobs',
+    alias: '/student',
     name: 'jobs',
     component: () => import('../views/JobsView.vue')
   },
