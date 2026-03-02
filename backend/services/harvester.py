@@ -83,12 +83,18 @@ SOURCES = {
         }
     },
     "FaangWatch": {
-        "url": "https://faang.watch/api/search",
-        "type": "direct",
+        "url": "https://faang-watch-api.p.rapidapi.com/search",
+        "host": "faang-watch-api.p.rapidapi.com",
+        "type": "rapidapi",
+        "config_key": "FAANG_WATCH_API_KEY",
         "mapping": {
             "title": "title",
             "company": "company",
-            "location": lambda item: (item.get("parsed_locations") or item.get("locations") or ["Remote"])[0],
+            "location": lambda item: (
+                f"{item['parsed_locations'][0].get('city', '')}, {item['parsed_locations'][0].get('state', '')}, {item['parsed_locations'][0].get('country', '')}".strip(", ")
+                if item.get("parsed_locations") and len(item["parsed_locations"]) > 0
+                else (item.get("locations") or ["Remote"])[0]
+            ),
             "description": "description",
             "url": "company_url"
         }
@@ -179,7 +185,7 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                         "text": role,
                         "location": loc,
                         "min_years_of_experience": 0,
-                        "seniority": "junior",
+                        "seniority": "Junior",
                         "page_size": 20
                     }
                     try:
@@ -190,8 +196,9 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                         if isinstance(data, list):
                             raw_jobs.extend(data)
                         elif isinstance(data, dict):
+                            # The API docs mention 'hits' specifically
                             raw_jobs.extend(data.get("hits", data.get("jobs", data.get("data", []))))
-                        time.sleep(1)
+                        time.sleep(2) # Increased delay to avoid 429 "Too many requests"
                     except Exception as e:
                         logger.error(f"FaangWatch sub-query '{role}' at '{loc}' failed: {e}")
 

@@ -1,6 +1,6 @@
 from . import db
 from datetime import datetime
-
+from pgvector.sqlalchemy import Vector
 
 class Job(db.Model):
     __tablename__ = 'job'
@@ -13,6 +13,7 @@ class Job(db.Model):
     source      = db.Column(db.String(80), nullable=False)   # e.g. 'Adzuna', 'LinkedIn'
     url         = db.Column(db.String(512), nullable=True)
     hash        = db.Column(db.String(64), unique=True, nullable=False)  # SHA-256 dedup key
+    embedding   = db.Column(Vector(384), nullable=True)
 
     def __repr__(self):
         return f'<Job {self.title} @ {self.company}>'

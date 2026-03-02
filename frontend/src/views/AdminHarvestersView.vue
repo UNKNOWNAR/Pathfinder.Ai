@@ -153,6 +153,12 @@ onMounted(async () => {
             <span class="trigger-quota">{{ getRemainingStr('GoogleJobs') }}</span>
          </button>
 
+         <button class="box trigger-btn faang-btn" @click="triggerHarvest('FaangWatch')" :disabled="harvesting || isQuotaExhausted('FaangWatch')">
+            <span class="trigger-title">⚡ FETCH FAANG.WATCH</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(FAANG Careers API)' }}</span>
+            <span class="trigger-quota">{{ getRemainingStr('FaangWatch') }}</span>
+         </button>
+
          <button class="box trigger-btn master-btn" @click="triggerHarvest('all')" :disabled="harvesting">
             <span class="trigger-title">🚀 RUN MASTER HARVEST</span>
             <span class="trigger-sub">{{ harvesting ? 'Running...' : '(All Sources Combined)' }}</span>
@@ -226,6 +232,7 @@ onMounted(async () => {
 .jsearch-btn { background: #74b9ff; }
 .internships-btn { background: #55efc4; }
 .google-btn { background: #fab1a0; }
+.faang-btn { background: #a29bfe; }
 .master-btn { background: var(--admin-accent); color: white; }
 .master-btn .trigger-quota { color: #fff; }
 @media (max-width: 860px) {
