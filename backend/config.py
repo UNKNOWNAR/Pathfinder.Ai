@@ -46,6 +46,9 @@ class Config:
     # Bebity Google Jobs Scraper (RapidAPI)
     BEBITY_API_KEY = os.getenv('BEBITY_API_KEY', '')
 
+    # Faang.watch API
+    FAANG_WATCH_API_KEY = os.getenv('FAANG_WATCH_API_KEY', '')
+
 
 
 

@@ -94,6 +94,7 @@ class AdminQuotas(Resource):
             "LinkedIn": 200,
             "Internships": 200,
             "GoogleJobs": 100,
+            "FaangWatch": 100,
             "Remotive": -1, # Unlimited
             "Arbeitnow": -1 # Unlimited
         }
