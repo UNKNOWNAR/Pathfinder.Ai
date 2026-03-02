@@ -1,3 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Core Framework
+flask
 Flask==3.0.3
 Flask-RESTful==0.3.10
 Flask-SQLAlchemy==3.1.1
@@ -12,9 +16,9 @@ psycopg2-binary==2.9.9
 pgvector==0.3.2
 SQLAlchemy==2.0.30
 
-# AI / Machine Learning
+# AI / Machine Learning (CPU Only)
+torch==2.3.1+cpu
 sentence-transformers==3.0.1
-torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
 huggingface-hub
 langchain-huggingface
 
