@@ -86,7 +86,7 @@ def find_similar_jobs(student_vector, limit=10):
     Given a student's profile vector, query PostgreSQL using pgvector <=> operator for the closest matching jobs.
     Returns a list of dicts with job_id and similarity_score.
     """
-    if not student_vector:
+    if student_vector is None or len(student_vector) == 0:
         return []
 
     try:
