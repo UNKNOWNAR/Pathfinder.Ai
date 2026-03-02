@@ -179,7 +179,7 @@ class JobsList(Resource):
         search   = request.args.get('q', '', type=str).strip()
 
         # Check if the user has an embedding and we're not explicitly text-searching
-        if not search and profile and profile.embedding:
+        if not search and profile and profile.embedding is not None:
             # Vector Database Search
             matches = find_similar_jobs(profile.embedding, limit=100)
 

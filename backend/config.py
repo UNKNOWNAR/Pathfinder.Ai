@@ -43,9 +43,6 @@ class Config:
     # Google Jobs API (RapidAPI) — aggregates LinkedIn, Indeed, Glassdoor etc.
     GOOGLE_JOBS_API_KEY = os.getenv('GOOGLE_JOBS_API_KEY', '')
 
-    # Bebity Google Jobs Scraper (RapidAPI)
-    BEBITY_API_KEY = os.getenv('BEBITY_API_KEY', '')
-
     # Faang.watch API
     FAANG_WATCH_API_KEY = os.getenv('FAANG_WATCH_API_KEY', '')
 
