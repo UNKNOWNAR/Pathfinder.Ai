@@ -1,17 +1,21 @@
 #!/bin/bash
 
 # Configuration
-VENV_PATH="/home/ubuntu/Pathfinder.Ai/backend/venv"
-APP_DIR="/home/ubuntu/Pathfinder.Ai/backend"
+PROJECT_ROOT="/home/ubuntu/Pathfinder.Ai"
+APP_DIR="$PROJECT_ROOT/backend"
+VENV_PATH="$PROJECT_ROOT/venv"
 ACCESS_LOG="/home/ubuntu/access.log"
 ERROR_LOG="/home/ubuntu/error.log"
 
 echo "🚀 Starting Pathfinder.Ai Production Sync..."
 
-# 1. Update Code from GitHub
-cd "$APP_DIR" || exit
+# 1. Update Code from GitHub (from the Root)
+cd "$PROJECT_ROOT" || exit
 echo "📥 Pulling latest code from master..."
 git pull origin master
+
+# 2. Enter Backend Directory for App tasks
+cd "$APP_DIR" || exit
 
 # 2. Activate Virtual Environment
 source "$VENV_PATH/bin/activate"
