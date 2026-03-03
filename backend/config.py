@@ -46,6 +46,9 @@ class Config:
     # Faang.watch API
     FAANG_WATCH_API_KEY = os.getenv('FAANG_WATCH_API_KEY', '')
 
+    # Groq API — used for AI Tech Interview (llama-3.3-70b-versatile)
+    GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+
 
 
 

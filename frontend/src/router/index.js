@@ -31,6 +31,11 @@ const routes = [
     component: () => import('../views/LeetCodeView.vue')
   },
   {
+    path: '/interview',
+    name: 'interview',
+    component: () => import('../views/InterviewView.vue')
+  },
+  {
     path: '/admin',
     name: 'admin',
     component: () => import('../views/AdminDashboardView.vue'),

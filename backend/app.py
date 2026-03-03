@@ -7,6 +7,7 @@ from flask_security.utils import hash_password as fs_hash_password
 from flask_restful import Api
 from user_datastore import user_datastore
 from api import init_routes
+from api.interview_api import seed_interview_topics
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
@@ -24,6 +25,7 @@ def create_app():
 def init_db():
     with app.app_context():
         db.create_all()
+        seed_interview_topics()
         if not User.query.filter_by(email='admin@example.com').first():
             admin = User(
                 username='admin',
