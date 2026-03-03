@@ -27,5 +27,8 @@ requests==2.32.3
 beautifulsoup4==4.12.3
 lxml==5.2.2
 
+# AI Interview (Groq)
+groq
+
 # Production
 gunicorn==22.0.0

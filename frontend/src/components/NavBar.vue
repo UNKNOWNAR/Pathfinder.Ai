@@ -13,6 +13,7 @@ const isCompany = computed(() => localStorage.getItem('role') === 'company');
 const studentLinks = [
   { label: 'Jobs',      to: '/jobs'      },
   { label: 'LeetCode',  to: '/leetcode'  },
+  { label: 'Interview', to: '/interview' },
   { label: 'Profile',   to: '/profile'   },
 ];
 
