@@ -20,6 +20,10 @@ cd "$APP_DIR" || exit
 # 2. Activate Virtual Environment
 source "$VENV_PATH/bin/activate"
 
+# Install/update dependencies
+echo "📦 Installing Python dependencies..."
+pip install -r requirements.txt
+
 # 3. Kill existing Gunicorn processes safely
 echo "🛑 Stopping old server..."
 pkill gunicorn
