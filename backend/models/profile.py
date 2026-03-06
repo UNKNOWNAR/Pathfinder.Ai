@@ -1,5 +1,4 @@
 from . import db
-from pgvector.sqlalchemy import Vector
 
 class Profile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'),primary_key=True, unique=True, nullable=False)
@@ -22,7 +21,8 @@ class Profile(db.Model):
 
     # Stores the raw JSON array vector from sentence-transformers for PG compatibility later
     # 384 dimensions for all-MiniLM-L6-v2
-    embedding = db.Column(Vector(384), nullable=True)
+    # Using JSON fallback since pgvector is not installed natively
+    embedding = db.Column(db.JSON, nullable=True)
 
     def __repr__(self):
         return f'<Profile {self.name}>'

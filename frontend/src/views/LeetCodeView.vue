@@ -28,6 +28,13 @@ const fetchStats = async () => {
   noUsername.value = false;
 
   try {
+    // First, check if the user has a LeetCode username set
+    const profileRes = await api.get('/profile');
+    if (!profileRes.data.leetcode_username) {
+      noUsername.value = true;
+      return;
+    }
+
     const res = await api.get('/api/leetcode/stats');
     stats.value = res.data.stats;
     advice.value = res.data.advice || '';
