@@ -30,15 +30,18 @@ def init_db():
         seed_interview_topics()
 
         if not User.query.filter_by(email='admin@example.com').first():
-            admin = User(
-                username='admin',
-                email='admin@example.com',
-                role='admin',
-                active=True
-            )
-            admin.password = fs_hash_password('admin')
-            db.session.add(admin)
-            db.session.commit()
+            try:
+                admin = User(
+                    username='admin',
+                    email='admin@example.com',
+                    role='admin',
+                    active=True
+                )
+                admin.password = fs_hash_password('admin')
+                db.session.add(admin)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
 
 app, api = create_app()
 CORS(app)

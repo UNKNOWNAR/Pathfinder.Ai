@@ -34,10 +34,41 @@ class GenerateResume(Resource):
             )
             
             print("Compiling LaTeX to PDF...")
-            pdf_bytes = compiler_service.compile_latex_to_pdf(latex_code)
-            
-            print("Successfully generated PDF.")
-            
+            compile_result = compiler_service.compile_latex_to_pdf(latex_code, profile.user_id)
+            pdf_bytes = compile_result["pdf_bytes"]
+            s3_key = compile_result["s3_key"]
+            presigned_url = compile_result["url"]
+
+            print(f"Successfully generated PDF and uploaded to S3: {s3_key}")
+
+            # Update Profile Resumes Array (Max 2)
+            from models import db
+            current_resumes = profile.resumes or []
+
+            # Add new resume at the beginning
+            new_resume_entry = {
+                "s3_key": s3_key,
+                "url": presigned_url,
+                "created_at": __import__('datetime').datetime.utcnow().isoformat()
+            }
+
+            # Keep only the latest 2 resumes
+            current_resumes.insert(0, new_resume_entry)
+
+            # If we exceed the limit, delete the oldest one from S3 and remove from array
+            if len(current_resumes) > 2:
+                oldest_resume = current_resumes.pop()
+                try:
+                    old_s3_key = oldest_resume.get("s3_key")
+                    if old_s3_key:
+                        compiler_service.s3_service.delete_file(old_s3_key)
+                except Exception as del_err:
+                    print(f"Failed to delete old resume from S3: {del_err}")
+
+            # Need to create a new list or SQLAlchemy JSON mutation won't be detected
+            profile.resumes = list(current_resumes)
+            db.session.commit()
+
             # Return as downloadable file
             return send_file(
                 io.BytesIO(pdf_bytes),

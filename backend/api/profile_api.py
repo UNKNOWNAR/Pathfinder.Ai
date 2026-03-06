@@ -4,6 +4,9 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from models import db
 from models.profile import Profile
 from services.embedding import store_student_embedding
+from services.s3_service import S3Service
+
+s3_service = S3Service()
 
 class ProfileAPI(Resource):
     @jwt_required()
@@ -19,29 +22,58 @@ class ProfileAPI(Resource):
     def put(self):
         user_id = get_jwt_identity()
         profile = Profile.query.filter_by(user_id=user_id).first()
-        if profile:
+
+        if not profile:
+            return {'message': 'Profile not found'}, 404
+
+        # Handle multipart/form-data for avatar uploads
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Check for avatar file
+            if 'avatar' in request.files:
+                file = request.files['avatar']
+                if file.filename != '':
+                    s3_key = s3_service.upload_avatar(file, file.filename, user_id)
+                    if s3_key:
+                        profile.avatar_url = s3_service.get_public_url(s3_key)
+
+            # The rest of the form data might be JSON strings or individual fields
+            # For this implementation, we handle the avatar upload via form-data
+            # and expect the main profile updates to still come via JSON below or
+            # as form fields.
+            payload = request.form.to_dict()
+
+            # Convert JSON strings back to objects if they are passed as form fields
+            import json
+            for key in ['skills', 'experience', 'education', 'projects', 'achievements']:
+                if key in payload and isinstance(payload[key], str):
+                    try:
+                        payload[key] = json.loads(payload[key])
+                    except json.JSONDecodeError:
+                        pass
+        else:
             payload = request.get_json()
-            if not payload:
-                return {'message': 'No data provided'}, 400
+
+        if payload:
             profile.updateData(payload)
 
-            # Re-generate vector embedding based on updated profile
-            # We convert skills array to string if it exists for the embedding generator
-            skills_text = ""
-            if profile.skills:
-                skills_text = ", ".join(profile.skills) if isinstance(profile.skills, list) else str(profile.skills)
+        # Always try to generate embedding if we got past the not found check
+        # We convert skills array to string if it exists for the embedding generator
+        skills_text = ""
+        if profile.skills:
+            skills_text = ", ".join(profile.skills) if isinstance(profile.skills, list) else str(profile.skills)
 
-            vector = store_student_embedding(
-                student_id=user_id,
-                skills=skills_text,
-                headline=profile.headline,
-                summary=profile.summary
-            )
+        vector = store_student_embedding(
+            student_id=user_id,
+            skills=skills_text,
+            headline=profile.headline,
+            summary=profile.summary
+        )
 
-            # We store it in PG as a JSON array (pgvector migration ready)
-            profile.embedding = vector
+        # We store it in PG as a JSON array (pgvector migration ready)
+        profile.embedding = vector
 
-            db.session.commit()
-            return {'message': 'Profile updated successfully'}, 200
-        else:
-            return {'message': 'Profile not found'}, 404
+        db.session.commit()
+        return {
+            'message': 'Profile updated successfully',
+            'profile': profile.to_dict()
+        }, 200
