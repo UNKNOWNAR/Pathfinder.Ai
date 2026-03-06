@@ -5,7 +5,8 @@ class Profile(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
     headline = db.Column(db.Text, nullable=True)
-    photo = db.Column(db.Text, nullable=True)
+    avatar_url = db.Column(db.Text, nullable=True) # S3 Public Object URL for Profile Picture
+    resumes = db.Column(db.JSON, nullable=True, default=[]) # Array of S3 Presigned URLs or Object Keys (Max 2)
     location = db.Column(db.String(255), nullable=True)
     phone = db.Column(db.String(255), nullable=True)
     summary = db.Column(db.Text, nullable=True)
@@ -33,7 +34,8 @@ class Profile(db.Model):
             'name': self.name,
             'email': self.email,
             'headline': self.headline,
-            'photo': self.photo,
+            'avatar_url': self.avatar_url,
+            'resumes': self.resumes,
             'location': self.location,
             'phone': self.phone,
             'summary': self.summary,
@@ -48,7 +50,7 @@ class Profile(db.Model):
             'achievements': self.achievements
         }
 
-    ALLOWED_FIELDS = {'name', 'headline', 'photo', 'location', 'phone',
+    ALLOWED_FIELDS = {'name', 'headline', 'avatar_url', 'resumes', 'location', 'phone',
                   'summary', 'github', 'linkedin', 'portfolio', 'leetcode_username',
                   'skills', 'experience', 'education', 'projects', 'achievements'}
 
