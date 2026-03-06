@@ -1,7 +1,11 @@
 import requests
+from services.s3_service import S3Service
 
 class CompilerService:
-    def compile_latex_to_pdf(self, latex_string: str) -> bytes:
+    def __init__(self):
+        self.s3_service = S3Service()
+
+    def compile_latex_to_pdf(self, latex_string: str, user_id: int) -> dict:
         # 1. Primary Attempt: TeXLive.net (Highly reliable, backed by LearnLaTeX)
         try:
             print("Attempting compilation via TeXLive.net...")
@@ -19,10 +23,20 @@ class CompilerService:
             
             # Verify the response is actually a PDF (starts with PDF magic bytes)
             if response.content.startswith(b'%PDF'):
-                return response.content
+                pdf_bytes = response.content
+                s3_key = self.s3_service.upload_resume_pdf(pdf_bytes, user_id)
+                if not s3_key:
+                    raise Exception("Failed to upload generated PDF to S3")
+
+                presigned_url = self.s3_service.get_presigned_url(s3_key)
+                return {
+                    "pdf_bytes": pdf_bytes, # keeping this for backward compatibility if needed
+                    "s3_key": s3_key,
+                    "url": presigned_url
+                }
             else:
                 print("TeXLive returned a response, but it was not a valid PDF. Checking fallback...")
-                
+
         except requests.exceptions.RequestException as e:
             print(f"TeXLive API failed: {e}")
 
@@ -43,9 +57,19 @@ class CompilerService:
                 timeout=15
             )
             response.raise_for_status()
-            
+
             if response.content.startswith(b'%PDF'):
-                return response.content
+                pdf_bytes = response.content
+                s3_key = self.s3_service.upload_resume_pdf(pdf_bytes, user_id)
+                if not s3_key:
+                    raise Exception("Failed to upload generated PDF to S3")
+
+                presigned_url = self.s3_service.get_presigned_url(s3_key)
+                return {
+                    "pdf_bytes": pdf_bytes,
+                    "s3_key": s3_key,
+                    "url": presigned_url
+                }
                 
         except requests.exceptions.RequestException as e:
             print(f"YtoTech API failed: {e}")

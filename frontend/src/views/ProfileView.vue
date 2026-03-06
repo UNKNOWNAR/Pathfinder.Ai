@@ -62,12 +62,14 @@ const saved_msg = ref('');
 
 // ── Photo upload ──────────────────────────────────────────────────────────
 const fileInput = ref(null);
-const photoPreview = computed(() => profile.photo || null);
+const photoPreview = computed(() => profile.avatar_url || profile.photo || null);
+const selectedPhotoFile = ref(null);
 
 const pickPhoto = () => fileInput.value.click();
 const onPhotoChange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  selectedPhotoFile.value = file;
   const reader = new FileReader();
   reader.onload = (ev) => { profile.photo = ev.target.result; };
   reader.readAsDataURL(file);
@@ -99,7 +101,42 @@ const saveProfile = async () => {
   isSaving.value = true;
   saved_msg.value = 'Saving...';
   try {
-    await api.put('/profile', profile);
+    const formData = new FormData();
+
+    // Append standard fields
+    formData.append('name', profile.name || '');
+    formData.append('headline', profile.headline || '');
+    formData.append('email', profile.email || '');
+    formData.append('phone', profile.phone || '');
+    formData.append('location', profile.location || '');
+    formData.append('summary', profile.summary || '');
+    formData.append('github', profile.github || '');
+    formData.append('linkedin', profile.linkedin || '');
+    formData.append('portfolio', profile.portfolio || '');
+    formData.append('leetcode_username', profile.leetcode_username || '');
+
+    // Append JSON arrays
+    formData.append('skills', JSON.stringify(profile.skills || []));
+    formData.append('experience', JSON.stringify(profile.experience || []));
+    formData.append('education', JSON.stringify(profile.education || []));
+    formData.append('projects', JSON.stringify(profile.projects || []));
+    formData.append('achievements', JSON.stringify(profile.achievements || []));
+
+    // Append avatar if selected
+    if (selectedPhotoFile.value) {
+      formData.append('avatar', selectedPhotoFile.value);
+    }
+
+    const res = await api.put('/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    // Update frontend state with potentially new backend data (e.g. new S3 avatar_url)
+    if (res.data && res.data.profile) {
+      Object.assign(profile, res.data.profile);
+      selectedPhotoFile.value = null; // Clear the temporary file now that it's uploaded
+    }
+
     saved_msg.value = '✦ SAVED!';
     // Optional: Keep localStorage username in sync if used elsewhere
     localStorage.setItem('username', profile.name);
@@ -127,6 +164,12 @@ const generateResume = async () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Refresh profile to fetch the new S3 resume URL
+    const profRes = await api.get('/profile');
+    if (profRes.data) {
+      profile.resumes = profRes.data.resumes || [];
+    }
   } catch (err) {
     console.error(err);
     alert('Failed to generate resume. Please ensure required profile fields are filled.');
@@ -414,6 +457,15 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
             {{ isGenerating ? 'GENERATING...' : '✦ GENERATE TAILORED RESUME →' }}
           </button>
           <p class="generate-note">The AI will rewrite your bullets to match the JD, then compile a beautifully formatted PDF.</p>
+
+          <!-- Generated Resumes List (Max 2) -->
+          <div v-if="profile.resumes && profile.resumes.length" class="resumes-list">
+            <h4>Your Generated Resumes</h4>
+            <div v-for="(resume, i) in profile.resumes" :key="i" class="resume-item">
+              <span class="resume-date">{{ new Date(resume.created_at).toLocaleString() }}</span>
+              <a :href="resume.url" target="_blank" rel="noopener noreferrer" class="outline-btn">Download / View</a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -747,6 +799,37 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   text-align: center;
   font-style: italic;
 }
+
+/* ── Resumes List ────────────────────────────────────────────────────── */
+.resumes-list {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--ink);
+}
+.resumes-list h4 {
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.resume-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fafafa;
+  border: var(--border);
+  margin-bottom: 8px;
+}
+.resume-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+.resume-item a {
+  text-decoration: none;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .hero { flex-direction: column; }
