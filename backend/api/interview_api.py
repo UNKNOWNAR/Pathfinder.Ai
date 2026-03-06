@@ -29,12 +29,13 @@ DEFAULT_TOPICS = [
 
 
 def seed_interview_topics():
-    for t in DEFAULT_TOPICS:
-        if not InterviewTopic.query.filter_by(name=t['name']).first():
-            db.session.add(InterviewTopic(**t))
-    db.session.commit()
-
-
+    try:
+        for t in DEFAULT_TOPICS:
+            if not InterviewTopic.query.filter_by(name=t['name']).first():
+                db.session.add(InterviewTopic(**t))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
 # ─── Helper ──────────────────────────────────────────────────────────
 def _student_only():
     claims = get_jwt()
