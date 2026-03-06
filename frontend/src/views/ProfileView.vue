@@ -86,7 +86,7 @@ const onSkillKey = (e) => { if (e.key === 'Enter' || e.key === ',') { e.preventD
 const addExp = () => profile.experience.push({ company: '', role: '', duration: '', description: '' });
 const removeExp = (i) => profile.experience.splice(i, 1);
 
-const addEdu = () => profile.education.push({ institution: '', degree: '', year: '' });
+const addEdu = () => profile.education.push({ institution: '', degree: '', year: '', cgpa: '' });
 const removeEdu = (i) => profile.education.splice(i, 1);
 
 const addProject = () => profile.projects.push({ title: '', tech: '', url: '', description: '' });
@@ -314,6 +314,10 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
               <div class="field">
                 <label>Year</label>
                 <input v-model="edu.year" placeholder="2021 – 2025" />
+              </div>
+              <div class="field">
+                <label>CGPA</label>
+                <input v-model="edu.cgpa" placeholder="8.5 / 10" />
               </div>
             </div>
           </div>
