@@ -41,7 +41,11 @@ function start() {
 
   recognition.onerror = (event) => {
     if (event.error !== 'aborted') {
-      errorMsg.value = `Speech error: ${event.error}`;
+      if (event.error === 'network') {
+        errorMsg.value = 'Speech recognition network error. Please type your answer below instead.';
+      } else {
+        errorMsg.value = `Speech error: ${event.error}`;
+      }
     }
     isListening.value = false;
   };
@@ -86,9 +90,14 @@ onUnmounted(() => stop());
     </button>
     <span v-if="isListening" class="pulse-dot"></span>
     <p v-if="errorMsg" class="voice-error">{{ errorMsg }}</p>
-    <div v-if="modelValue" class="transcript-box">
-      <span class="transcript-label">TRANSCRIPT</span>
-      <p class="transcript-text">{{ modelValue }}</p>
+    <div class="transcript-box">
+      <span class="transcript-label">TRANSCRIPT / TEXT INPUT</span>
+      <textarea
+        class="transcript-text"
+        :value="modelValue"
+        @input="$emit('update:modelValue', $event.target.value)"
+        placeholder="Use microphone or type your answer..."
+      ></textarea>
     </div>
   </div>
 </template>
@@ -159,5 +168,12 @@ onUnmounted(() => stop());
   font-size: 14px;
   font-weight: 600;
   line-height: 1.6;
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
 }
 </style>

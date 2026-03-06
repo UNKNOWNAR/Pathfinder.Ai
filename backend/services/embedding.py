@@ -90,14 +90,60 @@ def find_similar_jobs(student_vector, limit=10):
         return []
 
     try:
-        # pgvector cosine distance operator is `<=>`
-        # Using pure SQLAlchemy pgvector syntax -> Job.embedding.cosine_distance()
-        # similarity = 1 - distance
-        
-        results = db.session.query(
-            Job.job_id,
-            Job.embedding.cosine_distance(student_vector).label('distance')
-        ).filter(Job.embedding.isnot(None)).order_by('distance').limit(limit * 2).all()
+        import numpy as np
+
+        # Determine if pgvector is available by trying a query
+        try:
+            results = db.session.query(
+                Job.job_id,
+                Job.embedding.cosine_distance(student_vector).label('distance')
+            ).filter(Job.embedding.isnot(None)).order_by('distance').limit(limit * 2).all()
+        except Exception:
+            db.session.rollback()
+            # Fallback to pure Python numpy-based cosine similarity since pgvector is not available
+            all_jobs = Job.query.filter(Job.embedding.isnot(None)).all()
+
+            student_vec_np = np.array(student_vector)
+            norm_student = np.linalg.norm(student_vec_np)
+
+            # Prevent division by zero
+            if norm_student == 0:
+                return []
+
+            results = []
+
+            for j in all_jobs:
+                try:
+                    # Sometimes data might be saved incorrectly in fallback column
+                    if isinstance(j.embedding, str):
+                        import json
+                        job_vec_np = np.array(json.loads(j.embedding))
+                    else:
+                        job_vec_np = np.array(j.embedding)
+
+                    norm_job = np.linalg.norm(job_vec_np)
+                    if norm_job == 0:
+                        continue
+
+                    # Calculate cosine similarity: (A dot B) / (||A|| * ||B||)
+                    similarity = np.dot(student_vec_np, job_vec_np) / (norm_student * norm_job)
+
+                    # Convert to distance to match SQLAlchemy results format
+                    # Distance = 1 - similarity
+                    # Note: We create a dummy object to mimic SQLAlchemy Result
+                    class MockResult:
+                        def __init__(self, job_id, distance):
+                            self.job_id = job_id
+                            self.distance = distance
+
+                    results.append(MockResult(j.job_id, 1.0 - similarity))
+                except Exception as ex:
+                    logger.error(f"Error calculating similarity for job {j.job_id}: {ex}")
+                    continue
+
+            # Sort by distance ascending and limit
+            results.sort(key=lambda r: r.distance)
+            results = results[:limit * 2]
 
         matches = []
         for r in results:

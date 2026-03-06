@@ -1,29 +1,50 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
+import { cpp } from '@codemirror/lang-cpp';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
   language: { type: String, default: 'python' },
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'update:language']);
 
 const code = ref(props.modelValue);
 
 watch(() => props.modelValue, (v) => { code.value = v; });
 watch(code, (v) => { emit('update:modelValue', v); });
 
-const langExtension = props.language === 'javascript' ? javascript() : python();
-const extensions = [langExtension];
+const selectedLanguage = ref(props.language);
+watch(() => props.language, (v) => { selectedLanguage.value = v; });
+watch(selectedLanguage, (v) => { emit('update:language', v); });
+
+const extensions = computed(() => {
+  if (selectedLanguage.value === 'javascript') return [javascript()];
+  if (selectedLanguage.value === 'java') return [java()];
+  if (selectedLanguage.value === 'cpp' || selectedLanguage.value === 'c++') return [cpp()];
+  return [python()];
+});
+
+const languages = [
+  { id: 'python', name: 'Python' },
+  { id: 'javascript', name: 'JavaScript' },
+  { id: 'java', name: 'Java' },
+  { id: 'cpp', name: 'C++' }
+];
 </script>
 
 <template>
   <div class="code-editor-wrap">
     <div class="editor-header">
       <span class="editor-label">CODE</span>
-      <span class="editor-lang">{{ language.toUpperCase() }}</span>
+      <select v-model="selectedLanguage" class="lang-select">
+        <option v-for="lang in languages" :key="lang.id" :value="lang.id">
+          {{ lang.name }}
+        </option>
+      </select>
     </div>
     <Codemirror
       v-model="code"
@@ -57,13 +78,25 @@ const extensions = [langExtension];
   letter-spacing: 0.1em;
   opacity: 0.6;
 }
-.editor-lang {
-  font-size: 10px;
-  font-weight: 900;
+.lang-select {
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   background: var(--ink);
   color: #fff;
-  padding: 2px 8px;
+  padding: 4px 10px;
+  border: none;
+  cursor: pointer;
+  appearance: none;
+  border-radius: 0;
+  outline: none;
+}
+.lang-select:focus {
+  outline: 2px solid var(--accent);
+}
+.lang-select option {
+  background: var(--ink);
+  color: #fff;
 }
 </style>

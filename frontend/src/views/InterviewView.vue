@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
 import VoiceInput from '@/components/VoiceInput.vue';
@@ -20,9 +20,24 @@ const selectedDifficulty = ref('medium');
 // Per-question answers
 const voiceAnswer = ref('');
 const codeAnswer = ref('');
+const selectedLanguage = ref('python');
 const submitting = ref(false);
 
 const currentQuestion = computed(() => questions.value[currentIdx.value] || null);
+
+// Watch for language changes to update the starting code
+watch(selectedLanguage, (newLang) => {
+  if (currentQuestion.value?.starting_code && currentQuestion.value.question_type === 'coding') {
+    try {
+      const parsedCode = JSON.parse(currentQuestion.value.starting_code);
+      if (parsedCode[newLang]) {
+        codeAnswer.value = parsedCode[newLang];
+      }
+    } catch (e) {
+      // If it's not JSON (old format), just leave the current code or fallback
+    }
+  }
+});
 const isLastQuestion = computed(() => currentIdx.value >= questions.value.length - 1);
 const progress = computed(() => {
   if (!questions.value.length) return 0;
@@ -62,10 +77,20 @@ async function startSession() {
 async function generateQuestions() {
   loading.value = true;
   try {
-    const res = await api.post(`/api/interview/sessions/${session.value.session_id}/questions`);
+    const res = await api.post(`/api/interview/sessions/${session.value.session_id}/questions`, { count: 5 });
     questions.value = res.data.questions;
     currentIdx.value = 0;
+
+    // Set initial code to the starting_code of the first question, if applicable
     resetAnswers();
+    if (questions.value[0]?.starting_code) {
+      try {
+        const parsedCode = JSON.parse(questions.value[0].starting_code);
+        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
+      } catch (e) {
+        codeAnswer.value = questions.value[0].starting_code; // Fallback
+      }
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to generate questions.';
   } finally {
@@ -100,6 +125,14 @@ function nextQuestion() {
   if (currentIdx.value < questions.value.length - 1) {
     currentIdx.value++;
     resetAnswers();
+    if (currentQuestion.value?.starting_code) {
+      try {
+        const parsedCode = JSON.parse(currentQuestion.value.starting_code);
+        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
+      } catch (e) {
+        codeAnswer.value = currentQuestion.value.starting_code;
+      }
+    }
   }
 }
 
@@ -107,12 +140,22 @@ function prevQuestion() {
   if (currentIdx.value > 0) {
     currentIdx.value--;
     resetAnswers();
+    if (currentQuestion.value?.starting_code) {
+      try {
+        const parsedCode = JSON.parse(currentQuestion.value.starting_code);
+        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
+      } catch (e) {
+        codeAnswer.value = currentQuestion.value.starting_code;
+      }
+    }
   }
 }
 
 function resetAnswers() {
   voiceAnswer.value = '';
-  codeAnswer.value = '';
+  // Don't reset codeAnswer entirely, or it will flash empty.
+  // The actual new codeAnswer is set by generateQuestions or nextQuestion/prevQuestion.
+  selectedLanguage.value = 'python';
 }
 
 function resetSession() {
@@ -216,7 +259,7 @@ function scoreClass(score) {
 
               <!-- Code editor (for coding questions or optionally any) -->
               <div v-if="currentQuestion.question_type === 'coding'" class="editor-section">
-                <CodeEditor v-model="codeAnswer" language="python" />
+                <CodeEditor v-model="codeAnswer" v-model:language="selectedLanguage" />
               </div>
 
               <button

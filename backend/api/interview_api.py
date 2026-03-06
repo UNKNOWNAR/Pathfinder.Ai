@@ -1,3 +1,4 @@
+import json
 import logging
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
@@ -71,7 +72,7 @@ class InterviewSessionCreate(Resource):
             return {'message': 'Topic not found.'}, 404
 
         session = InterviewSession(
-            user_id=get_jwt_identity(),
+            user_id=int(get_jwt_identity()),
             topic_id=args['topic_id'],
             difficulty=args['difficulty'],
         )
@@ -88,7 +89,7 @@ class InterviewSessionDetail(Resource):
             return err
 
         session = InterviewSession.query.get(session_id)
-        if not session or session.user_id != get_jwt_identity():
+        if not session or session.user_id != int(get_jwt_identity()):
             return {'message': 'Session not found.'}, 404
         return {'session': session.to_dict()}, 200
 
@@ -102,7 +103,7 @@ class InterviewQuestionGenerate(Resource):
             return err
 
         session = InterviewSession.query.get(session_id)
-        if not session or session.user_id != get_jwt_identity():
+        if not session or session.user_id != int(get_jwt_identity()):
             return {'message': 'Session not found.'}, 404
 
         # Don't regenerate if questions already exist
@@ -127,6 +128,7 @@ class InterviewQuestionGenerate(Resource):
                 order_index=i,
                 question_text=q.get('question_text', ''),
                 question_type=q.get('question_type', 'conceptual'),
+                starting_code=json.dumps(q.get('starting_code', {})) if isinstance(q.get('starting_code'), dict) else q.get('starting_code', '')
             ))
         db.session.commit()
 
@@ -149,7 +151,7 @@ class InterviewAnswerSubmit(Resource):
 
         # Verify ownership
         session = InterviewSession.query.get(question.session_id)
-        if not session or session.user_id != get_jwt_identity():
+        if not session or session.user_id != int(get_jwt_identity()):
             return {'message': 'Not authorized.'}, 403
 
         # Don't re-evaluate

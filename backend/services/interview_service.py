@@ -18,6 +18,7 @@ class InterviewService:
             "and return ONLY a valid JSON array. Each element must have:\n"
             '  - "question_text": the question string\n'
             '  - "question_type": one of "conceptual", "coding", or "behavioral"\n'
+            '  - "starting_code": if question_type is "coding", provide a JSON object where keys are languages ("python", "java", "cpp", "javascript") and values are the starting function signature/class setup for each language. If not a coding question, return an empty object {}.\n'
             "No markdown, no commentary, just the JSON array."
         )
         user_prompt = (
