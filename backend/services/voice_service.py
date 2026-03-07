@@ -35,11 +35,8 @@ class VoiceService:
                 s3_folder = f"{self.environment}/interviews/audio"
                 s3_key = f"{s3_folder}/{filename}"
 
-                # 3. Upload the stream directly to S3
-                # We use the S3 client directly here since s3_service.upload_avatar 
-                # might be too specific (handles fileobj/content_type differently)
-                s3_client = boto3.client('s3')
-                s3_client.put_object(
+                # 3. Upload the stream directly to S3 using the properly-configured S3 client
+                self.s3_service.s3_client.put_object(
                     Bucket=self.bucket_name,
                     Key=s3_key,
                     Body=response['AudioStream'].read(),

@@ -1,6 +1,6 @@
 import json
 import logging
-from groq import Groq
+import boto3
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -8,8 +8,14 @@ logger = logging.getLogger(__name__)
 
 class InterviewService:
     def __init__(self):
-        self.client = Groq(api_key=Config.GROQ_API_KEY)
-        self.model = 'llama-3.3-70b-versatile'
+        # We assume AWS credentials are set in the environment or ~/.aws/credentials
+        # Using us-east-1 or us-west-2 depending on where you enable models in AWS Bedrock
+        self.bedrock_client = boto3.client(
+            service_name='bedrock-runtime',
+            region_name='us-east-1' # Hardcoded region to simplify setup unless provided in Config
+        )
+        # Using Claude 4.5 Haiku for the latest speed and reasoning performance
+        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
 
     def generate_questions(self, topic_name, difficulty, count=5):
         """Generate interview questions for a given topic and difficulty."""
@@ -27,19 +33,38 @@ class InterviewService:
             f"questions where appropriate."
         )
 
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 2000,
+            "system": system_prompt,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ],
+            "temperature": 0.7
+        })
+
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=2000,
-                temperature=0.7,
-                response_format={"type": "json_object"},
+            response = self.bedrock_client.invoke_model(
+                body=body,
+                modelId=self.model_id,
+                accept='application/json',
+                contentType='application/json'
             )
-            raw = response.choices[0].message.content.strip()
-            parsed = json.loads(raw)
+            response_body = json.loads(response.get('body').read())
+            raw = response_body.get('content')[0].get('text').strip()
+
+            # The model may wrap the array in markdown json blocks
+            if raw.startswith("```json"):
+                raw = raw[7:]
+            elif raw.startswith("```"):
+                raw = raw[3:]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+
+            parsed = json.loads(raw.strip())
 
             # The model may wrap the array in an object key
             if isinstance(parsed, dict):
@@ -50,7 +75,7 @@ class InterviewService:
 
             return parsed
         except Exception as e:
-            logger.error(f"Groq question generation failed: {e}")
+            logger.error(f"Bedrock question generation failed: {e}")
             return None
 
     def evaluate_answer(self, question_text, question_type, voice_answer=None, code_answer=None):
@@ -85,19 +110,38 @@ class InterviewService:
             f"Evaluate this answer thoroughly."
         )
 
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1500,
+            "system": system_prompt,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ],
+            "temperature": 0.3
+        })
+
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=1500,
-                temperature=0.3,
-                response_format={"type": "json_object"},
+            response = self.bedrock_client.invoke_model(
+                body=body,
+                modelId=self.model_id,
+                accept='application/json',
+                contentType='application/json'
             )
-            raw = response.choices[0].message.content.strip()
-            return json.loads(raw)
+            response_body = json.loads(response.get('body').read())
+            raw = response_body.get('content')[0].get('text').strip()
+
+            # The model may wrap the array in markdown json blocks
+            if raw.startswith("```json"):
+                raw = raw[7:]
+            elif raw.startswith("```"):
+                raw = raw[3:]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+
+            return json.loads(raw.strip())
         except Exception as e:
-            logger.error(f"Groq evaluation failed: {e}")
+            logger.error(f"Bedrock evaluation failed: {e}")
             return None

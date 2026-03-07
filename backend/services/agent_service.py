@@ -1,102 +1,358 @@
-import boto3
+"""
+Ghost Recruiter Agent Service
+=============================
+A stateless, event-driven AI interviewer powered by AWS Bedrock (Claude Haiku 4.5) and AWS Polly.
+
+Architecture:
+  1. Frontend sends: { user_answer, current_phase, profile_json, local_context_history, answered_question_ids, difficulty }
+  2. Agent wakes up, reads the candidate Profile JSON, picks a question from questions_bank.json,
+     generates a personalized recruiter response, synthesizes voice via Polly, and returns everything.
+  3. Agent instantly dies. Nothing is stored in backend memory.
+
+Phases:
+  - introduction: AI reads profile, greets the user, asks them to explain a project from their resume.
+  - resume_drilldown: Follow-up questions about the user's project/experience claims.
+  - leetcode: Pick a coding challenge from the question bank matching user's skills.
+  - system_design: Pick a system design question from the question bank.
+  - behavioral: Pick a behavioral question from the question bank.
+  - wrapup: Summarize the interview, give final feedback.
+"""
+
 import json
-import logging
 import os
+import logging
 import random
-from botocore.exceptions import ClientError
+import boto3
 from services.voice_service import VoiceService
-from config import Config # Assuming Config has BEDROCK_REGION if needed
 
 logger = logging.getLogger(__name__)
+
+# ─── Load questionbank once at module level ──────────────────────────────
+QUESTIONS_BANK_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'questions_bank.json')
+
+def _load_questions_bank():
+    try:
+        with open(QUESTIONS_BANK_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load questions_bank.json: {e}")
+        return {"leetcode": [], "system_design": [], "behavioral": []}
+
+QUESTIONS_BANK = _load_questions_bank()
+
+# ─── Pre-indexed lookup tables for O(1) access ──────────────────────────
+# Index by category + difficulty for instant retrieval
+LOOKUP = {}
+for category in ['leetcode', 'system_design', 'behavioral']:
+    LOOKUP[category] = {'easy': [], 'medium': [], 'hard': [], 'all': []}
+    for q in QUESTIONS_BANK.get(category, []):
+        diff = q.get('difficulty', 'medium')
+        LOOKUP[category][diff].append(q)
+        LOOKUP[category]['all'].append(q)
+
+# Index by topic for skill-matching (topic -> list of questions)
+TOPIC_INDEX = {}
+for category in ['leetcode', 'system_design', 'behavioral']:
+    for q in QUESTIONS_BANK.get(category, []):
+        for topic in q.get('topics', []):
+            key = topic.lower()
+            if key not in TOPIC_INDEX:
+                TOPIC_INDEX[key] = []
+            TOPIC_INDEX[key].append(q)
+
+logger.info(f"Loaded questions bank: LC={len(QUESTIONS_BANK.get('leetcode', []))}, "
+            f"SD={len(QUESTIONS_BANK.get('system_design', []))}, "
+            f"BEH={len(QUESTIONS_BANK.get('behavioral', []))}, "
+            f"Topics indexed: {len(TOPIC_INDEX)}")
+
+# ─── Phase flow order ────────────────────────────────────────────────────
+PHASE_ORDER = ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 'behavioral', 'wrapup']
+
 
 class AgentService:
     def __init__(self):
         self.bedrock_client = boto3.client(
             service_name='bedrock-runtime',
-            region_name='us-east-1' # Hardcoded region, could be from Config
+            region_name='us-east-1'
         )
-        self.bedrock_model_id = "anthropic.claude-3-haiku-20240307-v1:0" # Or Llama 3
+        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
         self.voice_service = VoiceService()
-        self.questions_bank = self._load_questions_bank()
 
-    def _load_questions_bank(self):
-        """Loads interview questions from a JSON file."""
-        questions_path = os.path.join(os.path.dirname(__file__), '../data/questions_bank.json')
-        if not os.path.exists(questions_path):
-            logger.error(f"Questions bank not found at {questions_path}")
-            return []
-        with open(questions_path, 'r') as f:
-            return json.load(f)
-
-    def _pick_next_question(self, profile_json: dict, local_context_history: list, answered_question_ids: list):
+    def process_step(self, user_answer, current_phase, profile_json, local_context_history,
+                     answered_question_ids, difficulty='medium'):
         """
-        Picks the next question based on profile, context, and previously answered questions.
-        For simplicity, initially, it picks a random question not yet answered.
-        Future: Implement matching logic based on profile skills and question keywords.
+        The main Ghost Recruiter entry point. Called once per user interaction.
+        Returns a dict with: recruiter_response_text, next_question, audio_url, next_phase, evaluation
         """
-        available_questions = [
-            q for q in self.questions_bank if q['id'] not in answered_question_ids
-        ]
+        profile = self._parse_profile(profile_json)
+        candidate_name = profile.get('name', 'Candidate')
 
-        if not available_questions:
-            return None # No more questions
+        # Determine what to do based on the current phase
+        if current_phase == 'introduction':
+            return self._handle_introduction(profile, candidate_name, difficulty)
 
-        # Basic skill matching (can be improved)
-        profile_skills = set(profile_json.get('skills', []))
+        elif current_phase == 'resume_drilldown':
+            return self._handle_resume_drilldown(profile, candidate_name, user_answer,
+                                                  local_context_history, difficulty)
 
-        # Prioritize questions that match profile skills
-        skilled_questions = []
-        for q in available_questions:
-            q_skills = set(q.get('skills_keywords', []))
-            if profile_skills.intersection(q_skills):
-                skilled_questions.append(q)
+        elif current_phase == 'leetcode':
+            return self._handle_leetcode(profile, candidate_name, user_answer,
+                                          local_context_history, answered_question_ids, difficulty)
 
-        if skilled_questions:
-            return random.choice(skilled_questions)
+        elif current_phase == 'system_design':
+            return self._handle_system_design(profile, candidate_name, user_answer,
+                                               local_context_history, answered_question_ids, difficulty)
+
+        elif current_phase == 'behavioral':
+            return self._handle_behavioral(profile, candidate_name, user_answer,
+                                            local_context_history, answered_question_ids, difficulty)
+
+        elif current_phase == 'wrapup':
+            return self._handle_wrapup(profile, candidate_name, user_answer, local_context_history)
+
         else:
-            return random.choice(available_questions) # Fallback to any remaining question
+            return self._handle_introduction(profile, candidate_name, difficulty)
 
-    def _generate_response(self, question: dict, profile_json: dict, user_answer: str, local_context_history: list):
-        """
-        Generates a personalized response using AWS Bedrock.
-        This response can be an evaluation of the user's answer, a follow-up, or the next question prompt.
-        """
+    # ─── Phase Handlers ──────────────────────────────────────────────────
+
+    def _handle_introduction(self, profile, name, difficulty):
+        """Phase 1: Greet the user and ask them to explain a project from their profile."""
+        projects = profile.get('projects', [])
+        skills = profile.get('skills', [])
+        experience = profile.get('experience', [])
+
         system_prompt = (
-            "You are a 'Ghost Recruiter' AI for Pathfinder.Ai. Your goal is to conduct "
-            "technical interviews. You will receive a question you asked, the candidate's "
-            "profile, their answer, and the conversation history. "
-            "Your task is to provide a concise, natural language response. "
-            "If the user provided an answer, you should briefly acknowledge it, "
-            "and then transition to the next question. Your response should sound "
-            "like a human recruiter, encouraging and professional. "
-            "Keep responses under 100 words. Do NOT ask for more details on the profile. "
-            "If the user_answer is empty, it means this is the first question, just introduce it."
+            "You are a friendly, professional Technical Recruiter at a top-tier tech company. "
+            "You are conducting a 30-minute mock interview. "
+            "You have the candidate's profile in front of you. "
+            "Your job is to warmly greet them by name, mention something specific from their profile "
+            "(a project, skill, or experience that impressed you), and then ask them to walk you through "
+            "one of their projects in detail. Be conversational, warm, and encouraging. "
+            "Keep your response under 100 words."
         )
 
-        current_question_text = question['question_text']
-        history_str = "\n".join([f"{h['role']}: {h['content']}" for h in local_context_history])
+        user_prompt = (
+            f"Candidate Profile:\n"
+            f"Name: {name}\n"
+            f"Skills: {json.dumps(skills)}\n"
+            f"Experience: {json.dumps(experience)}\n"
+            f"Projects: {json.dumps(projects)}\n\n"
+            f"Difficulty level: {difficulty}\n\n"
+            f"Please greet the candidate and ask them to explain one of their projects."
+        )
 
-        user_content = f"Candidate Profile: {json.dumps(profile_json)}\n"
-        user_content += f"Current Question: {current_question_text}\n"
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': {
+                'id': 'intro_project',
+                'question_text': recruiter_text,
+                'question_type': 'behavioral',
+                'starting_code': '{}'
+            },
+            'audio_url': audio_url,
+            'next_phase': 'resume_drilldown',
+            'evaluation': None
+        }
+
+    def _handle_resume_drilldown(self, profile, name, user_answer, context_history, difficulty):
+        """Phase 2: Drill into the user's project explanation. Find weaknesses."""
+        system_prompt = (
+            "You are a Technical Recruiter conducting a mock interview. "
+            "The candidate just explained one of their projects. "
+            "Your job is to: 1) Briefly evaluate their explanation (1-2 sentences), "
+            "2) Ask a specific follow-up question that digs deeper into a technical choice they made "
+            "(e.g., 'You mentioned using S3 for storage—how did you handle access control?'). "
+            "Be supportive but probe for depth. Keep your response under 80 words. "
+            "Return ONLY your spoken response, no JSON."
+        )
+
+        user_prompt = self._build_context_prompt(name, profile, context_history, user_answer)
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+
+        # Evaluate the answer
+        evaluation = self._evaluate_answer(user_answer, "Explain your project", context_history)
+
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': {
+                'id': 'resume_followup',
+                'question_text': recruiter_text,
+                'question_type': 'behavioral',
+                'starting_code': '{}'
+            },
+            'audio_url': audio_url,
+            'next_phase': 'leetcode',
+            'evaluation': evaluation
+        }
+
+    def _handle_leetcode(self, profile, name, user_answer, context_history,
+                          answered_ids, difficulty):
+        """Phase 3: Pick a LeetCode question matching the user's skills."""
+        # Pick a question not yet answered
+        question = self._pick_question('leetcode', answered_ids, difficulty, profile.get('skills', []))
+
+        if not question:
+            # Fallback: move to next phase
+            return self._handle_system_design(profile, name, user_answer, context_history, answered_ids, difficulty)
+
+        # Evaluate previous answer if there was one
+        evaluation = None
         if user_answer:
-            user_content += f"Candidate's Answer: {user_answer}\n"
-        user_content += f"Conversation History:\n{history_str}\n\n"
-        user_content += "Based on the above, provide a personalized response."
+            evaluation = self._evaluate_answer(user_answer, "Resume follow-up", context_history)
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content}
-        ]
+        # Generate a recruiter transition
+        system_prompt = (
+            "You are a Technical Recruiter. You are transitioning from the resume discussion "
+            "to a coding challenge. Briefly acknowledge the candidate's previous answer (1 sentence), "
+            "then introduce the coding challenge naturally. "
+            "Keep it under 60 words. Return ONLY your spoken words, no JSON."
+        )
 
+        user_prompt = (
+            f"Candidate: {name}\n"
+            f"Previous answer: {user_answer[:200] if user_answer else 'N/A'}\n"
+            f"Next question title: {question['title']}\n"
+            f"Next question: {question['question_text']}\n"
+        )
+
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': question,
+            'audio_url': audio_url,
+            'next_phase': 'system_design',
+            'evaluation': evaluation
+        }
+
+    def _handle_system_design(self, profile, name, user_answer, context_history,
+                               answered_ids, difficulty):
+        """Phase 4: Pick a System Design question."""
+        question = self._pick_question('system_design', answered_ids, difficulty, profile.get('skills', []))
+
+        if not question:
+            return self._handle_behavioral(profile, name, user_answer, context_history, answered_ids, difficulty)
+
+        evaluation = None
+        if user_answer:
+            prev_question = context_history[-2]['content'] if len(context_history) >= 2 else "Coding challenge"
+            evaluation = self._evaluate_answer(user_answer, prev_question, context_history)
+
+        system_prompt = (
+            "You are a Technical Recruiter transitioning to a system design question. "
+            "Briefly acknowledge the candidate's coding performance (1 sentence), "
+            "then introduce the system design challenge. "
+            "Keep it under 60 words. Return ONLY your spoken words."
+        )
+
+        user_prompt = (
+            f"Candidate: {name}\n"
+            f"Previous answer summary: {user_answer[:200] if user_answer else 'N/A'}\n"
+            f"Next question: {question['question_text']}\n"
+        )
+
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': question,
+            'audio_url': audio_url,
+            'next_phase': 'behavioral',
+            'evaluation': evaluation
+        }
+
+    def _handle_behavioral(self, profile, name, user_answer, context_history,
+                            answered_ids, difficulty):
+        """Phase 5: Pick a Behavioral question."""
+        question = self._pick_question('behavioral', answered_ids, difficulty, profile.get('skills', []))
+
+        if not question:
+            return self._handle_wrapup(profile, name, user_answer, context_history)
+
+        evaluation = None
+        if user_answer:
+            evaluation = self._evaluate_answer(user_answer, "System Design", context_history)
+
+        system_prompt = (
+            "You are a Technical Recruiter transitioning to a behavioral question. "
+            "Briefly acknowledge the candidate's system design response (1 sentence), "
+            "then smoothly introduce the behavioral question. "
+            "Keep it under 60 words. Return ONLY your spoken words."
+        )
+
+        user_prompt = (
+            f"Candidate: {name}\n"
+            f"Previous answer summary: {user_answer[:200] if user_answer else 'N/A'}\n"
+            f"Next question: {question['question_text']}\n"
+        )
+
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': question,
+            'audio_url': audio_url,
+            'next_phase': 'wrapup',
+            'evaluation': evaluation
+        }
+
+    def _handle_wrapup(self, profile, name, user_answer, context_history):
+        """Phase 6: Summarize the interview and give final feedback."""
+        evaluation = None
+        if user_answer:
+            evaluation = self._evaluate_answer(user_answer, "Behavioral question", context_history)
+
+        system_prompt = (
+            "You are a Technical Recruiter wrapping up a 30-minute mock interview. "
+            "Summarize the candidate's performance across all phases (project walkthrough, "
+            "coding, system design, behavioral). Be encouraging but honest. "
+            "Give 2-3 specific strengths and 1-2 areas for improvement. "
+            "End with a warm closing statement. Keep it under 120 words. "
+            "Return ONLY your spoken words."
+        )
+
+        # Build a summary of the entire conversation
+        conversation_summary = "\n".join([
+            f"{msg['role'].upper()}: {msg['content'][:100]}"
+            for msg in (context_history or [])[-10:]  # Last 10 messages
+        ])
+
+        user_prompt = (
+            f"Candidate: {name}\n"
+            f"Skills: {json.dumps(profile.get('skills', []))}\n"
+            f"Conversation summary:\n{conversation_summary}\n"
+            f"Final answer: {user_answer[:300] if user_answer else 'N/A'}\n"
+        )
+
+        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
+        audio_url = self._synthesize_and_get_url(recruiter_text)
+
+        return {
+            'recruiter_response_text': recruiter_text,
+            'next_question': None,  # Interview is over
+            'audio_url': audio_url,
+            'next_phase': 'completed',
+            'evaluation': evaluation
+        }
+
+    # ─── Helper Methods ──────────────────────────────────────────────────
+
+    def _call_bedrock(self, system_prompt, user_prompt):
+        """Call AWS Bedrock Claude and return the text response."""
         body = json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 300, # Sufficient for ~100 words
+            "max_tokens": 500,
             "system": system_prompt,
             "messages": [
-                {
-                    "role": "user",
-                    "content": user_content
-                }
+                {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.7
         })
@@ -104,47 +360,114 @@ class AgentService:
         try:
             response = self.bedrock_client.invoke_model(
                 body=body,
-                modelId=self.bedrock_model_id,
+                modelId=self.model_id,
                 accept='application/json',
                 contentType='application/json'
             )
             response_body = json.loads(response.get('body').read())
-            generated_text = response_body.get('content')[0].get('text').strip()
-            return generated_text
-        except ClientError as e:
-            logger.error(f"Bedrock LLM invocation failed: {e}")
-            return "I apologize, but I encountered an issue generating a response. Please try again."
+            return response_body.get('content', [{}])[0].get('text', '').strip()
         except Exception as e:
-            logger.error(f"An unexpected error occurred during response generation: {e}")
-            return "An unexpected error occurred."
+            logger.error(f"Bedrock call failed: {e}")
+            return f"I apologize, but I'm experiencing a technical issue. Let's continue with the next part of the interview."
 
-    def process_interview_step(self, user_answer: str, current_phase: str, profile_json: dict, local_context_history: list, answered_question_ids: list = []):
-        """
-        Orchestrates the 'Pick, Think, Voice' loop for the Ghost Recruiter.
-        Returns the next question, an evaluation (if any), and the audio URL for the response.
-        """
-        next_question = self._pick_next_question(profile_json, local_context_history, answered_question_ids)
-        if not next_question:
-            return {
-                "next_question": None,
-                "evaluation": {"summary": "Interview completed. Thank you!"},
-                "audio_url": None
-            }
+    def _evaluate_answer(self, user_answer, question_context, context_history):
+        """Evaluate the user's answer and return a score + feedback."""
+        if not user_answer or not user_answer.strip():
+            return {"score": 0, "strengths": "No answer provided.", "improvements": "Please provide an answer.", "ideal_answer": ""}
 
-        # If this is the first question, user_answer will be empty.
-        # The LLM will generate an introduction for the first question.
-        # For subsequent questions, it will acknowledge the previous answer and introduce the new question.
-        recruiter_response_text = self._generate_response(next_question, profile_json, user_answer, local_context_history)
+        system_prompt = (
+            "You are an expert technical interviewer evaluating a candidate's answer. "
+            "Return ONLY a valid JSON object with these keys:\n"
+            '  - "score": integer 0-100\n'
+            '  - "strengths": string summarizing what was done well\n'
+            '  - "improvements": string with specific improvement suggestions\n'
+            '  - "ideal_answer": string with a brief model answer\n'
+            "No markdown, no commentary, just the JSON object."
+        )
 
-        audio_s3_key = self.voice_service.synthesize_speech(recruiter_response_text)
-        audio_url = self.voice_service.get_presigned_url(audio_s3_key) if audio_s3_key else None
+        user_prompt = (
+            f"Question context: {question_context}\n"
+            f"Candidate's answer: {user_answer}\n"
+            f"Evaluate this answer thoroughly."
+        )
 
-        # Placeholder for evaluation logic (if any for the previous answer)
-        evaluation = {"summary": "Good answer. Let's move on."} if user_answer else None # Simplified
+        try:
+            raw = self._call_bedrock(system_prompt, user_prompt)
+            # Clean markdown wrappers
+            if raw.startswith("```json"):
+                raw = raw[7:]
+            elif raw.startswith("```"):
+                raw = raw[3:]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+            return json.loads(raw.strip())
+        except Exception as e:
+            logger.error(f"Evaluation parse failed: {e}")
+            return {"score": 50, "strengths": "Answer provided.", "improvements": "Could not parse evaluation.", "ideal_answer": ""}
 
-        return {
-            "next_question": next_question,
-            "recruiter_response_text": recruiter_response_text, # For debugging/display
-            "evaluation": evaluation,
-            "audio_url": audio_url
-        }
+    def _pick_question(self, category, answered_ids, difficulty, user_skills):
+        """Pick the best unanswered question from the pre-indexed bank."""
+        answered_set = set(answered_ids or [])
+
+        # Use pre-indexed LOOKUP for O(1) difficulty access
+        pool = LOOKUP.get(category, {}).get(difficulty, [])
+        available = [q for q in pool if q['id'] not in answered_set]
+
+        # Fallback to all difficulties if no match
+        if not available:
+            pool = LOOKUP.get(category, {}).get('all', [])
+            available = [q for q in pool if q['id'] not in answered_set]
+
+        if not available:
+            return None
+
+        # Try to match user skills via topic overlap
+        if user_skills:
+            skill_set = set(s.lower() for s in user_skills) if isinstance(user_skills, list) else set()
+            scored = []
+            for q in available:
+                q_topics = set(t.lower() for t in q.get('topics', []))
+                overlap = len(skill_set & q_topics)
+                scored.append((overlap, q['frequency'], q))
+            # Sort by skill overlap first, then by interview frequency
+            scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+            if scored[0][0] > 0:
+                return scored[0][2]
+
+        # Fallback: pick the highest-frequency unanswered question
+        available.sort(key=lambda q: q.get('frequency', 0), reverse=True)
+        return available[0]
+
+    def _synthesize_and_get_url(self, text):
+        """Synthesize speech and return a presigned URL."""
+        try:
+            s3_key = self.voice_service.synthesize_speech(text)
+            if s3_key:
+                return self.voice_service.get_audio_url(s3_key)
+        except Exception as e:
+            logger.error(f"Voice synthesis failed: {e}")
+        return None
+
+    def _parse_profile(self, profile_json):
+        """Safely parse the profile JSON string."""
+        if isinstance(profile_json, dict):
+            return profile_json
+        try:
+            return json.loads(profile_json)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    def _build_context_prompt(self, name, profile, context_history, user_answer):
+        """Build a context-aware prompt from the conversation history."""
+        recent = (context_history or [])[-4:]  # Only last 2 exchanges (4 messages)
+        history_text = "\n".join([
+            f"{msg['role'].upper()}: {msg['content'][:150]}"
+            for msg in recent
+        ])
+
+        return (
+            f"Candidate: {name}\n"
+            f"Skills: {json.dumps(profile.get('skills', []))}\n"
+            f"Recent conversation:\n{history_text}\n"
+            f"Latest answer from candidate: {user_answer}\n"
+        )

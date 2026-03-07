@@ -7,7 +7,8 @@ from api.leetcode_api import LeetCodeStats
 from api.readiness_api import JobReadiness
 from api.interview_api import (
     InterviewTopicList, InterviewSessionCreate, InterviewSessionDetail,
-    InterviewQuestionGenerate, InterviewAnswerSubmit, InterviewQuestionAudio, seed_interview_topics,
+    InterviewQuestionGenerate, InterviewAnswerSubmit, InterviewQuestionAudio,
+    GhostInterviewStep, seed_interview_topics,
 )
 
 

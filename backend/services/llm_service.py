@@ -12,8 +12,8 @@ class LLMService:
             service_name='bedrock-runtime',
             region_name='us-east-1' # Hardcoded region to simplify setup unless provided in Config
         )
-        # Using Claude 3 Haiku for speed and lower cost, but it can be changed to Llama 3
-        self.model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+        # Using Claude 4.5 Haiku for the latest speed and reasoning performance
+        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """

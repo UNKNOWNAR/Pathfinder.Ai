@@ -254,23 +254,27 @@ class GhostInterviewStep(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('user_answer', type=str, default='')
-        parser.add_argument('current_phase', type=str, default='introduction') # e.g., 'introduction', 'questioning', 'evaluation'
-        parser.add_argument('profile_json', type=str, required=True) # JSON string of candidate profile
-        parser.add_argument('local_context_history', type=list, default=[]) # List of dicts, e.g., [{"role": "user", "content": "..."}]
-        parser.add_argument('answered_question_ids', type=list, default=[], location='json') # List of question IDs already answered
+        parser.add_argument('current_phase', type=str, default='introduction')
+        parser.add_argument('profile_json', type=str, required=True)
+        parser.add_argument('local_context_history', type=list, default=[], location='json')
+        parser.add_argument('answered_question_ids', type=list, default=[], location='json')
+        parser.add_argument('difficulty', type=str, default='medium')
 
         args = parser.parse_args()
 
         try:
             profile_data = json.loads(args['profile_json'])
-        except json.JSONDecodeError:
-            return {'message': 'Invalid profile_json format.'}, 400
+        except (json.JSONDecodeError, TypeError):
+            # If it's already a dict (e.g., from JSON body), use it directly
+            profile_data = args['profile_json'] if isinstance(args['profile_json'], dict) else {}
 
-        result = agent_service.process_interview_step(
+        result = agent_service.process_step(
             user_answer=args['user_answer'],
             current_phase=args['current_phase'],
             profile_json=profile_data,
-            local_context_history=args['local_context_history'],
-            answered_question_ids=args['answered_question_ids']
+            local_context_history=args['local_context_history'] or [],
+            answered_question_ids=args['answered_question_ids'] or [],
+            difficulty=args['difficulty']
         )
         return result, 200
+

@@ -8,6 +8,8 @@ class InterviewSession(db.Model):
     topic_id = db.Column(db.Integer, db.ForeignKey('interview_topic.topic_id'), nullable=False)
     difficulty = db.Column(db.String(20), nullable=False, default='medium')  # easy, medium, hard
     status = db.Column(db.String(20), nullable=False, default='active')  # active, completed
+    greeting_text = db.Column(db.Text, nullable=True) # Personalized AI welcome
+    greeting_audio_key = db.Column(db.Text, nullable=True) # S3 Key for the synthesized intro
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     questions = db.relationship('InterviewQuestion', backref='session', lazy=True, order_by='InterviewQuestion.order_index')
