@@ -7,16 +7,9 @@ import logging
 
 class LLMService:
     def __init__(self):
-        # We assume AWS credentials are set in the environment or ~/.aws/credentials
-        # Using us-east-1 or us-west-2 depending on where you enable models in AWS Bedrock
-        self.bedrock_client = boto3.client(
-            service_name='bedrock-runtime',
-            region_name='us-east-1'
-        )
-        self.api_key = os.getenv('BEDROCK_API_KEY')
-        # Use Inference Profile prefix 'us.' as required for newest Claude 4.5+ models in us-east-1
-        self.model_id = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-        self.endpoint = "https://bedrock-runtime.us-east-1.amazonaws.com"
+        self.api_key = os.getenv('GROQ_API_KEY')
+        self.model_id = "llama3-70b-8192"
+        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """
@@ -97,56 +90,32 @@ class LLMService:
 
         user_prompt = f"Here is the Job Description:\n{jd_text}\n\nHere is the candidate's profile data:\n{json.dumps(student_profile)}\n\nGenerate the complete LaTeX document matching the requested structure."
 
-        # Bedrock Claude Messages API format
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 2500,
-            "system": system_prompt,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ],
-            "temperature": 0.1
-        })
-
         import requests
+        
+        if not self.api_key:
+            logging.error("GROQ_API_KEY is missing.")
+            raise ValueError("Groq API configuration missing")
+
         headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Authorization": f"Bearer {self.api_key}"
         }
-        if self.api_key:
-            headers["X-Api-Key"] = self.api_key
+        
+        body = {
+            "model": self.model_id,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.1,
+            "max_tokens": 2500
+        }
 
         try:
-            # First attempt: requests with API key (most direct for Bedrock Marketplace / specialized keys)
-            if self.api_key:
-                url = f"{self.endpoint}/model/{self.model_id}/invoke"
-                response = requests.post(url, headers=headers, data=body, timeout=30)
-                if response.status_code == 200:
-                    response_body = response.json()
-                else:
-                    logging.error(f"Bedrock Key call failed: {response.status_code} - {response.text}")
-                    # Fallback to boto3 if API key mode fails
-                    invoke_response = self.bedrock_client.invoke_model(
-                        body=body,
-                        modelId=self.model_id,
-                        accept='application/json',
-                        contentType='application/json'
-                    )
-                    response_body = json.loads(invoke_response.get('body').read())
-            else:
-                # Standard boto3 path
-                invoke_response = self.bedrock_client.invoke_model(
-                    body=body,
-                    modelId=self.model_id,
-                    accept='application/json',
-                    contentType='application/json'
-                )
-                response_body = json.loads(invoke_response.get('body').read())
-
-            raw_output = response_body.get('content')[0].get('text')
+            response = requests.post(self.endpoint, headers=headers, json=body, timeout=60)
+            response.raise_for_status()
+            data = response.json()
+            raw_output = data["choices"][0]["message"]["content"]
 
             # BULLETPROOF REGEX EXTRACTION
             # This grabs everything from \documentclass to \end{document} and ignores the rest
