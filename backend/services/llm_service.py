@@ -1,21 +1,29 @@
-from groq import Groq
+import boto3
 from config import Config
 import json
 import re
+import logging
 
 class LLMService:
     def __init__(self):
-        self.client = Groq(api_key=Config.GROQ_API_KEY)
+        # We assume AWS credentials are set in the environment or ~/.aws/credentials
+        # Using us-east-1 or us-west-2 depending on where you enable models in AWS Bedrock
+        self.bedrock_client = boto3.client(
+            service_name='bedrock-runtime',
+            region_name='us-east-1' # Hardcoded region to simplify setup unless provided in Config
+        )
+        # Using Claude 3 Haiku for speed and lower cost, but it can be changed to Llama 3
+        self.model_id = "anthropic.claude-3-haiku-20240307-v1:0"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """
         You are an expert technical recruiter and LaTeX developer. Your task is to generate a professional, ATS-friendly resume in raw LaTeX code based on the provided JSON profile and target Job Description (JD).
-        
-        You MUST use the exact LaTeX preamble, packages, and structural commands provided in the template below. 
+
+        You MUST use the exact LaTeX preamble, packages, and structural commands provided in the template below.
         Rewrite the bullet points for Experience and Projects to perfectly match the keywords, impact, and metrics required by the target JD.
-        
+
         REQUIRED LATEX STRUCTURE:
-        
+
         \\documentclass[11pt,a4paper]{article}
         \\usepackage[margin=0.65in]{geometry}
         \\usepackage[hidelinks]{hyperref}
@@ -78,7 +86,7 @@ class LLMService:
         <Inject short description of the achievement>
 
         \\end{document}
-        
+
         RULES:
         1. Output ONLY the raw LaTeX code. Do not add any conversational text.
         2. Ensure all LaTeX special characters like &, %, $, #, _ in the JSON text are properly escaped with a backslash.
@@ -86,36 +94,51 @@ class LLMService:
 
         user_prompt = f"Here is the Job Description:\n{jd_text}\n\nHere is the candidate's profile data:\n{json.dumps(student_profile)}\n\nGenerate the complete LaTeX document matching the requested structure."
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            max_tokens=2500, 
-            temperature=0.1
-        )
-        
-        raw_output = response.choices[0].message.content
-        
-        # BULLETPROOF REGEX EXTRACTION
-        # This grabs everything from \documentclass to \end{document} and ignores the rest
-        latex_match = re.search(r'(\\documentclass.*?\\end\{document\})', raw_output, re.DOTALL)
-        
-        if latex_match:
-            latex_code = latex_match.group(1)
-        else:
-            print("WARNING: Regex failed to find complete LaTeX document. Falling back to raw output.")
-            latex_code = raw_output.strip()
-            
-            # Legacy cleanup just in case
-            if latex_code.startswith("```latex"):
-                latex_code = latex_code[8:]
-            elif latex_code.startswith("```"):
-                latex_code = latex_code[3:]
-            if latex_code.endswith("```"):
-                latex_code = latex_code[:-3]
-                
-        return latex_code.strip()
+        # Bedrock Claude Messages API format
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 2500,
+            "system": system_prompt,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ],
+            "temperature": 0.1
+        })
+
+        try:
+            response = self.bedrock_client.invoke_model(
+                body=body,
+                modelId=self.model_id,
+                accept='application/json',
+                contentType='application/json'
+            )
+
+            response_body = json.loads(response.get('body').read())
+            raw_output = response_body.get('content')[0].get('text')
+
+            # BULLETPROOF REGEX EXTRACTION
+            # This grabs everything from \documentclass to \end{document} and ignores the rest
+            latex_match = re.search(r'(\\documentclass.*?\\end\{document\})', raw_output, re.DOTALL)
+
+            if latex_match:
+                latex_code = latex_match.group(1)
+            else:
+                logging.warning("Regex failed to find complete LaTeX document. Falling back to raw output.")
+                latex_code = raw_output.strip()
+
+                # Legacy cleanup just in case
+                if latex_code.startswith("```latex"):
+                    latex_code = latex_code[8:]
+                elif latex_code.startswith("```"):
+                    latex_code = latex_code[3:]
+                if latex_code.endswith("```"):
+                    latex_code = latex_code[:-3]
+
+            return latex_code.strip()
+
+        except Exception as e:
+            logging.error(f"Error generating LaTeX resume with AWS Bedrock: {e}")
+            raise

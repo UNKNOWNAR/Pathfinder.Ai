@@ -1,0 +1,62 @@
+[
+  {
+    "id": "q1",
+    "question_text": "Describe a time you solved a complex algorithm problem. What was your approach and the outcome?",
+    "question_type": "behavioral",
+    "skills_keywords": ["algorithms", "problem-solving", "critical thinking"]
+  },
+  {
+    "id": "q2",
+    "question_text": "Implement a function to reverse a singly linked list iteratively and recursively.",
+    "question_type": "coding",
+    "skills_keywords": ["data structures", "linked lists", "recursion", "iteration"]
+  },
+  {
+    "id": "q3",
+    "question_text": "Design a URL shortening service like TinyURL. What are the key components and considerations?",
+    "question_type": "system_design",
+    "skills_keywords": ["system design", "scalability", "databases", "distributed systems"]
+  },
+  {
+    "id": "q4",
+    "question_text": "What is the difference between a process and a thread? Explain with an example.",
+    "question_type": "conceptual",
+    "skills_keywords": ["operating systems", "concurrency", "multithreading"]
+  },
+  {
+    "id": "q5",
+    "question_text": "Tell me about a time you had to deliver a project under a tight deadline. How did you handle the pressure?",
+    "question_type": "behavioral",
+    "skills_keywords": ["time management", "pressure", "project management"]
+  },
+  {
+    "id": "q6",
+    "question_text": "Implement a binary search algorithm.",
+    "question_type": "coding",
+    "skills_keywords": ["algorithms", "searching"]
+  },
+  {
+    "id": "q7",
+    "question_text": "How would you design a global payment processing system?",
+    "question_type": "system_design",
+    "skills_keywords": ["system design", "payments", "security", "latency"]
+  },
+  {
+    "id": "q8",
+    "question_text": "Explain polymorphism and inheritance in Object-Oriented Programming.",
+    "question_type": "conceptual",
+    "skills_keywords": ["oop", "java", "python", "cpp"]
+  },
+  {
+    "id": "q9",
+    "question_text": "Describe a conflict you had with a team member and how you resolved it.",
+    "question_type": "behavioral",
+    "skills_keywords": ["teamwork", "conflict resolution"]
+  },
+  {
+    "id": "q10",
+    "question_text": "What is REST and why is it used?",
+    "question_type": "conceptual",
+    "skills_keywords": ["web development", "api", "rest"]
+  }
+]

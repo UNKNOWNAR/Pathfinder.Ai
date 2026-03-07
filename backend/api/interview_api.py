@@ -1,5 +1,6 @@
 import json
 import logging
+from flask import send_file
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models import db
@@ -8,10 +9,15 @@ from models.interview_session import InterviewSession
 from models.interview_question import InterviewQuestion
 from models.interview_evaluation import InterviewEvaluation
 from services.interview_service import InterviewService
+from services.voice_service import VoiceService
+from services.agent_service import AgentService # Import AgentService
+import io
 
 logger = logging.getLogger(__name__)
 
 interview_service = InterviewService()
+voice_service = VoiceService()
+agent_service = AgentService() # Initialize AgentService
 
 # ─── Seed default topics on import ───────────────────────────────────
 DEFAULT_TOPICS = [
@@ -138,6 +144,48 @@ class InterviewQuestionGenerate(Resource):
         return {'questions': [q.to_dict() for q in session.questions]}, 201
 
 
+class InterviewQuestionAudio(Resource):
+    @jwt_required()
+    def get(self, question_id):
+        err = _student_only()
+        if err:
+            return err
+
+        question = InterviewQuestion.query.get(question_id)
+        if not question:
+            return {'message': 'Question not found.'}, 404
+
+        session = InterviewSession.query.get(question.session_id)
+        if not session or session.user_id != int(get_jwt_identity()):
+            return {'message': 'Not authorized.'}, 403
+
+        try:
+            # We use boto3 polly client directly inside the VoiceService to get the bytes if synthesize_speech does not return bytes.
+            # But the VoiceService was just modified to return S3 URL by the user, so let's check it.
+            # Based on the user changes:
+            s3_key = voice_service.synthesize_speech(question.question_text)
+            if not s3_key:
+                return {'message': 'Failed to generate audio.'}, 500
+
+            # Since the frontend expects audio bytes from this endpoint in the way we wrote it earlier (blob),
+            # we should either fetch it from S3 and return the bytes, or return the presigned URL and let frontend download it.
+            # Let's fetch the object from S3 and return the bytes to keep compatibility with the frontend blob logic.
+            import boto3
+            s3_client = boto3.client('s3')
+            response = s3_client.get_object(Bucket=voice_service.bucket_name, Key=s3_key)
+            audio_bytes = response['Body'].read()
+
+            return send_file(
+                io.BytesIO(audio_bytes),
+                mimetype="audio/mpeg",
+                as_attachment=False,
+                download_name=f"question_{question_id}.mp3"
+            )
+        except Exception as e:
+            logger.error(f"Failed to generate audio for question {question_id}: {e}")
+            return {'message': 'Failed to generate audio.'}, 500
+
+
 # ─── Answer Submission ───────────────────────────────────────────────
 class InterviewAnswerSubmit(Resource):
     @jwt_required()
@@ -194,3 +242,35 @@ class InterviewAnswerSubmit(Resource):
 
         db.session.commit()
         return {'evaluation': evaluation.to_dict()}, 201
+
+
+# ─── Ghost Recruiter Endpoint ─────────────────────────────────────────
+class GhostInterviewStep(Resource):
+    @jwt_required()
+    def post(self):
+        err = _student_only()
+        if err:
+            return err
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('user_answer', type=str, default='')
+        parser.add_argument('current_phase', type=str, default='introduction') # e.g., 'introduction', 'questioning', 'evaluation'
+        parser.add_argument('profile_json', type=str, required=True) # JSON string of candidate profile
+        parser.add_argument('local_context_history', type=list, default=[]) # List of dicts, e.g., [{"role": "user", "content": "..."}]
+        parser.add_argument('answered_question_ids', type=list, default=[], location='json') # List of question IDs already answered
+
+        args = parser.parse_args()
+
+        try:
+            profile_data = json.loads(args['profile_json'])
+        except json.JSONDecodeError:
+            return {'message': 'Invalid profile_json format.'}, 400
+
+        result = agent_service.process_interview_step(
+            user_answer=args['user_answer'],
+            current_phase=args['current_phase'],
+            profile_json=profile_data,
+            local_context_history=args['local_context_history'],
+            answered_question_ids=args['answered_question_ids']
+        )
+        return result, 200

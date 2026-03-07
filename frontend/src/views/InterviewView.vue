@@ -7,11 +7,18 @@ import api from '@/services/api';
 
 // ─── State ───────────────────────────────────────────────
 const topics = ref([]);
-const session = ref(null);
+const session = ref(null); // This will still be used for the traditional flow if that is kept
 const questions = ref([]);
 const currentIdx = ref(0);
 const loading = ref(false);
 const error = ref('');
+
+// Ghost Recruiter specific state
+const ghostSessionActive = ref(false);
+const recruiterResponseText = ref('');
+const profileData = ref({}); // Candidate's profile JSON from DB
+const localContextHistory = ref([]); // Stores conversation for LLM context
+const answeredQuestionIds = ref([]); // Tracks questions already answered by ghost
 
 // Setup form
 const selectedTopic = ref(null);
@@ -23,7 +30,17 @@ const codeAnswer = ref('');
 const selectedLanguage = ref('python');
 const submitting = ref(false);
 
-const currentQuestion = computed(() => questions.value[currentIdx.value] || null);
+const currentQuestion = computed(() => {
+  // If ghost session is active, currentQuestion comes from ghostSession's next_question
+  if (ghostSessionActive.value && ghostSession.value && ghostSession.value.next_question) {
+    return ghostSession.value.next_question;
+  }
+  // Otherwise, use the traditional questions array
+  return questions.value[currentIdx.value] || null;
+});
+
+// Audio playback
+const audioPlayer = ref(null);
 
 // Watch for language changes to update the starting code
 watch(selectedLanguage, (newLang) => {
@@ -38,11 +55,19 @@ watch(selectedLanguage, (newLang) => {
     }
   }
 });
+
 const isLastQuestion = computed(() => currentIdx.value >= questions.value.length - 1);
 const progress = computed(() => {
   if (!questions.value.length) return 0;
   const answered = questions.value.filter(q => q.evaluation).length;
   return Math.round((answered / questions.value.length) * 100);
+});
+
+// Watch currentIdx to auto-play audio for the new question
+watch(currentIdx, async () => {
+  if (currentQuestion.value) {
+    await playQuestionAudio(currentQuestion.value.question_id);
+  }
 });
 
 // ─── Fetch topics on mount ──────────────────────────────
@@ -51,29 +76,69 @@ onMounted(async () => {
     const res = await api.get('/api/interview/topics');
     topics.value = res.data.topics;
     if (topics.value.length) selectedTopic.value = topics.value[0].topic_id;
+
+    // Fetch profile data for the Ghost Recruiter
+    profileData.value = await getProfileData();
+
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load topics.';
+    error.value = err.response?.data?.message || 'Failed to load topics or profile data.';
   }
 });
+
+// Mock profile data for now
+async function getProfileData() {
+  // In a real application, this would fetch from /profile endpoint
+  // const res = await api.get('/profile');
+  // return res.data.profile;
+  return {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "skills": ["python", "java", "data structures", "algorithms", "system design"],
+    "experience": ["Software Engineer at Google", "Software Engineer at Facebook"],
+    "education": ["Stanford University"]
+  };
+}
 
 // ─── Start session ──────────────────────────────────────
 async function startSession() {
   loading.value = true;
   error.value = '';
   try {
-    const res = await api.post('/api/interview/sessions', {
-      topic_id: selectedTopic.value,
-      difficulty: selectedDifficulty.value,
+    // Initiate Ghost Interview flow
+    const res = await api.post('/api/interview/ghost_step', {
+      user_answer: '', // Initial call, no answer yet
+      current_phase: 'introduction',
+      profile_json: JSON.stringify(profileData.value),
+      local_context_history: [],
+      answered_question_ids: [],
     });
-    session.value = res.data.session;
-    await generateQuestions();
+    ghostSessionActive.value = true;
+    session.value = res.data; // Store the entire response as ghostSession
+
+    recruiterResponseText.value = res.data.recruiter_response_text;
+    if (res.data.audio_url) {
+      await playAudioFromUrl(res.data.audio_url);
+    }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to start session.';
+    error.value = err.response?.data?.message || 'Failed to start Ghost Interview session.';
   } finally {
     loading.value = false;
   }
 }
 
+async function playAudioFromUrl(audioUrl) {
+  try {
+    if (audioPlayer.value) {
+      audioPlayer.value.pause();
+      audioPlayer.value.src = audioUrl;
+      await audioPlayer.value.play();
+    }
+  } catch (err) {
+    console.error('Failed to play audio from URL:', err);
+  }
+}
+
+// This function is no longer needed for the Ghost flow, but keep for traditional
 async function generateQuestions() {
   loading.value = true;
   try {
@@ -91,10 +156,41 @@ async function generateQuestions() {
         codeAnswer.value = questions.value[0].starting_code; // Fallback
       }
     }
+
+    // Auto-play the first question's audio
+    if (questions.value.length > 0) {
+      await playQuestionAudio(questions.value[0].question_id);
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to generate questions.';
   } finally {
     loading.value = false;
+  }
+}
+
+async function playQuestionAudio(questionId) {
+  try {
+    const response = await api.get(`/api/interview/questions/${questionId}/audio`, {
+      responseType: 'blob'
+    });
+
+    const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    if (audioPlayer.value) {
+      audioPlayer.value.pause();
+      audioPlayer.value.src = audioUrl;
+      await audioPlayer.value.play();
+    }
+  } catch (err) {
+    console.error('Failed to play question audio:', err);
+    // Don't show error to user, just fail gracefully if audio doesn't play
+  }
+}
+
+function replayAudio() {
+  if (audioPlayer.value && audioPlayer.value.src) {
+    audioPlayer.value.play();
   }
 }
 
@@ -103,18 +199,37 @@ async function submitAnswer() {
   if (!currentQuestion.value) return;
   submitting.value = true;
   error.value = '';
+
+  // Add user's answer to local context history
+  localContextHistory.value.push({ role: 'user', content: voiceAnswer.value });
+
+  // Update answered questions for the ghost recruiter
+  if (currentQuestion.value && currentQuestion.value.id && !answeredQuestionIds.value.includes(currentQuestion.value.id)) {
+    answeredQuestionIds.value.push(currentQuestion.value.id);
+  }
+
   try {
-    const res = await api.post(`/api/interview/questions/${currentQuestion.value.question_id}/answer`, {
-      voice_answer: voiceAnswer.value,
-      code_answer: codeAnswer.value,
+    const res = await api.post('/api/interview/ghost_step', {
+      user_answer: voiceAnswer.value,
+      current_phase: 'questioning', // Or 'evaluation' depending on the logic
+      profile_json: JSON.stringify(profileData.value),
+      local_context_history: localContextHistory.value,
+      answered_question_ids: answeredQuestionIds.value,
     });
-    // Update the question in our local array with the evaluation
-    questions.value[currentIdx.value] = {
-      ...questions.value[currentIdx.value],
-      evaluation: res.data.evaluation,
-    };
+
+    // Update ghost session state
+    session.value = res.data; // Overwrite current session with ghost data
+    recruiterResponseText.value = res.data.recruiter_response_text;
+    if (res.data.audio_url) {
+      await playAudioFromUrl(res.data.audio_url);
+    }
+
+    // Add recruiter's response to local context history
+    localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
+
+    resetAnswers(); // Clear user's answer input
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to submit answer.';
+    error.value = err.response?.data?.message || 'Failed to submit answer to Ghost Recruiter.';
   } finally {
     submitting.value = false;
   }
@@ -123,6 +238,7 @@ async function submitAnswer() {
 // ─── Navigation ─────────────────────────────────────────
 function nextQuestion() {
   if (currentIdx.value < questions.value.length - 1) {
+    if (audioPlayer.value) audioPlayer.value.pause();
     currentIdx.value++;
     resetAnswers();
     if (currentQuestion.value?.starting_code) {
@@ -138,6 +254,7 @@ function nextQuestion() {
 
 function prevQuestion() {
   if (currentIdx.value > 0) {
+    if (audioPlayer.value) audioPlayer.value.pause();
     currentIdx.value--;
     resetAnswers();
     if (currentQuestion.value?.starting_code) {
@@ -159,11 +276,19 @@ function resetAnswers() {
 }
 
 function resetSession() {
-  session.value = null;
+  if (audioPlayer.value) audioPlayer.value.pause();
+  session.value = null; // Traditional session
   questions.value = [];
   currentIdx.value = 0;
   resetAnswers();
   error.value = '';
+
+  // Ghost Recruiter specific resets
+  ghostSessionActive.value = false;
+  recruiterResponseText.value = '';
+  localContextHistory.value = [];
+  answeredQuestionIds.value = [];
+  // profileData is not reset as it's fetched on mount and persists
 }
 
 function scoreClass(score) {
@@ -182,6 +307,9 @@ function scoreClass(score) {
         <p class="page-sub">Practice technical & behavioral interviews with AI feedback.</p>
       </div>
 
+      <!-- Audio Element (Hidden) -->
+      <audio ref="audioPlayer"></audio>
+
       <!-- ─── Error ─────────────────────────────────────── -->
       <div v-if="error" class="box status-box error">
         <p class="status-label">ERROR</p>
@@ -189,19 +317,16 @@ function scoreClass(score) {
         <button class="outline-btn" @click="error = ''">DISMISS</button>
       </div>
 
-      <!-- ─── Setup Panel (no session yet) ──────────────── -->
-      <template v-if="!session">
+      <!-- ─── Setup Panel (no ghost session yet) ──────────────── -->
+      <template v-if="!ghostSessionActive">
         <div class="box setup-box">
-          <h2 class="section-title">Start an Interview</h2>
+          <h2 class="section-title">Start a Ghost Interview</h2>
+          <p class="section-sub">
+            This is a stateless, event-driven interview. The AI will generate questions
+            and responses on the fly based on your profile and answers.
+          </p>
           <div class="setup-form">
-            <div class="form-group">
-              <label class="form-label">TOPIC</label>
-              <select v-model="selectedTopic" class="form-select">
-                <option v-for="t in topics" :key="t.topic_id" :value="t.topic_id">
-                  {{ t.name }}
-                </option>
-              </select>
-            </div>
+            <!-- Difficulty selection can still be used to inform the initial question type -->
             <div class="form-group">
               <label class="form-label">DIFFICULTY</label>
               <div class="diff-group">
@@ -214,104 +339,63 @@ function scoreClass(score) {
                 >{{ d }}</button>
               </div>
             </div>
-            <button class="primary-btn" @click="startSession" :disabled="loading || !selectedTopic">
-              {{ loading ? 'STARTING...' : 'START INTERVIEW' }}
+            <button class="primary-btn" @click="startSession" :disabled="loading">
+              {{ loading ? 'STARTING...' : 'START GHOST INTERVIEW' }}
             </button>
           </div>
         </div>
       </template>
 
-      <!-- ─── Active Interview ──────────────────────────── -->
-      <template v-else>
-        <!-- Progress bar -->
-        <div class="box progress-box">
-          <div class="progress-header">
-            <span class="progress-label">{{ session.topic?.name || 'Interview' }} &mdash; {{ session.difficulty.toUpperCase() }}</span>
-            <span class="progress-count">{{ currentIdx + 1 }} / {{ questions.length }}</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" :style="{ width: progress + '%' }"></div>
-          </div>
-          <button class="outline-btn small" @click="resetSession">NEW SESSION</button>
+      <!-- ─── Active Ghost Interview ──────────────────────────── -->
+      <template v-else-if="ghostSessionActive">
+        <!-- Recruiter's Response -->
+        <div v-if="recruiterResponseText" class="box recruiter-response-box">
+          <p class="recruiter-text">{{ recruiterResponseText }}</p>
+          <button class="replay-btn" @click="replayAudio" title="Replay Audio">
+            🔊
+          </button>
         </div>
 
-        <!-- Loading questions -->
-        <div v-if="loading" class="box status-box">
-          <p class="status-text">Generating questions...</p>
-        </div>
-
-        <!-- Question Card -->
-        <template v-else-if="currentQuestion">
+        <!-- Current Question -->
+        <template v-if="currentQuestion">
           <div class="box question-box">
             <span class="q-type-badge" :class="currentQuestion.question_type">
-              {{ currentQuestion.question_type }}
+              {{ currentQuestion.question_type.replace('_', ' ') }}
             </span>
             <p class="question-text">{{ currentQuestion.question_text }}</p>
           </div>
 
-          <!-- Answer area (only if not yet evaluated) -->
-          <template v-if="!currentQuestion.evaluation">
-            <div class="answer-section">
-              <h3 class="section-title">Your Answer</h3>
+          <!-- Answer area -->
+          <div class="answer-section">
+            <h3 class="section-title">Your Answer</h3>
 
-              <!-- Voice input -->
-              <VoiceInput v-model="voiceAnswer" />
+            <!-- Voice input -->
+            <VoiceInput v-model="voiceAnswer" />
 
-              <!-- Code editor (for coding questions or optionally any) -->
-              <div v-if="currentQuestion.question_type === 'coding'" class="editor-section">
-                <CodeEditor v-model="codeAnswer" v-model:language="selectedLanguage" />
-              </div>
-
-              <button
-                class="primary-btn"
-                @click="submitAnswer"
-                :disabled="submitting || (!voiceAnswer && !codeAnswer)"
-              >
-                {{ submitting ? 'EVALUATING...' : 'SUBMIT ANSWER' }}
-              </button>
+            <!-- Code editor (for coding questions or optionally any) -->
+            <div v-if="currentQuestion.question_type === 'coding'" class="editor-section">
+              <CodeEditor v-model="codeAnswer" v-model:language="selectedLanguage" />
             </div>
-          </template>
 
-          <!-- Evaluation result -->
-          <template v-else>
-            <div class="box eval-box">
-              <div class="eval-header">
-                <span class="eval-label">AI EVALUATION</span>
-                <span class="eval-score" :class="scoreClass(currentQuestion.evaluation.score)">
-                  {{ currentQuestion.evaluation.score }} / 100
-                </span>
-              </div>
-
-              <div class="eval-section">
-                <h4 class="eval-sub">Strengths</h4>
-                <p class="eval-text">{{ currentQuestion.evaluation.strengths }}</p>
-              </div>
-              <div class="eval-section">
-                <h4 class="eval-sub">Areas to Improve</h4>
-                <p class="eval-text">{{ currentQuestion.evaluation.improvements }}</p>
-              </div>
-              <div class="eval-section">
-                <h4 class="eval-sub">Ideal Answer</h4>
-                <p class="eval-text">{{ currentQuestion.evaluation.ideal_answer }}</p>
-              </div>
-            </div>
-          </template>
-
-          <!-- Navigation -->
-          <div class="nav-row">
-            <button class="outline-btn" @click="prevQuestion" :disabled="currentIdx === 0">PREV</button>
             <button
-              v-if="!isLastQuestion"
-              class="outline-btn"
-              @click="nextQuestion"
-            >NEXT</button>
-            <button
-              v-else
               class="primary-btn"
-              @click="resetSession"
-            >FINISH</button>
+              @click="submitAnswer"
+              :disabled="submitting || (!voiceAnswer && !codeAnswer)"
+            >
+              {{ submitting ? 'SUBMITTING...' : 'SUBMIT ANSWER' }}
+            </button>
           </div>
         </template>
+        <template v-else>
+          <div class="box status-box">
+            <p class="status-text">Interview completed. Thank you!</p>
+            <button class="primary-btn" @click="resetSession">START NEW INTERVIEW</button>
+          </div>
+        </template>
+
+        <div class="nav-row">
+          <button class="outline-btn" @click="resetSession">END INTERVIEW</button>
+        </div>
       </template>
     </main>
   </div>
@@ -402,9 +486,52 @@ function scoreClass(score) {
 .primary-btn:hover  { background: #1a7ae0; }
 .primary-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
 .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.replay-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.replay-btn:hover {
+  opacity: 1;
+}
+
+/* ── Recruiter Response Box ───────────────────────────────── */
+.recruiter-response-box {
+  padding: 20px 28px;
+  background: var(--accent);
+  color: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recruiter-response-box .recruiter-text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-right: 15px; /* Space between text and replay button */
+}
+
+.recruiter-response-box .replay-btn {
+  color: #fff;
+}
+
 /* ── Setup Box ────────────────────────────────────────── */
 .setup-box { padding: 28px; }
 .section-title { margin-bottom: 18px; }
+.section-sub {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
 .setup-form {
   display: flex;
   flex-direction: column;
@@ -482,6 +609,12 @@ function scoreClass(score) {
 }
 /* ── Question Box ─────────────────────────────────────── */
 .question-box { padding: 24px 28px; }
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
 .q-type-badge {
   display: inline-block;
   padding: 3px 10px;
@@ -490,7 +623,6 @@ function scoreClass(score) {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border: 2px solid var(--ink);
-  margin-bottom: 14px;
 }
 .q-type-badge.conceptual { background: #a5b4fc; }
 .q-type-badge.coding { background: #34d399; }
