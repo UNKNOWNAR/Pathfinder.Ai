@@ -19,6 +19,8 @@ const recruiterResponseText = ref('');
 const profileData = ref({}); // Candidate's profile JSON from DB
 const localContextHistory = ref([]); // Stores conversation for LLM context
 const answeredQuestionIds = ref([]); // Tracks questions already answered by ghost
+const currentPhase = ref('introduction'); // Tracks which phase the interview is in
+const lastEvaluation = ref(null); // Stores the evaluation from the last answer
 
 // Setup form
 const selectedTopic = ref(null);
@@ -31,9 +33,9 @@ const selectedLanguage = ref('python');
 const submitting = ref(false);
 
 const currentQuestion = computed(() => {
-  // If ghost session is active, currentQuestion comes from ghostSession's next_question
-  if (ghostSessionActive.value && ghostSession.value && ghostSession.value.next_question) {
-    return ghostSession.value.next_question;
+  // If ghost session is active, currentQuestion comes from the session's next_question
+  if (ghostSessionActive.value && session.value && session.value.next_question) {
+    return session.value.next_question;
   }
   // Otherwise, use the traditional questions array
   return questions.value[currentIdx.value] || null;
@@ -46,12 +48,14 @@ const audioPlayer = ref(null);
 watch(selectedLanguage, (newLang) => {
   if (currentQuestion.value?.starting_code && currentQuestion.value.question_type === 'coding') {
     try {
-      const parsedCode = JSON.parse(currentQuestion.value.starting_code);
-      if (parsedCode[newLang]) {
-        codeAnswer.value = parsedCode[newLang];
+      const codeData = typeof currentQuestion.value.starting_code === 'string'
+        ? JSON.parse(currentQuestion.value.starting_code)
+        : currentQuestion.value.starting_code;
+      if (codeData[newLang]) {
+        codeAnswer.value = codeData[newLang];
       }
     } catch (e) {
-      // If it's not JSON (old format), just leave the current code or fallback
+      // If it's not JSON, leave the current code
     }
   }
 });
@@ -70,52 +74,58 @@ watch(currentIdx, async () => {
   }
 });
 
-// ─── Fetch topics on mount ──────────────────────────────
+// ─── Fetch topics and profile on mount ──────────────────
 onMounted(async () => {
   try {
     const res = await api.get('/api/interview/topics');
     topics.value = res.data.topics;
     if (topics.value.length) selectedTopic.value = topics.value[0].topic_id;
 
-    // Fetch profile data for the Ghost Recruiter
-    profileData.value = await getProfileData();
+    // Fetch REAL profile data from the database
+    try {
+      const profileRes = await api.get('/profile');
+      profileData.value = profileRes.data.profile || profileRes.data || {};
+    } catch (profileErr) {
+      console.warn('Could not load profile, using empty profile:', profileErr);
+      profileData.value = {};
+    }
 
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to load topics or profile data.';
   }
 });
 
-// Mock profile data for now
-async function getProfileData() {
-  // In a real application, this would fetch from /profile endpoint
-  // const res = await api.get('/profile');
-  // return res.data.profile;
-  return {
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "skills": ["python", "java", "data structures", "algorithms", "system design"],
-    "experience": ["Software Engineer at Google", "Software Engineer at Facebook"],
-    "education": ["Stanford University"]
-  };
-}
-
 // ─── Start session ──────────────────────────────────────
 async function startSession() {
   loading.value = true;
   error.value = '';
+  currentPhase.value = 'introduction';
   try {
-    // Initiate Ghost Interview flow
     const res = await api.post('/api/interview/ghost_step', {
-      user_answer: '', // Initial call, no answer yet
+      user_answer: '',
       current_phase: 'introduction',
       profile_json: JSON.stringify(profileData.value),
       local_context_history: [],
       answered_question_ids: [],
+      difficulty: selectedDifficulty.value,
     });
     ghostSessionActive.value = true;
-    session.value = res.data; // Store the entire response as ghostSession
+    session.value = res.data;
 
     recruiterResponseText.value = res.data.recruiter_response_text;
+    currentPhase.value = res.data.next_phase || 'resume_drilldown';
+
+    // Add the recruiter's greeting to context
+    localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
+
+    // If the question is a coding question, set the starting code
+    if (res.data.next_question?.starting_code && res.data.next_question.question_type === 'coding') {
+      const codeData = typeof res.data.next_question.starting_code === 'string'
+        ? JSON.parse(res.data.next_question.starting_code)
+        : res.data.next_question.starting_code;
+      codeAnswer.value = codeData[selectedLanguage.value] || '';
+    }
+
     if (res.data.audio_url) {
       await playAudioFromUrl(res.data.audio_url);
     }
@@ -200,34 +210,55 @@ async function submitAnswer() {
   submitting.value = true;
   error.value = '';
 
-  // Add user's answer to local context history
-  localContextHistory.value.push({ role: 'user', content: voiceAnswer.value });
+  // Combine voice + code into a single answer payload
+  const combinedAnswer = [
+    voiceAnswer.value ? `Spoken: ${voiceAnswer.value}` : '',
+    codeAnswer.value ? `Code:\n${codeAnswer.value}` : '',
+  ].filter(Boolean).join('\n\n');
 
-  // Update answered questions for the ghost recruiter
-  if (currentQuestion.value && currentQuestion.value.id && !answeredQuestionIds.value.includes(currentQuestion.value.id)) {
+  // Add user's answer to local context history
+  localContextHistory.value.push({ role: 'user', content: combinedAnswer });
+
+  // Track answered question IDs
+  if (currentQuestion.value?.id && !answeredQuestionIds.value.includes(currentQuestion.value.id)) {
     answeredQuestionIds.value.push(currentQuestion.value.id);
   }
 
   try {
     const res = await api.post('/api/interview/ghost_step', {
-      user_answer: voiceAnswer.value,
-      current_phase: 'questioning', // Or 'evaluation' depending on the logic
+      user_answer: combinedAnswer,
+      current_phase: currentPhase.value,
       profile_json: JSON.stringify(profileData.value),
       local_context_history: localContextHistory.value,
       answered_question_ids: answeredQuestionIds.value,
+      difficulty: selectedDifficulty.value,
     });
 
     // Update ghost session state
-    session.value = res.data; // Overwrite current session with ghost data
+    session.value = res.data;
     recruiterResponseText.value = res.data.recruiter_response_text;
-    if (res.data.audio_url) {
-      await playAudioFromUrl(res.data.audio_url);
-    }
+    currentPhase.value = res.data.next_phase || 'completed';
+    lastEvaluation.value = res.data.evaluation || null;
 
     // Add recruiter's response to local context history
     localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
 
-    resetAnswers(); // Clear user's answer input
+    // Reset answers and set starting code for next question if coding
+    resetAnswers();
+    if (res.data.next_question?.starting_code && res.data.next_question.question_type === 'coding') {
+      try {
+        const codeData = typeof res.data.next_question.starting_code === 'string'
+          ? JSON.parse(res.data.next_question.starting_code)
+          : res.data.next_question.starting_code;
+        codeAnswer.value = codeData[selectedLanguage.value] || '';
+      } catch (e) {
+        codeAnswer.value = '';
+      }
+    }
+
+    if (res.data.audio_url) {
+      await playAudioFromUrl(res.data.audio_url);
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to submit answer to Ghost Recruiter.';
   } finally {
@@ -288,6 +319,9 @@ function resetSession() {
   recruiterResponseText.value = '';
   localContextHistory.value = [];
   answeredQuestionIds.value = [];
+  currentPhase.value = 'introduction';
+  lastEvaluation.value = null;
+  codeAnswer.value = '';
   // profileData is not reset as it's fetched on mount and persists
 }
 
@@ -348,6 +382,41 @@ function scoreClass(score) {
 
       <!-- ─── Active Ghost Interview ──────────────────────────── -->
       <template v-else-if="ghostSessionActive">
+        <!-- Phase Indicator -->
+        <div class="box phase-indicator">
+          <div
+            v-for="phase in ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 'behavioral', 'wrapup']"
+            :key="phase"
+            class="phase-dot"
+            :class="{
+              active: currentPhase === phase,
+              completed: ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 'behavioral', 'wrapup']
+                .indexOf(phase) < ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 'behavioral', 'wrapup']
+                .indexOf(currentPhase)
+            }"
+          >
+            {{ phase.replace('_', ' ') }}
+          </div>
+        </div>
+
+        <!-- Last Evaluation (if available) -->
+        <div v-if="lastEvaluation" class="box eval-box">
+          <div class="eval-header">
+            <span class="eval-label">Previous Answer Evaluation</span>
+            <span class="eval-score" :class="scoreClass(lastEvaluation.score)">
+              {{ lastEvaluation.score }}/100
+            </span>
+          </div>
+          <div class="eval-section">
+            <p class="eval-sub">Strengths</p>
+            <p class="eval-text">{{ lastEvaluation.strengths }}</p>
+          </div>
+          <div class="eval-section">
+            <p class="eval-sub">Areas for Improvement</p>
+            <p class="eval-text">{{ lastEvaluation.improvements }}</p>
+          </div>
+        </div>
+
         <!-- Recruiter's Response -->
         <div v-if="recruiterResponseText" class="box recruiter-response-box">
           <p class="recruiter-text">{{ recruiterResponseText }}</p>
@@ -357,7 +426,7 @@ function scoreClass(score) {
         </div>
 
         <!-- Current Question -->
-        <template v-if="currentQuestion">
+        <template v-if="currentQuestion && currentPhase !== 'completed'">
           <div class="box question-box">
             <span class="q-type-badge" :class="currentQuestion.question_type">
               {{ currentQuestion.question_type.replace('_', ' ') }}
@@ -386,9 +455,10 @@ function scoreClass(score) {
             </button>
           </div>
         </template>
-        <template v-else>
+        <template v-else-if="currentPhase === 'completed'">
           <div class="box status-box">
-            <p class="status-text">Interview completed. Thank you!</p>
+            <p class="status-label">INTERVIEW COMPLETE</p>
+            <p class="status-text">{{ recruiterResponseText }}</p>
             <button class="primary-btn" @click="resetSession">START NEW INTERVIEW</button>
           </div>
         </template>
@@ -410,6 +480,37 @@ function scoreClass(score) {
   display: flex;
   flex-direction: column;
   gap: 22px;
+}
+/* ── Phase Indicator ─────────────────────────────────── */
+.phase-indicator {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 4px;
+  overflow-x: auto;
+}
+.phase-dot {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  border: 2px solid var(--ink);
+  background: #f5f5f5;
+  opacity: 0.4;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.phase-dot.active {
+  background: #2d8cf0;
+  color: #fff;
+  opacity: 1;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.phase-dot.completed {
+  background: #22c55e;
+  color: #fff;
+  opacity: 0.8;
 }
 /* ── Page Header ──────────────────────────────────────── */
 .page-header { margin-bottom: 4px; }

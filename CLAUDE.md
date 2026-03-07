@@ -121,17 +121,31 @@ FAANG_WATCH_API_KEY=...
 5. **Resume History Vault:** Increased maximum resume generations from 2 to 10 and implemented a dedicated UI History section.
 6. **LLM Migration:** Successfully migrated Resume Generator from HuggingFace to Groq for faster, highly reliable LaTeX code generation.
 
-### The Real-Time Voice AI Interviewer (AWS Native) ✅
-We transformed the text-based AI Interview prep into an interactive voice call simulator, powered by AWS Bedrock (Haiku 4.5/5.0) for intelligence and AWS Polly for text-to-speech.
+### The "Ghost Recruiter" Voice AI Interviewer (AWS Native) ✅
+A stateless, event-driven 30-minute AI interviewer powered by **AWS Bedrock (Claude Haiku 4.5)** and **AWS Polly (Matthew Neural)**.
 
-**Implementation Details:**
-1. **`backend/services/voice_service.py` created:** Uses `boto3` (Polly) to synthesize speech into MP3s, stored in S3.
-2. **`backend/services/llm_service.py` upgraded:** Now uses `boto3` (`bedrock-runtime`) with Claude 3 Haiku for question generation and response evaluation.
-3. **Interview API (`backend/api/interview_api.py`) modified:** Integrates the new `GhostInterviewStep` endpoint, which uses `AgentService` to pick questions, generate responses, and synthesize audio. Returns AI's response text and audio URL.
-4. **Frontend (`frontend/src/views/InterviewView.vue`) connected:** Updates UI to initiate and manage the Ghost Interview flow, displays recruiter's response text, and auto-plays the generated audio.
+**Architecture:** The AI wakes up only when the user submits an answer. Between answers, 0 tokens are consumed. On refresh, the interview resets.
 
-### 2. Smart Semantic Job Matching (pgvector) ✅ Complete
-The database correctly stores `pgvector` embeddings natively or uses a Python numpy cosine-similarity fallback. Semantic matching natively works for all users navigating the `/api/jobs` feed!
+**6-Phase Interview Flow:**
+1. **Introduction:** AI reads user's Profile JSON from DB, greets them by name, asks to explain a project.
+2. **Resume Drilldown:** AI probes weaknesses in the project explanation.
+3. **LeetCode:** AI picks a coding challenge from `backend/data/questions_bank.json` matching user's skills.
+4. **System Design:** AI picks a system design question from the JSON bank.
+5. **Behavioral:** AI picks a behavioral question from the JSON bank.
+6. **Wrapup:** AI summarizes the interview and gives final feedback.
 
-### 3. Fix Missing Interview Route
-`POST /api/interview/sessions/<id>/questions` returns a 404 in the backend. Ensure the route is defined in the API and registered in `api/__init__.py`, matching the frontend's request.
+**Files Created/Modified:**
+- `backend/services/agent_service.py` — The Ghost Recruiter brain (picks questions, calls Bedrock, calls Polly).
+- `backend/services/voice_service.py` — AWS Polly TTS synthesis, uploads MP3 to S3.
+- `backend/services/llm_service.py` — Upgraded to Claude Haiku 4.5 (`anthropic.claude-haiku-4-5-20251001-v1:0`).
+- `backend/services/interview_service.py` — Upgraded to Claude Haiku 4.5.
+- `backend/data/questions_bank.json` — Placeholder question bank (user will replace with curated data).
+- `backend/api/interview_api.py` — Added `GhostInterviewStep` endpoint at `/api/interview/ghost_step`.
+- `frontend/src/views/InterviewView.vue` — Full Ghost Interview UI with phase indicator, evaluation display, audio playback.
+
+### Smart Semantic Job Matching (pgvector) ✅ Complete
+The database correctly stores `pgvector` embeddings natively or uses a Python numpy cosine-similarity fallback.
+
+### TODO: Replace Question Bank
+The user will provide curated LeetCode, System Design, and Behavioral questions in JSON format to replace the placeholder `backend/data/questions_bank.json`.
+

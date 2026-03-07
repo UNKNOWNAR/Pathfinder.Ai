@@ -1,5 +1,5 @@
 {
-  "leetcode": [
+  "easy": [
     {
       "difficulty": "easy",
       "title": "Reformat Phone Number",
@@ -195,7 +195,9 @@
       ],
       "id": "lc_015",
       "question_type": "coding"
-    },
+    }
+  ],
+  "medium": [
     {
       "difficulty": "medium",
       "title": "Bulb Switcher",
@@ -544,7 +546,9 @@
       ],
       "id": "lc_040",
       "question_type": "coding"
-    },
+    }
+  ],
+  "hard": [
     {
       "difficulty": "hard",
       "title": "Count All Valid Pickup And Delivery Options",
@@ -684,126 +688,6 @@
       ],
       "id": "lc_050",
       "question_type": "coding"
-    }
-  ],
-  "system_design": [
-    {
-      "id": "sd_001",
-      "title": "Design a URL Shortener",
-      "difficulty": "medium",
-      "topics": [
-        "scalability",
-        "hashing",
-        "databases"
-      ],
-      "question_text": "Design a URL shortening service like bit.ly. Users should be able to submit a long URL and get a shortened URL. When they visit the short URL, they should be redirected to the original. How would you handle billions of URLs, ensure uniqueness, and design the database schema?",
-      "question_type": "system_design"
-    },
-    {
-      "id": "sd_002",
-      "title": "Design a Chat Application",
-      "difficulty": "hard",
-      "topics": [
-        "real-time",
-        "websockets",
-        "message-queues"
-      ],
-      "question_text": "Design a real-time chat application like WhatsApp or Slack. Consider how you would handle message delivery, read receipts, group chats, message persistence, and handling millions of concurrent users.",
-      "question_type": "system_design"
-    },
-    {
-      "id": "sd_003",
-      "title": "Design a Notification System",
-      "difficulty": "medium",
-      "topics": [
-        "scalability",
-        "queues",
-        "pub-sub"
-      ],
-      "question_text": "Design a notification system that can send millions of push notifications, emails, and SMS daily. How would you ensure high availability, handle user preferences, rate limiting, and retry failed deliveries?",
-      "question_type": "system_design"
-    },
-    {
-      "id": "sd_004",
-      "title": "Design a Rate Limiter",
-      "difficulty": "medium",
-      "topics": [
-        "algorithms",
-        "distributed-systems",
-        "caching"
-      ],
-      "question_text": "Design a rate limiter that can limit the number of API requests a user can make within a given time window. Consider different algorithms (token bucket, sliding window), distributed environments, and how to handle bursts.",
-      "question_type": "system_design"
-    },
-    {
-      "id": "sd_005",
-      "title": "Design a Video Streaming Platform",
-      "difficulty": "hard",
-      "topics": [
-        "cdn",
-        "encoding",
-        "storage",
-        "scalability"
-      ],
-      "question_text": "Design a video streaming platform like YouTube or Netflix. How would you handle video upload, transcoding, storage, content delivery via CDN, adaptive bitrate streaming, and recommendations?",
-      "question_type": "system_design"
-    }
-  ],
-  "behavioral": [
-    {
-      "id": "beh_001",
-      "title": "Conflict Resolution",
-      "difficulty": "medium",
-      "topics": [
-        "teamwork",
-        "communication"
-      ],
-      "question_text": "Tell me about a time you had a significant disagreement with a teammate on a technical decision. How did you handle it, and what was the outcome?",
-      "question_type": "behavioral"
-    },
-    {
-      "id": "beh_002",
-      "title": "Failure and Learning",
-      "difficulty": "medium",
-      "topics": [
-        "resilience",
-        "growth"
-      ],
-      "question_text": "Describe a project or task where you failed to meet a deadline or deliver the expected result. What went wrong, and what did you learn from the experience?",
-      "question_type": "behavioral"
-    },
-    {
-      "id": "beh_003",
-      "title": "Leadership Under Pressure",
-      "difficulty": "hard",
-      "topics": [
-        "leadership",
-        "decision-making"
-      ],
-      "question_text": "Tell me about a time when you had to lead a team through a critical situation with tight deadlines. How did you prioritize tasks and keep the team motivated?",
-      "question_type": "behavioral"
-    },
-    {
-      "id": "beh_004",
-      "title": "Ambiguity and Initiative",
-      "difficulty": "medium",
-      "topics": [
-        "initiative",
-        "problem-solving"
-      ],
-      "question_text": "Describe a situation where you had to work with unclear or incomplete requirements. How did you handle the ambiguity and move the project forward?",
-      "question_type": "behavioral"
-    },
-    {
-      "id": "beh_005",
-      "title": "Cross-Team Collaboration",
-      "difficulty": "medium",
-      "topics": [
-        "collaboration",
-        "communication"
-      ],
-      "question_text": "Tell me about a time you had to collaborate with a team outside your own department. What challenges did you face, and how did you build trust and ensure alignment?",
-      "question_type": "behavioral"
     }
   ]
 }
