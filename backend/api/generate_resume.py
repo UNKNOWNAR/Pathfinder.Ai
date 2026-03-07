@@ -52,11 +52,11 @@ class GenerateResume(Resource):
                 "created_at": __import__('datetime').datetime.utcnow().isoformat()
             }
 
-            # Keep only the latest 2 resumes
+            # Keep only the latest 10 resumes
             current_resumes.insert(0, new_resume_entry)
 
             # If we exceed the limit, delete the oldest one from S3 and remove from array
-            if len(current_resumes) > 2:
+            if len(current_resumes) > 10:
                 oldest_resume = current_resumes.pop()
                 try:
                     old_s3_key = oldest_resume.get("s3_key")
