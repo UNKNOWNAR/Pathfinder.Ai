@@ -14,7 +14,8 @@ class LLMService:
             region_name='us-east-1'
         )
         self.api_key = os.getenv('BEDROCK_API_KEY')
-        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
+        # Use Inference Profile prefix 'us.' as required for newest Claude 4.5+ models in us-east-1
+        self.model_id = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
         self.endpoint = "https://bedrock-runtime.us-east-1.amazonaws.com"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
@@ -126,6 +127,7 @@ class LLMService:
                 if response.status_code == 200:
                     response_body = response.json()
                 else:
+                    logger.error(f"Bedrock Key call failed: {response.status_code} - {response.text}")
                     # Fallback to boto3 if API key mode fails
                     invoke_response = self.bedrock_client.invoke_model(
                         body=body,
