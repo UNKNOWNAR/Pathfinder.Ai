@@ -357,18 +357,14 @@ class AgentService:
             "temperature": 0.7
         })
 
-        try:
-            response = self.bedrock_client.invoke_model(
-                body=body,
-                modelId=self.model_id,
-                accept='application/json',
-                contentType='application/json'
-            )
-            response_body = json.loads(response.get('body').read())
-            return response_body.get('content', [{}])[0].get('text', '').strip()
-        except Exception as e:
-            logger.error(f"Bedrock call failed: {e}")
-            return f"I apologize, but I'm experiencing a technical issue. Let's continue with the next part of the interview."
+        response = self.bedrock_client.invoke_model(
+            body=body,
+            modelId=self.model_id,
+            accept='application/json',
+            contentType='application/json'
+        )
+        response_body = json.loads(response.get('body').read())
+        return response_body.get('content', [{}])[0].get('text', '').strip()
 
     def _evaluate_answer(self, user_answer, question_context, context_history):
         """Evaluate the user's answer and return a score + feedback."""
