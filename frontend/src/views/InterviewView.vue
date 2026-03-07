@@ -23,7 +23,7 @@ const currentPhase = ref('introduction'); // Tracks which phase the interview is
 const lastEvaluation = ref(null); // Stores the evaluation from the last answer
 
 // Ghost Timer
-const timerSeconds = ref(1800); // 30 minutes
+const timerSeconds = ref(11400); // 190 minutes
 let ghostTimerInterval = null;
 const formattedTimer = computed(() => {
   const m = Math.floor(timerSeconds.value / 60);
@@ -111,7 +111,7 @@ async function startSession() {
   currentPhase.value = 'introduction';
 
   // Start Ghost Timer
-  timerSeconds.value = 1800; // 30 minutes
+  timerSeconds.value = 11400; // 190 minutes
   if (ghostTimerInterval) clearInterval(ghostTimerInterval);
   ghostTimerInterval = setInterval(() => {
     if (timerSeconds.value > 0) timerSeconds.value--;
