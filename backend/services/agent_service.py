@@ -428,7 +428,7 @@ class AgentService:
             for q in available:
                 q_topics = set(t.lower() for t in q.get('topics', []))
                 overlap = len(skill_set & q_topics)
-                scored.append((overlap, q['frequency'], q))
+                scored.append((overlap, q.get('frequency', 0), q))
             # Sort by skill overlap first, then by interview frequency
             scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
             if scored[0][0] > 0:
