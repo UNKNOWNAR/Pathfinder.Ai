@@ -1,6 +1,7 @@
 import logging
 import requests
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from models import db
 from models.job import Job, HarvestLog
@@ -8,9 +9,7 @@ from services.utils import make_job_hash
 
 from services.rss_sources import (
     fetch_remoteok_jobs,
-    fetch_weworkremotely_jobs,
-    fetch_naukri_jobs,
-    fetch_wellfound_jobs
+    fetch_weworkremotely_jobs
 )
 
 logger = logging.getLogger(__name__)
@@ -29,21 +28,27 @@ INDIA_CITIES = [
 ]
 
 
-def is_india_or_remote(location):
+def is_allowed_location(location):
 
     if not location:
         return False
 
     loc = location.lower()
 
-    if "india" in loc:
-        return True
+    allowed_words = [
+        "india",
+        "remote",
+        "worldwide",
+        "anywhere",
+        "global"
+    ]
 
-    if "remote" in loc:
-        return True
+    for w in allowed_words:
+        if w in loc:
+            return True
 
-    for city in INDIA_CITIES:
-        if city.lower() in loc:
+    for c in INDIA_CITIES:
+        if c.lower() in loc:
             return True
 
     return False
@@ -51,8 +56,8 @@ def is_india_or_remote(location):
 
 def insert_jobs(source, raw_jobs, existing_hashes):
 
-    inserted = 0
     new_jobs = []
+    inserted = 0
 
     for job in raw_jobs:
 
@@ -65,7 +70,7 @@ def insert_jobs(source, raw_jobs, existing_hashes):
         if not title or not company:
             continue
 
-        if not is_india_or_remote(location):
+        if not is_allowed_location(location):
             continue
 
         job_hash = make_job_hash(title, company, url or "")
@@ -73,17 +78,18 @@ def insert_jobs(source, raw_jobs, existing_hashes):
         if job_hash in existing_hashes:
             continue
 
-        new_job = Job(
-            title=title,
-            company=company,
-            location=location,
-            description=description,
-            source=source,
-            url=url,
-            hash=job_hash
+        new_jobs.append(
+            Job(
+                title=title,
+                company=company,
+                location=location,
+                description=description,
+                source=source,
+                url=url,
+                hash=job_hash
+            )
         )
 
-        new_jobs.append(new_job)
         existing_hashes.add(job_hash)
 
     if new_jobs:
@@ -102,7 +108,7 @@ def fetch_remotive():
 
     url = "https://remotive.com/api/remote-jobs"
 
-    res = requests.get(url)
+    res = requests.get(url, timeout=20)
 
     data = res.json()
 
@@ -127,7 +133,7 @@ def fetch_arbeitnow():
 
     url = "https://arbeitnow.com/api/job-board-api"
 
-    res = requests.get(url)
+    res = requests.get(url, timeout=20)
 
     data = res.json()
 
@@ -150,14 +156,12 @@ def fetch_arbeitnow():
 
 def fetch_jsearch(api_key):
 
-    jobs = []
-
     headers = {
         "X-RapidAPI-Key": api_key,
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
     }
 
-    for city in INDIA_CITIES:
+    def fetch_city(city):
 
         query = f"software engineer {city}"
 
@@ -170,25 +174,89 @@ def fetch_jsearch(api_key):
             "date_posted": "week"
         }
 
-        res = requests.get(
-            "https://jsearch.p.rapidapi.com/search",
-            headers=headers,
-            params=params
-        )
+        try:
 
-        data = res.json()
+            res = requests.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers=headers,
+                params=params,
+                timeout=15
+            )
 
-        for j in data.get("data", []):
+            data = res.json()
 
-            jobs.append({
-                "title": j.get("job_title"),
-                "company": j.get("employer_name"),
-                "location": j.get("job_city") or j.get("job_country"),
-                "description": j.get("job_description"),
-                "url": j.get("job_apply_link")
-            })
+            jobs = []
+
+            for j in data.get("data", []):
+
+                jobs.append({
+                    "title": j.get("job_title"),
+                    "company": j.get("employer_name"),
+                    "location": j.get("job_city") or j.get("job_country"),
+                    "description": j.get("job_description"),
+                    "url": j.get("job_apply_link")
+                })
+
+            return jobs
+
+        except Exception as e:
+
+            logger.error(f"LinkedIn {city} failed: {e}")
+            return []
+
+    jobs = []
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+
+        results = executor.map(fetch_city, INDIA_CITIES)
+
+        for r in results:
+            jobs.extend(r)
 
     logger.info(f"LinkedIn fetched {len(jobs)} jobs")
+
+    return jobs
+
+
+def fetch_adzuna(app):
+
+    app_id = app.config.get("ADZUNA_APP_ID")
+    app_key = app.config.get("ADZUNA_APP_KEY")
+
+    jobs = []
+
+    for page in range(1, 6):
+
+        url = f"https://api.adzuna.com/v1/api/jobs/in/search/{page}"
+
+        params = {
+            "app_id": app_id,
+            "app_key": app_key,
+            "results_per_page": 50,
+            "what": "software engineer"
+        }
+
+        try:
+
+            res = requests.get(url, params=params, timeout=15)
+
+            data = res.json()
+
+            for j in data.get("results", []):
+
+                jobs.append({
+                    "title": j.get("title"),
+                    "company": j.get("company", {}).get("display_name"),
+                    "location": j.get("location", {}).get("display_name"),
+                    "description": j.get("description"),
+                    "url": j.get("redirect_url")
+                })
+
+        except Exception as e:
+
+            logger.error(f"Adzuna page {page} failed: {e}")
+
+    logger.info(f"Adzuna fetched {len(jobs)} jobs")
 
     return jobs
 
@@ -200,20 +268,22 @@ def _run_harvest(app):
         logger.info("MASTER HARVEST STARTED")
 
         log = HarvestLog(source="all", status="running", jobs_added=0)
+
         db.session.add(log)
         db.session.commit()
 
         existing_hashes = {h[0] for h in db.session.query(Job.hash).all()}
+
         total_added = 0
 
         sources = [
+
             ("Remotive", fetch_remotive),
             ("Arbeitnow", fetch_arbeitnow),
             ("LinkedIn", lambda: fetch_jsearch(app.config.get("JSEARCH_API_KEY"))),
+            ("Adzuna", lambda: fetch_adzuna(app)),
             ("RemoteOK", fetch_remoteok_jobs),
-            ("WeWorkRemotely", fetch_weworkremotely_jobs),
-            ("Naukri", fetch_naukri_jobs),
-            ("Wellfound", fetch_wellfound_jobs),
+            ("WeWorkRemotely", fetch_weworkremotely_jobs)
         ]
 
         for name, fn in sources:
@@ -232,14 +302,13 @@ def _run_harvest(app):
 
                 logger.error(f"{name} FAILED: {e}")
 
-                continue
-
         log.status = "completed"
         log.jobs_added = total_added
 
         db.session.commit()
 
         logger.info(f"HARVEST COMPLETE — added {total_added} jobs")
+
 
 def harvest_all(app, roles=None, locations=None):
 
@@ -256,4 +325,4 @@ def harvest_all(app, roles=None, locations=None):
 
 def harvest_source(app, source, roles=None, locations=None):
 
-    return harvest_all(app, roles, locations)
+    return harvest_all(app)

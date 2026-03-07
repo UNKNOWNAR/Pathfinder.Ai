@@ -47,6 +47,10 @@ class Config:
     FAANG_WATCH_API_KEY = os.getenv('FAANG_WATCH_API_KEY', '')
 
 
+    ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID", "")
+    ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY", "")
+
+
 
 
 
