@@ -72,7 +72,7 @@ PHASE_ORDER = ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 
 class AgentService:
     def __init__(self):
         self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama3-8b-8192"
+        self.model_id = "llama-3.1-8b-instant"
         self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         self.voice_service = VoiceService()
 
