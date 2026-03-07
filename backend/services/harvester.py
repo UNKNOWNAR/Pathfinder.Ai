@@ -1,345 +1,328 @@
 import logging
 import requests
 import threading
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+
 from models import db
 from models.job import Job, HarvestLog
-from services.utils import make_job_hash, is_fresher_role
-from services.embedding import store_job_embedding
+from services.utils import make_job_hash
 
-# ── Configuration & Logging ────────────────────────────────────────────────────
+from services.rss_sources import (
+    fetch_remoteok_jobs,
+    fetch_weworkremotely_jobs
+)
 
 logger = logging.getLogger(__name__)
 
-# Base roles if none are provided
-DEFAULT_ROLES = ["software engineer", "data engineer", "machine learning engineer"]
-DEFAULT_LOCATIONS = ["India", "United States", "Remote"]
 
-# Source Registry: Centralizing URLs, hosts, and mapping logic
-SOURCES = {
-    "Remotive": {
-        "url": "https://remotive.com/api/remote-jobs",
-        "params": {"search": "junior entry level fresher"},
-        "type": "direct",
-        "mapping": {
-            "title": "title",
-            "company": "company_name",
-            "location": "candidate_required_location",
-            "description": "description",
-            "url": "url"
-        }
-    },
-    "Arbeitnow": {
-        "url": "https://arbeitnow.com/api/job-board-api",
-        "type": "direct",
-        "mapping": {
-            "title": "title",
-            "company": "company_name",
-            "location": "location",
-            "description": "description",
-            "url": "url"
-        },
-        "filter_fresher": True
-    },
-    "LinkedIn": {
-        "url": "https://jsearch.p.rapidapi.com/search",
-        "host": "jsearch.p.rapidapi.com",
-        "type": "rapidapi",
-        "config_key": "JSEARCH_API_KEY",
-        "timeout": 60,
-        "mapping": {
-            "title": "job_title",
-            "company": "employer_name",
-            "location": lambda item: item.get("job_city") or item.get("job_country") or "Remote",
-            "description": "job_description",
-            "url": "job_apply_link"
-        }
-    },
-    "Internships": {
-        "url": "https://internships-api.p.rapidapi.com/active-jb-7d",
-        "host": "internships-api.p.rapidapi.com",
-        "type": "rapidapi",
-        "config_key": "INTERNSHIPS_API_KEY",
-        "mapping": {
-            "title": "title",
-            "company": "organization",
-            "location": lambda item: (item.get("locations_derived") or ["Remote"])[0],
-            "description": "description_text",
-            "url": "url"
-        }
-    },
-    "GoogleJobs": {
-        "url": "https://google-jobs-api.p.rapidapi.com/google-jobs",
-        "host": "google-jobs-api.p.rapidapi.com",
-        "type": "rapidapi",
-        "config_key": "GOOGLE_JOBS_API_KEY",
-        "mapping": {
-            "title": "title",
-            "company": "company",
-            "location": "location",
-            "description": "snippet",
-            "url": "link"
-        }
-    },
-    "FaangWatch": {
-        "url": "https://faang-watch-api.p.rapidapi.com/search",
-        "host": "faang-watch-api.p.rapidapi.com",
-        "type": "rapidapi",
-        "config_key": "FAANG_WATCH_API_KEY",
-        "mapping": {
-            "title": "title",
-            "company": "company",
-            "location": lambda item: (
-                f"{item['parsed_locations'][0].get('city', '')}, {item['parsed_locations'][0].get('state', '')}, {item['parsed_locations'][0].get('country', '')}".strip(", ")
-                if item.get("parsed_locations") and len(item["parsed_locations"]) > 0
-                else (item.get("locations") or ["Remote"])[0]
-            ),
-            "description": "description",
-            "url": "company_url"
-        }
-    },
-}
+INDIA_CITIES = [
+    "Bangalore",
+    "Hyderabad",
+    "Pune",
+    "Chennai",
+    "Mumbai",
+    "Delhi",
+    "Gurgaon",
+    "Noida",
+    "Kolkata"
+]
 
-# ── Fetching Logic ─────────────────────────────────────────────────────────────
 
-def _get_headers(source_conf, api_key):
-    headers = {"Accept": "application/json"}
-    if source_conf["type"].startswith("rapidapi"):
-        headers.update({
-            "X-RapidAPI-Key": api_key,
-            "X-RapidAPI-Host": source_conf["host"]
-        })
-    return headers
+def is_allowed_location(location):
 
-def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
-    """Fetches raw data from a source, generating dynamic queries based on inputs."""
-    conf = SOURCES[source_id]
-    api_key = app_config.get(conf.get("config_key", ""), "") if conf.get("config_key") else None
+    if not location:
+        return False
 
-    if conf.get("config_key") and not api_key:
-        logger.warning(f"{conf['config_key']} not set — skipping {source_id}.")
-        return [], 0 # return jobs and api_calls made
+    loc = location.lower()
 
-    headers = _get_headers(conf, api_key)
-    timeout = conf.get("timeout", 30)
-    raw_jobs = []
-    api_calls = 0
+    allowed_words = [
+        "india",
+        "remote",
+        "worldwide",
+        "anywhere",
+        "global"
+    ]
 
-    # Use provided roles/locations or fallback to defaults
-    active_roles = roles if roles and len(roles) > 0 else DEFAULT_ROLES
-    active_locations = locations if locations and len(locations) > 0 else DEFAULT_LOCATIONS
+    for w in allowed_words:
+        if w in loc:
+            return True
 
-    try:
-        if source_id == "GoogleJobs":
-            for loc in active_locations:
-                for role in active_roles:
-                    q = f"{role} fresher entry level"
-                    try:
-                        res = requests.get(conf["url"], headers=headers, params={
-                            "query": q, "location": loc, "experience": "Entry",
-                            "language": "English", "pageSize": 10
-                        }, timeout=timeout)
-                        api_calls += 1
-                        res.raise_for_status()
-                        raw_jobs.extend(res.json().get("jobs", []))
-                        time.sleep(1) # Safety delay for Rate Limits (429)
-                    except Exception as e:
-                        logger.error(f"Google Jobs sub-query '{q}' at '{loc}' failed: {e}")
+    for c in INDIA_CITIES:
+        if c.lower() in loc:
+            return True
 
-        elif source_id == "LinkedIn":
-            for loc in active_locations:
-                for role in active_roles:
-                    q = f"entry level junior fresher {role} {loc}"
-                    try:
-                        res = requests.get(conf["url"], headers=headers, params={
-                            "query": q,
-                            "num_pages": "1",
-                            "page": "1",
-                            "date_posted": "week" # Changed from month to week for fresher jobs
-                        }, timeout=timeout)
-                        api_calls += 1
-                        res.raise_for_status()
-                        data = res.json()
-                        raw_jobs.extend(data.get("data", []))
-                        time.sleep(1)
-                    except Exception as e:
-                        logger.error(f"LinkedIn sub-query '{q}' failed: {e}")
+    return False
 
-        elif source_id == "Internships":
-            # Internships API doesn't take complex query strings as easily, just title filter
-            for offset in [0, 10]:
-                res = requests.get(conf["url"], headers=headers, params={
-                    "title_filter": "intern OR internship", "description_type": "text", "offset": offset
-                }, timeout=timeout)
-                api_calls += 1
-                res.raise_for_status()
-                batch = res.json()
-                if not batch: break
-                raw_jobs.extend(batch)
 
-        elif source_id == "FaangWatch":
-            for loc in active_locations:
-                for role in active_roles:
-                    params = {
-                        "text": role,
-                        "location": loc,
-                        "min_years_of_experience": 0,
-                        "seniority": "Junior",
-                        "page_size": 20
-                    }
-                    try:
-                        res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
-                        api_calls += 1
-                        res.raise_for_status()
-                        data = res.json()
-                        if isinstance(data, list):
-                            raw_jobs.extend(data)
-                        elif isinstance(data, dict):
-                            # The API docs mention 'hits' specifically
-                            raw_jobs.extend(data.get("hits", data.get("jobs", data.get("data", []))))
-                        time.sleep(2) # Increased delay to avoid 429 "Too many requests"
-                    except Exception as e:
-                        logger.error(f"FaangWatch sub-query '{role}' at '{loc}' failed: {e}")
+def insert_jobs(source, raw_jobs, existing_hashes):
 
-        else:
-            # Standard GET request for public APIs
-            # We can try to append roles to the search param for remotive
-            params = conf.get("params", {}).copy()
-            if "search" in params and active_roles:
-                params["search"] = f"junior entry level fresher {active_roles[0]}"
-
-            res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
-            api_calls += 1
-            res.raise_for_status()
-            data = res.json()
-            raw_jobs = data.get("jobs") or data.get("data") or (data if isinstance(data, list) else [])
-
-    except Exception as e:
-        logger.error(f"Fetch failed for {source_id}: {e}")
-        return raw_jobs, api_calls
-
-    return raw_jobs, api_calls
-
-# ── Processing & Orchestration ─────────────────────────────────────────────────
-
-def _process_job_items(source_id, raw_items, existing_hashes):
-    """Maps raw items to Job models and returns a list of new Job instances."""
-    conf = SOURCES[source_id]
-    mapping = conf["mapping"]
     new_jobs = []
+    inserted = 0
 
-    for item in raw_items:
-        try:
-            fields = {}
-            for target, source in mapping.items():
-                fields[target] = source(item) if callable(source) else item.get(source)
+    for job in raw_jobs:
 
-            title = (fields["title"] or "").strip()
-            company = (fields["company"] or "").strip()
+        title = job.get("title")
+        company = job.get("company")
+        location = job.get("location")
+        description = job.get("description", "")
+        url = job.get("url")
 
-            if not title or not company or company.lower() == "unknown":
-                continue
-
-            if conf.get("filter_fresher") and not is_fresher_role(title):
-                continue
-
-            job_hash = make_job_hash(title, company)
-            if job_hash in existing_hashes:
-                continue
-
-            new_job = Job(
-                title=title,
-                company=company,
-                location=fields.get("location") or "Remote",
-                description=fields.get("description") or "",
-                source=source_id,
-                url=fields.get("url") or "",
-                hash=job_hash
-            )
-            new_jobs.append(new_job)
-            existing_hashes.add(job_hash) # Local dedup within the run
-        except Exception:
+        if not title or not company:
             continue
 
-    return new_jobs
+        if not is_allowed_location(location):
+            continue
 
-def _run_harvest(app, source="all", roles=None, locations=None):
-    """Core harvest loop. Can be run for a single source or all."""
+        job_hash = make_job_hash(title, company, url or "")
+
+        if job_hash in existing_hashes:
+            continue
+
+        new_jobs.append(
+            Job(
+                title=title,
+                company=company,
+                location=location,
+                description=description,
+                source=source,
+                url=url,
+                hash=job_hash
+            )
+        )
+
+        existing_hashes.add(job_hash)
+
+    if new_jobs:
+
+        db.session.bulk_save_objects(new_jobs)
+        db.session.commit()
+
+        inserted = len(new_jobs)
+
+    logger.info(f"{source}: inserted {inserted} jobs")
+
+    return inserted
+
+
+def fetch_remotive():
+
+    url = "https://remotive.com/api/remote-jobs"
+
+    res = requests.get(url, timeout=20)
+
+    data = res.json()
+
+    jobs = []
+
+    for j in data.get("jobs", []):
+
+        jobs.append({
+            "title": j.get("title"),
+            "company": j.get("company_name"),
+            "location": j.get("candidate_required_location"),
+            "description": j.get("description"),
+            "url": j.get("url")
+        })
+
+    logger.info(f"Remotive fetched {len(jobs)} jobs")
+
+    return jobs
+
+
+def fetch_arbeitnow():
+
+    url = "https://arbeitnow.com/api/job-board-api"
+
+    res = requests.get(url, timeout=20)
+
+    data = res.json()
+
+    jobs = []
+
+    for j in data.get("data", []):
+
+        jobs.append({
+            "title": j.get("title"),
+            "company": j.get("company_name"),
+            "location": j.get("location"),
+            "description": j.get("description"),
+            "url": j.get("url")
+        })
+
+    logger.info(f"Arbeitnow fetched {len(jobs)} jobs")
+
+    return jobs
+
+
+def fetch_jsearch(api_key):
+
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
+    }
+
+    def fetch_city(city):
+
+        query = f"software engineer {city}"
+
+        logger.info(f"LinkedIn query: {query}")
+
+        params = {
+            "query": query,
+            "page": "1",
+            "num_pages": "1",
+            "date_posted": "week"
+        }
+
+        try:
+
+            res = requests.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers=headers,
+                params=params,
+                timeout=15
+            )
+
+            data = res.json()
+
+            jobs = []
+
+            for j in data.get("data", []):
+
+                jobs.append({
+                    "title": j.get("job_title"),
+                    "company": j.get("employer_name"),
+                    "location": j.get("job_city") or j.get("job_country"),
+                    "description": j.get("job_description"),
+                    "url": j.get("job_apply_link")
+                })
+
+            return jobs
+
+        except Exception as e:
+
+            logger.error(f"LinkedIn {city} failed: {e}")
+            return []
+
+    jobs = []
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+
+        results = executor.map(fetch_city, INDIA_CITIES)
+
+        for r in results:
+            jobs.extend(r)
+
+    logger.info(f"LinkedIn fetched {len(jobs)} jobs")
+
+    return jobs
+
+
+def fetch_adzuna(app):
+
+    app_id = app.config.get("ADZUNA_APP_ID")
+    app_key = app.config.get("ADZUNA_APP_KEY")
+
+    jobs = []
+
+    for page in range(1, 6):
+
+        url = f"https://api.adzuna.com/v1/api/jobs/in/search/{page}"
+
+        params = {
+            "app_id": app_id,
+            "app_key": app_key,
+            "results_per_page": 50,
+            "what": "software engineer"
+        }
+
+        try:
+
+            res = requests.get(url, params=params, timeout=15)
+
+            data = res.json()
+
+            for j in data.get("results", []):
+
+                jobs.append({
+                    "title": j.get("title"),
+                    "company": j.get("company", {}).get("display_name"),
+                    "location": j.get("location", {}).get("display_name"),
+                    "description": j.get("description"),
+                    "url": j.get("redirect_url")
+                })
+
+        except Exception as e:
+
+            logger.error(f"Adzuna page {page} failed: {e}")
+
+    logger.info(f"Adzuna fetched {len(jobs)} jobs")
+
+    return jobs
+
+
+def _run_harvest(app):
+
     with app.app_context():
-        log = HarvestLog(source=source, status="running", jobs_added=0, api_calls=0)
+
+        logger.info("MASTER HARVEST STARTED")
+
+        log = HarvestLog(source="all", status="running", jobs_added=0)
+
         db.session.add(log)
         db.session.commit()
 
-        try:
-            logger.info("Pre-fetching existing job hashes...")
-            existing_hashes = {h[0] for h in db.session.query(Job.hash).all()}
-            total_added = 0
-            total_api_calls = 0
+        existing_hashes = {h[0] for h in db.session.query(Job.hash).all()}
 
-            sources_to_run = list(SOURCES.keys()) if source == "all" else ([source] if source in SOURCES else [])
-            if not sources_to_run:
-                raise ValueError(f"Unknown source: {source}")
+        total_added = 0
 
-            # Note: We run fetches in sequence when using custom parameters to avoid
-            # blowing through rate limits entirely in a few seconds.
-            # However, for pure speed, we can keep the ThreadPool.
-            def fetch_and_map(name):
-                raw, calls = _fetch_source_raw(name, app.config, roles, locations)
-                return name, raw, calls
+        sources = [
 
-            if source == "all":
-                logger.info(f"Starting parallel fetch for {len(sources_to_run)} sources...")
-                with ThreadPoolExecutor(max_workers=len(sources_to_run)) as executor:
-                    futures = {executor.submit(fetch_and_map, name): name for name in sources_to_run}
+            ("Remotive", fetch_remotive),
+            ("Arbeitnow", fetch_arbeitnow),
+            ("LinkedIn", lambda: fetch_jsearch(app.config.get("JSEARCH_API_KEY"))),
+            ("Adzuna", lambda: fetch_adzuna(app)),
+            ("RemoteOK", fetch_remoteok_jobs),
+            ("WeWorkRemotely", fetch_weworkremotely_jobs)
+        ]
 
-                    for future in as_completed(futures):
-                        name, raw_data, calls = future.result()
-                        total_api_calls += calls
-                        new_jobs = _process_job_items(name, raw_data, existing_hashes)
+        for name, fn in sources:
 
-                        added = len(new_jobs)
-                        if added > 0:
-                            db.session.bulk_save_objects(new_jobs, return_defaults=True)
-                            db.session.commit()
-                            total_added += added
-                            # Generate embeddings for newly inserted jobs
-                            for j in new_jobs:
-                                store_job_embedding(j.job_id, j.title, j.description)
-                        logger.info(f"Completed {name}: added {added} jobs from {calls} API calls.")
-            else:
-                raw_data, calls = _fetch_source_raw(source, app.config, roles, locations)
-                total_api_calls += calls
-                new_jobs = _process_job_items(source, raw_data, existing_hashes)
-                total_added = len(new_jobs)
-                if total_added > 0:
-                    db.session.bulk_save_objects(new_jobs, return_defaults=True)
-                    db.session.commit()
-                    # Generate embeddings for newly inserted jobs
-                    for j in new_jobs:
-                        store_job_embedding(j.job_id, j.title, j.description)
-                logger.info(f"Completed {source}: added {total_added} jobs from {calls} API calls.")
+            try:
 
-            log.status = "completed"
-            log.jobs_added = total_added
-            log.api_calls = total_api_calls
-            db.session.commit()
-            logger.info(f"Total jobs added: {total_added}")
+                logger.info(f"{name}: fetching")
 
-        except Exception as e:
-            db.session.rollback()
-            log.status = "failed"
-            db.session.commit()
-            logger.error(f"'{source}' harvest failed: {e}")
+                raw_jobs = fn()
 
-# ── Public Entry Points ────────────────────────────────────────────────────────
+                added = insert_jobs(name, raw_jobs, existing_hashes)
+
+                total_added += added
+
+            except Exception as e:
+
+                logger.error(f"{name} FAILED: {e}")
+
+        log.status = "completed"
+        log.jobs_added = total_added
+
+        db.session.commit()
+
+        logger.info(f"HARVEST COMPLETE — added {total_added} jobs")
+
 
 def harvest_all(app, roles=None, locations=None):
-    thread = threading.Thread(target=_run_harvest, args=(app, "all", roles, locations), daemon=True)
+
+    thread = threading.Thread(
+        target=_run_harvest,
+        args=(app,),
+        daemon=True
+    )
+
     thread.start()
+
     return thread
 
-def harvest_source(app, source: str, roles=None, locations=None):
-    thread = threading.Thread(target=_run_harvest, args=(app, source, roles, locations), daemon=True)
-    thread.start()
-    return thread
+
+def harvest_source(app, source, roles=None, locations=None):
+
+    return harvest_all(app)

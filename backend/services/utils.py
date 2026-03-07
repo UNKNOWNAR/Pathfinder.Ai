@@ -9,9 +9,9 @@ FRESHER_KEYWORDS = {
     "trainee", "associate", "0-1 year", "0-2 year", "new grad",
 }
 
-def make_job_hash(title: str, company: str) -> str:
+def make_job_hash(title: str, company: str, url: str) -> str:
     """Generates a unique SHA-256 hash for a job title and company."""
-    raw = f"{title.strip().lower()}|{company.strip().lower()}"
+    raw = f"{title.strip().lower()}|{company.strip().lower()}|{url.strip().lower()}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 def is_fresher_role(title: str) -> bool:

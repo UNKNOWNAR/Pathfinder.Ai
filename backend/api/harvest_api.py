@@ -5,7 +5,7 @@ from api.admin_api import admin_required
 from models import db
 from models.user import User
 from models.job import Job, HarvestLog
-from services.harvester import harvest_all, harvest_source
+from services.harvester import harvest_all
 from services.embedding import find_similar_jobs
 
 
@@ -61,10 +61,7 @@ class AdminHarvest(Resource):
 
         app = current_app._get_current_object()
 
-        if source == 'all':
-            harvest_all(app, roles, locations)
-        else:
-            harvest_source(app, source, roles, locations)
+        harvest_all(app, roles, locations)
 
         return {'message': f'Harvest started for {source} in background.'}, 202
 
