@@ -78,6 +78,7 @@ class GenerateResume(Resource):
             )
             
         except Exception as e:
-            print(f"Error in generate resume: {str(e)}")
+            import logging
+            logging.error(f"Error in generate resume: {str(e)}", exc_info=True)
             return {"error": str(e)}, 500
         
