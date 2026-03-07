@@ -21,9 +21,10 @@ const localContextHistory = ref([]); // Stores conversation for LLM context
 const answeredQuestionIds = ref([]); // Tracks questions already answered by ghost
 const currentPhase = ref('introduction'); // Tracks which phase the interview is in
 const lastEvaluation = ref(null); // Stores the evaluation from the last answer
+const questionStartTime = ref(null); // Tracks when the current question was presented
 
 // Ghost Timer
-const timerSeconds = ref(11400); // 190 minutes
+const timerSeconds = ref(5400); // 90 minutes
 let ghostTimerInterval = null;
 const formattedTimer = computed(() => {
   const m = Math.floor(timerSeconds.value / 60);
@@ -111,7 +112,7 @@ async function startSession() {
   currentPhase.value = 'introduction';
 
   // Start Ghost Timer
-  timerSeconds.value = 11400; // 190 minutes
+  timerSeconds.value = 5400; // 90 minutes
   if (ghostTimerInterval) clearInterval(ghostTimerInterval);
   ghostTimerInterval = setInterval(() => {
     if (timerSeconds.value > 0) timerSeconds.value--;
@@ -146,6 +147,9 @@ async function startSession() {
     if (res.data.audio_url) {
       await playAudioFromUrl(res.data.audio_url);
     }
+    
+    // Set timer for the first question
+    questionStartTime.value = Date.now();
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to start Ghost Interview session.';
   } finally {
@@ -227,10 +231,18 @@ async function submitAnswer() {
   submitting.value = true;
   error.value = '';
 
-  // Combine voice + code into a single answer payload
+  // Time taken logic
+  let timeStr = "";
+  if (questionStartTime.value) {
+    const timeTaken = Math.round((Date.now() - questionStartTime.value) / 1000);
+    timeStr = `[Time Taken: ${Math.floor(timeTaken/60)}m ${timeTaken%60}s]`;
+  }
+
+  // Combine voice + code + time into a single answer payload
   const combinedAnswer = [
     voiceAnswer.value ? `Spoken: ${voiceAnswer.value}` : '',
     codeAnswer.value ? `Code:\n${codeAnswer.value}` : '',
+    timeStr
   ].filter(Boolean).join('\n\n');
 
   // Add user's answer to local context history
@@ -250,13 +262,17 @@ async function submitAnswer() {
       answered_question_ids: answeredQuestionIds.value,
       difficulty: selectedDifficulty.value,
     });
-
     // Update ghost session state
     session.value = res.data;
     recruiterResponseText.value = res.data.recruiter_response_text;
     currentPhase.value = res.data.next_phase || 'completed';
     lastEvaluation.value = res.data.evaluation || null;
 
+    // Restart the tracking timer for the next question
+    questionStartTime.value = Date.now();
+
+    // Reset inputs for next question
+    voiceAnswer.value = '';
     // Add recruiter's response to local context history
     localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
 
@@ -339,6 +355,7 @@ function resetSession() {
   currentPhase.value = 'introduction';
   lastEvaluation.value = null;
   codeAnswer.value = '';
+  questionStartTime.value = null;
 
   if (ghostTimerInterval) {
     clearInterval(ghostTimerInterval);
