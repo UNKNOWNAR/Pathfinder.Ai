@@ -10,6 +10,14 @@ from api import init_routes
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -36,9 +44,9 @@ def init_db():
             db.session.commit()
 
 app, api = create_app()
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 init_db()
 init_routes(api)
 
 if __name__ == '__main__':
-    app.run(debug=app.config.get('DEBUG', True))
+    app.run(host="0.0.0.0", port=5000, debug=True)
