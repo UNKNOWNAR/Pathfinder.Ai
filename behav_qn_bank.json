@@ -1,0 +1,292 @@
+[
+  {
+    "question": "Describe a time you had to resolve a conflict with a teammate.",
+    "difficulty": "medium",
+    "topics": [
+      "Teamwork",
+      "Conflict Resolution",
+      "Communication",
+      "Problem Solving"
+    ]
+  },
+  {
+    "question": "Tell me about a time you had to meet a tight deadline.",
+    "difficulty": "easy",
+    "topics": [
+      "Time Management",
+      "Prioritization",
+      "Adaptability",
+      "Productivity"
+    ]
+  },
+  {
+    "question": "Describe a situation where you demonstrated leadership.",
+    "difficulty": "medium",
+    "topics": [
+      "Leadership",
+      "Team Management",
+      "Problem Solving",
+      "Communication"
+    ]
+  },
+  {
+    "question": "Tell me about a time you had to adapt to a significant change.",
+    "difficulty": "medium",
+    "topics": [
+      "Adaptability",
+      "Change Management",
+      "Resilience",
+      "Problem Solving"
+    ]
+  },
+  {
+    "question": "Describe a time you solved a difficult problem.",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Critical Thinking",
+      "Adaptability",
+      "Resilience"
+    ]
+  },
+  {
+    "question": "Tell me about a time you received critical feedback.",
+    "difficulty": "medium",
+    "topics": [
+      "Receiving Feedback",
+      "Adaptability",
+      "Personal Growth",
+      "Professional Development"
+    ]
+  },
+  {
+    "question": "Describe a time when you had to prioritize multiple tasks.",
+    "difficulty": "medium",
+    "topics": [
+      "Time Management",
+      "Prioritization",
+      "Organization",
+      "Productivity"
+    ]
+  },
+  {
+    "question": "Tell me about a time you improved a process.",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Adaptability",
+      "Communication",
+      "Leadership"
+    ]
+  },
+  {
+    "question": "Describe a time you had to work with a difficult coworker.",
+    "difficulty": "medium",
+    "topics": [
+      "Teamwork",
+      "Conflict Resolution",
+      "Communication",
+      "Adaptability"
+    ]
+  },
+  {
+    "question": "Tell me about a time you made a mistake and how you handled it.",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Accountability",
+      "Adaptability",
+      "Communication"
+    ]
+  },
+  {
+    "question": "Describe a time when you helped a teammate succeed.",
+    "difficulty": "easy",
+    "topics": [
+      "Teamwork",
+      "Collaboration",
+      "Leadership",
+      "Communication"
+    ]
+  },
+  {
+    "question": "Tell me about a time you had to learn something quickly.",
+    "difficulty": "medium",
+    "topics": [
+      "Adaptability",
+      "Learning Ability",
+      "Problem Solving",
+      "Time Management"
+    ]
+  },
+  {
+    "question": "Describe a situation where you had to persuade someone.",
+    "difficulty": "medium",
+    "topics": [
+      "Influence and Persuasion",
+      "Communication",
+      "Conflict Resolution",
+      "Leadership"
+    ]
+  },
+  {
+    "question": "Tell me about a time you had to make a difficult decision.",
+    "difficulty": "medium",
+    "topics": [
+      "Decision Making",
+      "Problem Solving",
+      "Leadership",
+      "Adaptability"
+    ]
+  },
+  {
+    "question": "What would you do if two teammates strongly disagreed during a project?",
+    "difficulty": "medium",
+    "topics": [
+      "Conflict Resolution",
+      "Teamwork",
+      "Communication",
+      "Problem Solving"
+    ]
+  },
+  {
+    "question": "What would you do if you were assigned a task you had never done before?",
+    "difficulty": "easy",
+    "topics": [
+      "Adaptability",
+      "Problem Solving",
+      "Learning Ability",
+      "Initiative"
+    ]
+  },
+  {
+    "question": "What would you do if your project deadline was suddenly moved earlier?",
+    "difficulty": "medium",
+    "topics": [
+      "Time Management",
+      "Adaptability",
+      "Prioritization",
+      "Problem Solving"
+    ]
+  },
+  {
+    "question": "What would you do if you noticed a serious bug just before release?",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Communication",
+      "Time Management",
+      "Ethics"
+    ]
+  },
+  {
+    "question": "What would you do if your manager disagreed with your technical decision?",
+    "difficulty": "medium",
+    "topics": [
+      "Conflict Resolution",
+      "Communication",
+      "Problem Solving",
+      "Teamwork"
+    ]
+  },
+  {
+    "question": "What would you do if you were overloaded with tasks from multiple stakeholders?",
+    "difficulty": "medium",
+    "topics": [
+      "Time Management",
+      "Prioritization",
+      "Stakeholder Management",
+      "Adaptability"
+    ]
+  },
+  {
+    "question": "What would you do if a teammate was not contributing to the project?",
+    "difficulty": "medium",
+    "topics": [
+      "Teamwork",
+      "Communication",
+      "Conflict Resolution",
+      "Problem Solving"
+    ]
+  },
+  {
+    "question": "What would you do if you were asked to lead a project with little guidance?",
+    "difficulty": "medium",
+    "topics": [
+      "Leadership",
+      "Problem Solving",
+      "Adaptability",
+      "Initiative"
+    ]
+  },
+  {
+    "question": "What would you do if a customer reported a critical production issue?",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Customer Service",
+      "Communication",
+      "Conflict Resolution"
+    ]
+  },
+  {
+    "question": "What would you do if you discovered a better solution after implementation started?",
+    "difficulty": "medium",
+    "topics": [
+      "Adaptability",
+      "Problem Solving",
+      "Decision Making",
+      "Communication"
+    ]
+  },
+  {
+    "question": "What would you do if a project requirement kept changing frequently?",
+    "difficulty": "medium",
+    "topics": [
+      "Adaptability",
+      "Problem Solving",
+      "Communication",
+      "Time Management"
+    ]
+  },
+  {
+    "question": "What would you do if your teammate took credit for your work?",
+    "difficulty": "medium",
+    "topics": [
+      "Conflict Resolution",
+      "Communication",
+      "Teamwork",
+      "Integrity"
+    ]
+  },
+  {
+    "question": "What would you do if you had to deliver a project with incomplete information?",
+    "difficulty": "medium",
+    "topics": [
+      "Problem Solving",
+      "Communication",
+      "Adaptability",
+      "Time Management"
+    ]
+  },
+  {
+    "question": "What would you do if your team was consistently missing deadlines?",
+    "difficulty": "medium",
+    "topics": [
+      "Time Management",
+      "Team Management",
+      "Problem Solving",
+      "Leadership"
+    ]
+  },
+  {
+    "question": "What would you do if a stakeholder requested something unrealistic?",
+    "difficulty": "medium",
+    "topics": [
+      "Conflict Resolution",
+      "Stakeholder Management",
+      "Communication",
+      "Problem Solving"
+    ]
+  }
+]

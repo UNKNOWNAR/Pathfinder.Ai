@@ -7,10 +7,36 @@ from models import db
 from models.job import Job, HarvestLog
 from services.utils import make_job_hash, is_fresher_role
 from services.embedding import store_job_embedding
+from services.rss_sources import (
+    fetch_remoteok_jobs,
+    fetch_weworkremotely_jobs,
+    fetch_naukri_jobs,
+    fetch_indeed_jobs,
+    fetch_stackoverflow_jobs,
+    fetch_wellfound_jobs
+)
 
 # ── Configuration & Logging ────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
+
+INDIA_CITIES = [
+    "Bangalore", "Hyderabad", "Pune", "Chennai", "Mumbai", 
+    "Delhi", "Gurgaon", "Noida", "Kolkata"
+]
+
+def is_allowed_location(location):
+    if not location:
+        return False
+    loc = location.lower()
+    allowed_words = ["india", "remote", "worldwide", "anywhere", "global"]
+    for w in allowed_words:
+        if w in loc:
+            return True
+    for c in INDIA_CITIES:
+        if c.lower() in loc:
+            return True
+    return False
 
 # Base roles if none are provided
 DEFAULT_ROLES = ["software engineer", "data engineer", "machine learning engineer"]
@@ -99,6 +125,23 @@ SOURCES = {
             "url": "company_url"
         }
     },
+    "Adzuna": {
+        "url": "https://api.adzuna.com/v1/api/jobs/in/search",
+        "type": "direct",
+        "mapping": {
+            "title": "title",
+            "company": lambda item: item.get("company", {}).get("display_name"),
+            "location": lambda item: item.get("location", {}).get("display_name"),
+            "description": "description",
+            "url": "redirect_url"
+        }
+    },
+    "RemoteOK": {"type": "rss", "fn": fetch_remoteok_jobs},
+    "WeWorkRemotely": {"type": "rss", "fn": fetch_weworkremotely_jobs},
+    "Naukri": {"type": "rss", "fn": fetch_naukri_jobs},
+    "Indeed": {"type": "rss", "fn": fetch_indeed_jobs},
+    "StackOverflow": {"type": "rss", "fn": fetch_stackoverflow_jobs},
+    "Wellfound": {"type": "rss", "fn": fetch_wellfound_jobs},
 }
 
 # ── Fetching Logic ─────────────────────────────────────────────────────────────
@@ -167,40 +210,60 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                         logger.error(f"LinkedIn sub-query '{q}' failed: {e}")
 
         elif source_id == "Internships":
-            # Internships API doesn't take complex query strings as easily, just title filter
             for offset in [0, 10]:
-                res = requests.get(conf["url"], headers=headers, params={
-                    "title_filter": "intern OR internship", "description_type": "text", "offset": offset
-                }, timeout=timeout)
-                api_calls += 1
-                res.raise_for_status()
-                batch = res.json()
-                if not batch: break
-                raw_jobs.extend(batch)
+                try:
+                    res = requests.get(conf["url"], headers=headers, params={
+                        "title_filter": "intern OR internship", "description_type": "text", "offset": offset
+                    }, timeout=timeout)
+                    api_calls += 1
+                    res.raise_for_status()
+                    batch = res.json()
+                    if not batch: break
+                    raw_jobs.extend(batch)
+                except Exception as e:
+                    logger.error(f"Internships fetch failed: {e}")
 
         elif source_id == "FaangWatch":
             for loc in active_locations:
                 for role in active_roles:
-                    params = {
-                        "text": role,
-                        "location": loc,
-                        "min_years_of_experience": 0,
-                        "seniority": "Junior",
-                        "page_size": 20
-                    }
                     try:
-                        res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
+                        res = requests.get(conf["url"], headers=headers, params={
+                            "text": role, "location": loc, "min_years_of_experience": 0,
+                            "seniority": "Junior", "page_size": 20
+                        }, timeout=timeout)
                         api_calls += 1
                         res.raise_for_status()
                         data = res.json()
-                        if isinstance(data, list):
-                            raw_jobs.extend(data)
-                        elif isinstance(data, dict):
-                            # The API docs mention 'hits' specifically
-                            raw_jobs.extend(data.get("hits", data.get("jobs", data.get("data", []))))
-                        time.sleep(2) # Increased delay to avoid 429 "Too many requests"
+                        raw_jobs.extend(data if isinstance(data, list) else data.get("hits", []))
+                        time.sleep(2)
                     except Exception as e:
-                        logger.error(f"FaangWatch sub-query '{role}' at '{loc}' failed: {e}")
+                        logger.error(f"FaangWatch query '{role}' failed: {e}")
+
+        elif source_id == "Adzuna":
+            app_id = app_config.get("ADZUNA_APP_ID")
+            app_key = app_config.get("ADZUNA_APP_KEY")
+            if not app_id or not app_key:
+                logger.warning("Adzuna credentials missing.")
+                return [], 0
+            for page in range(1, 4):
+                try:
+                    res = requests.get(f"{conf['url']}/{page}", params={
+                        "app_id": app_id, "app_key": app_key, 
+                        "results_per_page": 50, "what": active_roles[0]
+                    }, timeout=timeout)
+                    api_calls += 1
+                    res.raise_for_status()
+                    raw_jobs.extend(res.json().get("results", []))
+                    time.sleep(1)
+                except Exception as e:
+                    logger.error(f"Adzuna page {page} failed: {e}")
+
+        elif conf.get("type") == "rss" and "fn" in conf:
+            try:
+                raw_jobs = conf["fn"]()
+                api_calls += 1
+            except Exception as e:
+                logger.error(f"RSS fetch {source_id} failed: {e}")
 
         else:
             # Standard GET request for public APIs
@@ -239,6 +302,10 @@ def _process_job_items(source_id, raw_items, existing_hashes):
             company = (fields["company"] or "").strip()
 
             if not title or not company or company.lower() == "unknown":
+                continue
+
+            loc = fields.get("location") or "Remote"
+            if not is_allowed_location(loc):
                 continue
 
             if conf.get("filter_fresher") and not is_fresher_role(title):
