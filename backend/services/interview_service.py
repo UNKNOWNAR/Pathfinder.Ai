@@ -8,14 +8,10 @@ logger = logging.getLogger(__name__)
 
 class InterviewService:
     def __init__(self):
-        # We assume AWS credentials are set in the environment or ~/.aws/credentials
-        # Using us-east-1 or us-west-2 depending on where you enable models in AWS Bedrock
-        self.bedrock_client = boto3.client(
-            service_name='bedrock-runtime',
-            region_name='us-east-1' # Hardcoded region to simplify setup unless provided in Config
-        )
-        # Using Claude 4.5 Haiku for the latest speed and reasoning performance
-        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
+        import os
+        self.api_key = os.getenv('GROQ_API_KEY')
+        self.model_id = "llama-3.3-70b-versatile"
+        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     def generate_questions(self, topic_name, difficulty, count=5):
         """Generate interview questions for a given topic and difficulty."""
@@ -33,28 +29,31 @@ class InterviewService:
             f"questions where appropriate."
         )
 
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 2000,
-            "system": system_prompt,
+        import requests
+        if not self.api_key:
+            logger.error("GROQ_API_KEY is missing.")
+            return []
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        body = {
+            "model": self.model_id,
             "messages": [
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.7
-        })
+            "temperature": 0.5,
+            "max_tokens": 2000
+        }
 
         try:
-            response = self.bedrock_client.invoke_model(
-                body=body,
-                modelId=self.model_id,
-                accept='application/json',
-                contentType='application/json'
-            )
-            response_body = json.loads(response.get('body').read())
-            raw = response_body.get('content')[0].get('text').strip()
+            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            raw = data["choices"][0]["message"]["content"].strip()
 
             # The model may wrap the array in markdown json blocks
             if raw.startswith("```json"):
@@ -72,11 +71,11 @@ class InterviewService:
                     if isinstance(v, list):
                         parsed = v
                         break
-
+            
             return parsed
         except Exception as e:
-            logger.error(f"Bedrock question generation failed: {e}")
-            return None
+            logger.error(f"Error generating questions with Groq: {e}")
+            return []
 
     def evaluate_answer(self, question_text, question_type, voice_answer=None, code_answer=None):
         """Evaluate a student's answer using the LLM."""
@@ -110,28 +109,31 @@ class InterviewService:
             f"Evaluate this answer thoroughly."
         )
 
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1500,
-            "system": system_prompt,
+        import requests
+        if not self.api_key:
+            logger.error("GROQ_API_KEY is missing.")
+            return None
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        body = {
+            "model": self.model_id,
             "messages": [
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.3
-        })
+            "temperature": 0.3,
+            "max_tokens": 1500
+        }
 
         try:
-            response = self.bedrock_client.invoke_model(
-                body=body,
-                modelId=self.model_id,
-                accept='application/json',
-                contentType='application/json'
-            )
-            response_body = json.loads(response.get('body').read())
-            raw = response_body.get('content')[0].get('text').strip()
+            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            raw = data["choices"][0]["message"]["content"].strip()
 
             # The model may wrap the array in markdown json blocks
             if raw.startswith("```json"):
@@ -143,5 +145,5 @@ class InterviewService:
 
             return json.loads(raw.strip())
         except Exception as e:
-            logger.error(f"Bedrock evaluation failed: {e}")
+            logger.error(f"Groq evaluation failed: {e}")
             return None
