@@ -70,19 +70,7 @@ watch(selectedLanguage, (newLang) => {
   }
 });
 
-const isLastQuestion = computed(() => currentIdx.value >= questions.value.length - 1);
-const progress = computed(() => {
-  if (!questions.value.length) return 0;
-  const answered = questions.value.filter(q => q.evaluation).length;
-  return Math.round((answered / questions.value.length) * 100);
-});
-
-// Watch currentIdx to auto-play audio for the new question
-watch(currentIdx, async () => {
-  if (currentQuestion.value) {
-    await playQuestionAudio(currentQuestion.value.question_id);
-  }
-});
+// The questions list is no longer used for Ghost, but we won't delete all state just yet.
 
 // ─── Fetch topics and profile on mount ──────────────────
 onMounted(async () => {
@@ -169,56 +157,6 @@ async function playAudioFromUrl(audioUrl) {
   }
 }
 
-// This function is no longer needed for the Ghost flow, but keep for traditional
-async function generateQuestions() {
-  loading.value = true;
-  try {
-    const res = await api.post(`/api/interview/sessions/${session.value.session_id}/questions`, { count: 5 });
-    questions.value = res.data.questions;
-    currentIdx.value = 0;
-
-    // Set initial code to the starting_code of the first question, if applicable
-    resetAnswers();
-    if (questions.value[0]?.starting_code) {
-      try {
-        const parsedCode = JSON.parse(questions.value[0].starting_code);
-        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
-      } catch (e) {
-        codeAnswer.value = questions.value[0].starting_code; // Fallback
-      }
-    }
-
-    // Auto-play the first question's audio
-    if (questions.value.length > 0) {
-      await playQuestionAudio(questions.value[0].question_id);
-    }
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to generate questions.';
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function playQuestionAudio(questionId) {
-  try {
-    const response = await api.get(`/api/interview/questions/${questionId}/audio`, {
-      responseType: 'blob'
-    });
-
-    const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-
-    if (audioPlayer.value) {
-      audioPlayer.value.pause();
-      audioPlayer.value.src = audioUrl;
-      await audioPlayer.value.play();
-    }
-  } catch (err) {
-    console.error('Failed to play question audio:', err);
-    // Don't show error to user, just fail gracefully if audio doesn't play
-  }
-}
-
 function replayAudio() {
   if (audioPlayer.value && audioPlayer.value.src) {
     audioPlayer.value.play();
@@ -300,38 +238,6 @@ async function submitAnswer() {
 }
 
 // ─── Navigation ─────────────────────────────────────────
-function nextQuestion() {
-  if (currentIdx.value < questions.value.length - 1) {
-    if (audioPlayer.value) audioPlayer.value.pause();
-    currentIdx.value++;
-    resetAnswers();
-    if (currentQuestion.value?.starting_code) {
-      try {
-        const parsedCode = JSON.parse(currentQuestion.value.starting_code);
-        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
-      } catch (e) {
-        codeAnswer.value = currentQuestion.value.starting_code;
-      }
-    }
-  }
-}
-
-function prevQuestion() {
-  if (currentIdx.value > 0) {
-    if (audioPlayer.value) audioPlayer.value.pause();
-    currentIdx.value--;
-    resetAnswers();
-    if (currentQuestion.value?.starting_code) {
-      try {
-        const parsedCode = JSON.parse(currentQuestion.value.starting_code);
-        codeAnswer.value = parsedCode[selectedLanguage.value] || '';
-      } catch (e) {
-        codeAnswer.value = currentQuestion.value.starting_code;
-      }
-    }
-  }
-}
-
 function resetAnswers() {
   voiceAnswer.value = '';
   // Don't reset codeAnswer entirely, or it will flash empty.
