@@ -295,11 +295,16 @@ def _process_job_items(source_id, raw_items, existing_hashes):
     for item in raw_items:
         try:
             fields = {}
-            for target, source in mapping.items():
-                fields[target] = source(item) if callable(source) else item.get(source)
+            if conf.get("type") == "rss":
+                # RSS items are already pre-formatted by the fetcher functions
+                fields = item
+            else:
+                mapping = conf.get("mapping", {})
+                for target, source in mapping.items():
+                    fields[target] = source(item) if callable(source) else item.get(source)
 
-            title = (fields["title"] or "").strip()
-            company = (fields["company"] or "").strip()
+            title = (fields.get("title") or "").strip()
+            company = (fields.get("company") or "").strip()
 
             if not title or not company or company.lower() == "unknown":
                 continue
