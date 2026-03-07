@@ -8,7 +8,7 @@ import logging
 class LLMService:
     def __init__(self):
         self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama3-70b-8192"
+        self.model_id = "llama-3.3-70b-versatile"
         self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
