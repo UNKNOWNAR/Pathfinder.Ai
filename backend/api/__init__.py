@@ -7,7 +7,7 @@ from api.leetcode_api import LeetCodeStats
 from api.readiness_api import JobReadiness
 from api.interview_api import (
     InterviewTopicList, InterviewSessionCreate, InterviewSessionDetail,
-    InterviewQuestionGenerate, InterviewAnswerSubmit, seed_interview_topics,
+    InterviewQuestionGenerate, InterviewAnswerSubmit, InterviewQuestionAudio, seed_interview_topics,
 )
 
 
@@ -35,4 +35,6 @@ def init_routes(api):
     api.add_resource(InterviewSessionCreate,    '/api/interview/sessions')
     api.add_resource(InterviewSessionDetail,    '/api/interview/sessions/<int:session_id>')
     api.add_resource(InterviewQuestionGenerate, '/api/interview/sessions/<int:session_id>/questions')
+    api.add_resource(InterviewQuestionAudio,    '/api/interview/questions/<int:question_id>/audio')
+    api.add_resource(GhostInterviewStep,        '/api/interview/ghost_step') # New Ghost Recruiter endpoint
     api.add_resource(InterviewAnswerSubmit,     '/api/interview/questions/<int:question_id>/answer')
