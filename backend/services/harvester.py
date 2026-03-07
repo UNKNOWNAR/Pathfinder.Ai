@@ -289,7 +289,6 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
 def _process_job_items(source_id, raw_items, existing_hashes):
     """Maps raw items to Job models and returns a list of new Job instances."""
     conf = SOURCES[source_id]
-    mapping = conf["mapping"]
     new_jobs = []
 
     for item in raw_items:
