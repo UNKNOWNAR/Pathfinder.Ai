@@ -170,9 +170,6 @@ class AgentService:
         user_prompt = self._build_context_prompt(name, profile, context_history, user_answer)
         recruiter_text = self._call_bedrock(system_prompt, user_prompt)
 
-        # Evaluate the answer
-        evaluation = self._evaluate_answer(user_answer, "Explain your project", context_history)
-
         audio_url = self._synthesize_and_get_url(recruiter_text)
 
         return {
@@ -185,7 +182,7 @@ class AgentService:
             },
             'audio_url': audio_url,
             'next_phase': 'leetcode',
-            'evaluation': evaluation
+            'evaluation': None
         }
 
     def _handle_leetcode(self, profile, name, user_answer, context_history,
@@ -197,11 +194,6 @@ class AgentService:
         if not question:
             # Fallback: move to next phase
             return self._handle_system_design(profile, name, user_answer, context_history, answered_ids, difficulty)
-
-        # Evaluate previous answer if there was one
-        evaluation = None
-        if user_answer:
-            evaluation = self._evaluate_answer(user_answer, "Resume follow-up", context_history)
 
         # Generate a recruiter transition
         system_prompt = (
@@ -226,7 +218,7 @@ class AgentService:
             'next_question': question,
             'audio_url': audio_url,
             'next_phase': 'system_design',
-            'evaluation': evaluation
+            'evaluation': None
         }
 
     def _handle_system_design(self, profile, name, user_answer, context_history,
@@ -236,11 +228,6 @@ class AgentService:
 
         if not question:
             return self._handle_behavioral(profile, name, user_answer, context_history, answered_ids, difficulty)
-
-        evaluation = None
-        if user_answer:
-            prev_question = context_history[-2]['content'] if len(context_history) >= 2 else "Coding challenge"
-            evaluation = self._evaluate_answer(user_answer, prev_question, context_history)
 
         system_prompt = (
             "You are a Technical Recruiter transitioning to a system design question. "
@@ -263,7 +250,7 @@ class AgentService:
             'next_question': question,
             'audio_url': audio_url,
             'next_phase': 'behavioral',
-            'evaluation': evaluation
+            'evaluation': None
         }
 
     def _handle_behavioral(self, profile, name, user_answer, context_history,
@@ -273,10 +260,6 @@ class AgentService:
 
         if not question:
             return self._handle_wrapup(profile, name, user_answer, context_history)
-
-        evaluation = None
-        if user_answer:
-            evaluation = self._evaluate_answer(user_answer, "System Design", context_history)
 
         system_prompt = (
             "You are a Technical Recruiter transitioning to a behavioral question. "
@@ -299,14 +282,19 @@ class AgentService:
             'next_question': question,
             'audio_url': audio_url,
             'next_phase': 'wrapup',
-            'evaluation': evaluation
+            'evaluation': None
         }
 
     def _handle_wrapup(self, profile, name, user_answer, context_history):
-        """Phase 6: Summarize the interview and give final feedback."""
-        evaluation = None
+        """Phase 6: Summarize the interview and give a final, comprehensive report."""
+        # Add the final answer to history for the report
+        full_history = (context_history or [])
         if user_answer:
-            evaluation = self._evaluate_answer(user_answer, "Behavioral question", context_history)
+             # This is a bit hacky since we are in a stateless call, 
+             # but we can simulate the final exchange for evaluation
+             full_history.append({"role": "user", "content": user_answer})
+
+        final_report = self._generate_final_report(profile, full_history)
 
         system_prompt = (
             "You are a Technical Recruiter wrapping up a 30-minute mock interview. "
@@ -317,17 +305,16 @@ class AgentService:
             "Return ONLY your spoken words."
         )
 
-        # Build a summary of the entire conversation
+        # Build a summary of the entire conversation for the recruiter's spoken voice
         conversation_summary = "\n".join([
-            f"{msg['role'].upper()}: {msg['content'][:100]}"
-            for msg in (context_history or [])[-10:]  # Last 10 messages
+            f"{msg['role'].upper()}: {msg['content'][:150]}"
+            for msg in (full_history)[-8:]  # Last 8 messages
         ])
 
         user_prompt = (
             f"Candidate: {name}\n"
-            f"Skills: {json.dumps(profile.get('skills', []))}\n"
             f"Conversation summary:\n{conversation_summary}\n"
-            f"Final answer: {user_answer[:300] if user_answer else 'N/A'}\n"
+            "Please provide your final spoken wrap-up."
         )
 
         recruiter_text = self._call_bedrock(system_prompt, user_prompt)
@@ -335,11 +322,56 @@ class AgentService:
 
         return {
             'recruiter_response_text': recruiter_text,
-            'next_question': None,  # Interview is over
+            'next_question': None,
             'audio_url': audio_url,
             'next_phase': 'completed',
-            'evaluation': evaluation
+            'evaluation': final_report
         }
+
+    def _generate_final_report(self, profile, history):
+        """Generate a comprehensive JSON report for the entire interview."""
+        system_prompt = (
+            "You are a Senior Technical Mock Interviewer. Based on the entire interview history, "
+            "conduct a thorough analysis and generate a final report. "
+            "Return ONLY a valid JSON object with these EXACT keys:\n"
+            '  - "score": integer 0-100 (Overall performance)\n'
+            '  - "strengths": string summarizing what the candidate did best\n'
+            '  - "improvements": string with specific technical or behavioral advice\n'
+            '  - "ideal_answer": string providing a sample perfect response to the most difficult part of the interview\n'
+            "Keep the feedback professional and actionable. No markdown, no commentary."
+        )
+
+        history_text = "\n".join([
+            f"{msg['role'].upper()}: {msg['content']}"
+            for msg in history
+        ])
+
+        user_prompt = (
+            f"Candidate Name: {profile.get('name', 'N/A')}\n"
+            f"Candidate Skills: {profile.get('skills', [])}\n"
+            f"Full Interview Record:\n{history_text}\n"
+            "Please generate the overall evaluation report JSON now."
+        )
+
+        try:
+            raw = self._call_bedrock(system_prompt, user_prompt)
+            # Cleanup markdown
+            if raw.startswith("```json"):
+                raw = raw[7:]
+            elif raw.startswith("```"):
+                raw = raw[3:]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+            
+            return json.loads(raw.strip())
+        except Exception as e:
+            logger.error(f"Final report generation failed: {e}")
+            return {
+                "score": 50,
+                "strengths": "Interview completed.",
+                "improvements": "System error generating detailed report.",
+                "ideal_answer": "Refer to official documentation for best practices."
+            }
 
     # ─── Helper Methods ──────────────────────────────────────────────────
 
