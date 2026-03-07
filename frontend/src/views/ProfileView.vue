@@ -55,6 +55,7 @@ const openSections = reactive({
   projects:     false,
   achievements: false,
   resume:       false,
+  history:      false,
 });
 
 const jdText = ref('');
@@ -458,9 +459,17 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
           </button>
           <p class="generate-note">The AI will rewrite your bullets to match the JD, then compile a beautifully formatted PDF.</p>
 
-          <!-- Generated Resumes List (Max 2) -->
-          <div v-if="profile.resumes && profile.resumes.length" class="resumes-list">
-            <h4>Your Generated Resumes</h4>
+        </div>
+      </div>
+
+      <!-- Resume History -->
+      <div v-if="profile.resumes && profile.resumes.length" class="accord box">
+        <button class="accord-head" @click="toggle('history')">
+          <span>✎ RESUME HISTORY</span>
+          <span class="chevron" :class="{ open: openSections.history }">▼</span>
+        </button>
+        <div v-if="openSections.history" class="accord-body">
+          <div class="resumes-list" style="width: 100%;">
             <div v-for="(resume, i) in profile.resumes" :key="i" class="resume-item">
               <span class="resume-date">{{ new Date(resume.created_at).toLocaleString() }}</span>
               <a :href="resume.url" target="_blank" rel="noopener noreferrer" class="outline-btn">Download / View</a>
