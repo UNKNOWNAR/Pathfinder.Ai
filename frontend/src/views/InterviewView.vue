@@ -299,25 +299,11 @@ function scoreClass(score) {
       <!-- ─── Setup Panel (no ghost session yet) ──────────────── -->
       <template v-if="!ghostSessionActive">
         <div class="box setup-box">
-          <h2 class="section-title">Start a Ghost Interview</h2>
+          <h2 class="section-title">Start AI Interview</h2>
           <p class="section-sub">
-            This is a stateless, event-driven interview. The AI will generate questions
-            and responses on the fly based on your profile and answers.
+            Complete a full, realistic 6-stage interview including Behavioral, System Design, and DSA. The AI will adapt to your responses in real-time.
           </p>
           <div class="setup-form">
-            <!-- Difficulty selection can still be used to inform the initial question type -->
-            <div class="form-group">
-              <label class="form-label">DIFFICULTY</label>
-              <div class="diff-group">
-                <button
-                  v-for="d in ['easy', 'medium', 'hard']"
-                  :key="d"
-                  class="diff-btn"
-                  :class="{ active: selectedDifficulty === d, [d]: true }"
-                  @click="selectedDifficulty = d"
-                >{{ d }}</button>
-              </div>
-            </div>
             <button class="primary-btn" @click="startSession" :disabled="loading">
               {{ loading ? 'STARTING...' : 'Start Interview' }}
             </button>
