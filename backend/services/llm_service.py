@@ -127,7 +127,7 @@ class LLMService:
                 if response.status_code == 200:
                     response_body = response.json()
                 else:
-                    logger.error(f"Bedrock Key call failed: {response.status_code} - {response.text}")
+                    logging.error(f"Bedrock Key call failed: {response.status_code} - {response.text}")
                     # Fallback to boto3 if API key mode fails
                     invoke_response = self.bedrock_client.invoke_model(
                         body=body,
