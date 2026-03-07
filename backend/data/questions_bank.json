@@ -1,591 +1,49 @@
 {
   "leetcode": [
     {
-      "difficulty": "easy",
-      "title": "Reformat Phone Number",
-      "frequency": 100,
-      "acceptance_rate": 0.67,
-      "link": "https://leetcode.com/problems/reformat-phone-number",
+      "difficulty": "hard",
+      "title": "Alien Dictionary",
+      "frequency": 80,
+      "acceptance_rate": 0.37,
+      "link": "https://leetcode.com/problems/alien-dictionary",
       "topics": [
-        "String"
+        "Array",
+        "String",
+        "Depth-First Search",
+        "Breadth-First Search",
+        "Graph",
+        "Topological Sort"
       ],
       "id": "lc_001",
-      "question_type": "coding"
+      "question_type": "coding",
+      "question_text": "Alien Dictionary"
     },
     {
-      "difficulty": "easy",
-      "title": "Two Sum",
-      "frequency": 100,
-      "acceptance_rate": 0.56,
-      "link": "https://leetcode.com/problems/two-sum",
+      "difficulty": "hard",
+      "title": "Dice Roll Simulation",
+      "frequency": 98,
+      "acceptance_rate": 0.5,
+      "link": "https://leetcode.com/problems/dice-roll-simulation",
       "topics": [
         "Array",
-        "Hash Table"
+        "Dynamic Programming"
       ],
       "id": "lc_002",
-      "question_type": "coding"
+      "question_type": "coding",
+      "question_text": "Dice Roll Simulation"
     },
     {
-      "difficulty": "easy",
-      "title": "Number Of 1 Bits",
-      "frequency": 100,
-      "acceptance_rate": 0.75,
-      "link": "https://leetcode.com/problems/number-of-1-bits",
+      "difficulty": "medium",
+      "title": "Out Of Boundary Paths",
+      "frequency": 98,
+      "acceptance_rate": 0.48,
+      "link": "https://leetcode.com/problems/out-of-boundary-paths",
       "topics": [
-        "Divide And Conquer",
-        "Bit Manipulation"
+        "Dynamic Programming"
       ],
       "id": "lc_003",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Maximum Number Of Balls In A Box",
-      "frequency": 100,
-      "acceptance_rate": 0.74,
-      "link": "https://leetcode.com/problems/maximum-number-of-balls-in-a-box",
-      "topics": [
-        "Hash Table",
-        "Math",
-        "Counting"
-      ],
-      "id": "lc_004",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Valid Palindrome",
-      "frequency": 100,
-      "acceptance_rate": 0.51,
-      "link": "https://leetcode.com/problems/valid-palindrome",
-      "topics": [
-        "Two Pointers",
-        "String"
-      ],
-      "id": "lc_005",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Complement Of Base 10 Integer",
-      "frequency": 100,
-      "acceptance_rate": 0.61,
-      "link": "https://leetcode.com/problems/complement-of-base-10-integer",
-      "topics": [
-        "Bit Manipulation"
-      ],
-      "id": "lc_006",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Palindrome Number",
-      "frequency": 100,
-      "acceptance_rate": 0.59,
-      "link": "https://leetcode.com/problems/palindrome-number",
-      "topics": [
-        "Math"
-      ],
-      "id": "lc_007",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Merge Two Sorted Lists",
-      "frequency": 100,
-      "acceptance_rate": 0.67,
-      "link": "https://leetcode.com/problems/merge-two-sorted-lists",
-      "topics": [
-        "Linked List",
-        "Recursion"
-      ],
-      "id": "lc_008",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Binary Tree Tilt",
-      "frequency": 100,
-      "acceptance_rate": 0.64,
-      "link": "https://leetcode.com/problems/binary-tree-tilt",
-      "topics": [
-        "Tree",
-        "Depth-First Search",
-        "Binary Tree"
-      ],
-      "id": "lc_009",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Largest Number After Digit Swaps By Parity",
-      "frequency": 100,
-      "acceptance_rate": 0.64,
-      "link": "https://leetcode.com/problems/largest-number-after-digit-swaps-by-parity",
-      "topics": [
-        "Sorting",
-        "Heap (Priority Queue)"
-      ],
-      "id": "lc_010",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Guess Number Higher Or Lower",
-      "frequency": 83,
-      "acceptance_rate": 0.56,
-      "link": "https://leetcode.com/problems/guess-number-higher-or-lower",
-      "topics": [
-        "Binary Search",
-        "Interactive"
-      ],
-      "id": "lc_011",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Implement Queue Using Stacks",
-      "frequency": 67,
-      "acceptance_rate": 0.68,
-      "link": "https://leetcode.com/problems/implement-queue-using-stacks",
-      "topics": [
-        "Stack",
-        "Design",
-        "Queue"
-      ],
-      "id": "lc_012",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Design Parking System",
-      "frequency": 66,
-      "acceptance_rate": 0.87,
-      "link": "https://leetcode.com/problems/design-parking-system",
-      "topics": [
-        "Design",
-        "Simulation",
-        "Counting"
-      ],
-      "id": "lc_013",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Counting Bits",
-      "frequency": 48,
-      "acceptance_rate": 0.8,
-      "link": "https://leetcode.com/problems/counting-bits",
-      "topics": [
-        "Dynamic Programming",
-        "Bit Manipulation"
-      ],
-      "id": "lc_014",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "easy",
-      "title": "Find The Number Of Good Pairs I",
-      "frequency": 100,
-      "acceptance_rate": 0.86,
-      "link": "https://leetcode.com/problems/find-the-number-of-good-pairs-i",
-      "topics": [
-        "Array",
-        "Hash Table"
-      ],
-      "id": "lc_015",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Bulb Switcher",
-      "frequency": 100,
-      "acceptance_rate": 0.54,
-      "link": "https://leetcode.com/problems/bulb-switcher",
-      "topics": [
-        "Math",
-        "Brainteaser"
-      ],
-      "id": "lc_016",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Replace The Substring For Balanced String",
-      "frequency": 100,
-      "acceptance_rate": 0.4,
-      "link": "https://leetcode.com/problems/replace-the-substring-for-balanced-string",
-      "topics": [
-        "String",
-        "Sliding Window"
-      ],
-      "id": "lc_017",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Insert Delete Getrandom O(1)",
-      "frequency": 100,
-      "acceptance_rate": 0.55,
-      "link": "https://leetcode.com/problems/insert-delete-getrandom-o1",
-      "topics": [
-        "Array",
-        "Hash Table",
-        "Math",
-        "Design",
-        "Randomized"
-      ],
-      "id": "lc_018",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Number Of Divisible Substrings",
-      "frequency": 100,
-      "acceptance_rate": 0.73,
-      "link": "https://leetcode.com/problems/number-of-divisible-substrings",
-      "topics": [
-        "Hash Table",
-        "String",
-        "Counting",
-        "Prefix Sum"
-      ],
-      "id": "lc_019",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Longest Palindromic Substring",
-      "frequency": 100,
-      "acceptance_rate": 0.36,
-      "link": "https://leetcode.com/problems/longest-palindromic-substring",
-      "topics": [
-        "Two Pointers",
-        "String",
-        "Dynamic Programming"
-      ],
-      "id": "lc_020",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Min Stack",
-      "frequency": 100,
-      "acceptance_rate": 0.56,
-      "link": "https://leetcode.com/problems/min-stack",
-      "topics": [
-        "Stack",
-        "Design"
-      ],
-      "id": "lc_021",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Add Two Numbers",
-      "frequency": 100,
-      "acceptance_rate": 0.46,
-      "link": "https://leetcode.com/problems/add-two-numbers",
-      "topics": [
-        "Linked List",
-        "Math",
-        "Recursion"
-      ],
-      "id": "lc_022",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Number Of Connected Components In An Undirected Graph",
-      "frequency": 100,
-      "acceptance_rate": 0.64,
-      "link": "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph",
-      "topics": [
-        "Depth-First Search",
-        "Breadth-First Search",
-        "Union Find",
-        "Graph"
-      ],
-      "id": "lc_023",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Binary Tree Level Order Traversal",
-      "frequency": 100,
-      "acceptance_rate": 0.71,
-      "link": "https://leetcode.com/problems/binary-tree-level-order-traversal",
-      "topics": [
-        "Tree",
-        "Breadth-First Search",
-        "Binary Tree"
-      ],
-      "id": "lc_024",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Minimum Number Of Operations To Make X And Y Equal",
-      "frequency": 100,
-      "acceptance_rate": 0.47,
-      "link": "https://leetcode.com/problems/minimum-number-of-operations-to-make-x-and-y-equal",
-      "topics": [
-        "Dynamic Programming",
-        "Breadth-First Search",
-        "Memoization"
-      ],
-      "id": "lc_025",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Maximal Network Rank",
-      "frequency": 100,
-      "acceptance_rate": 0.65,
-      "link": "https://leetcode.com/problems/maximal-network-rank",
-      "topics": [
-        "Graph"
-      ],
-      "id": "lc_026",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Walking Robot Simulation Ii",
-      "frequency": 98,
-      "acceptance_rate": 0.25,
-      "link": "https://leetcode.com/problems/walking-robot-simulation-ii",
-      "topics": [
-        "Design",
-        "Simulation"
-      ],
-      "id": "lc_027",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Maximum Total Importance Of Roads",
-      "frequency": 98,
-      "acceptance_rate": 0.69,
-      "link": "https://leetcode.com/problems/maximum-total-importance-of-roads",
-      "topics": [
-        "Greedy",
-        "Graph",
-        "Sorting",
-        "Heap (Priority Queue)"
-      ],
-      "id": "lc_028",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Minimum Knight Moves",
-      "frequency": 93,
-      "acceptance_rate": 0.41,
-      "link": "https://leetcode.com/problems/minimum-knight-moves",
-      "topics": [
-        "Breadth-First Search"
-      ],
-      "id": "lc_029",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Numbers With Same Consecutive Differences",
-      "frequency": 82,
-      "acceptance_rate": 0.59,
-      "link": "https://leetcode.com/problems/numbers-with-same-consecutive-differences",
-      "topics": [
-        "Backtracking",
-        "Breadth-First Search"
-      ],
-      "id": "lc_030",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Pyramid Transition Matrix",
-      "frequency": 70,
-      "acceptance_rate": 0.53,
-      "link": "https://leetcode.com/problems/pyramid-transition-matrix",
-      "topics": [
-        "Bit Manipulation",
-        "Depth-First Search",
-        "Breadth-First Search"
-      ],
-      "id": "lc_031",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "3Sum",
-      "frequency": 100,
-      "acceptance_rate": 0.37,
-      "link": "https://leetcode.com/problems/3sum",
-      "topics": [
-        "Array",
-        "Two Pointers",
-        "Sorting"
-      ],
-      "id": "lc_032",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Find The Number Of Good Pairs Ii",
-      "frequency": 100,
-      "acceptance_rate": 0.26,
-      "link": "https://leetcode.com/problems/find-the-number-of-good-pairs-ii",
-      "topics": [
-        "Array",
-        "Hash Table"
-      ],
-      "id": "lc_033",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Minimum Array Changes To Make Differences Equal",
-      "frequency": 100,
-      "acceptance_rate": 0.23,
-      "link": "https://leetcode.com/problems/minimum-array-changes-to-make-differences-equal",
-      "topics": [
-        "Array",
-        "Hash Table",
-        "Prefix Sum"
-      ],
-      "id": "lc_034",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Find Polygon With The Largest Perimeter",
-      "frequency": 100,
-      "acceptance_rate": 0.65,
-      "link": "https://leetcode.com/problems/find-polygon-with-the-largest-perimeter",
-      "topics": [
-        "Array",
-        "Greedy",
-        "Sorting",
-        "Prefix Sum"
-      ],
-      "id": "lc_035",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Daily Temperatures",
-      "frequency": 100,
-      "acceptance_rate": 0.67,
-      "link": "https://leetcode.com/problems/daily-temperatures",
-      "topics": [
-        "Array",
-        "Stack",
-        "Monotonic Stack"
-      ],
-      "id": "lc_036",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Delete And Earn",
-      "frequency": 100,
-      "acceptance_rate": 0.57,
-      "link": "https://leetcode.com/problems/delete-and-earn",
-      "topics": [
-        "Array",
-        "Hash Table",
-        "Dynamic Programming"
-      ],
-      "id": "lc_037",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Split Concatenated Strings",
-      "frequency": 100,
-      "acceptance_rate": 0.43,
-      "link": "https://leetcode.com/problems/split-concatenated-strings",
-      "topics": [
-        "Array",
-        "String",
-        "Greedy"
-      ],
-      "id": "lc_038",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Path Sum Iv",
-      "frequency": 100,
-      "acceptance_rate": 0.63,
-      "link": "https://leetcode.com/problems/path-sum-iv",
-      "topics": [
-        "Array",
-        "Hash Table",
-        "Tree",
-        "Depth-First Search",
-        "Binary Tree"
-      ],
-      "id": "lc_039",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "medium",
-      "title": "Valid Parenthesis String",
-      "frequency": 100,
-      "acceptance_rate": 0.39,
-      "link": "https://leetcode.com/problems/valid-parenthesis-string",
-      "topics": [
-        "String",
-        "Dynamic Programming",
-        "Stack",
-        "Greedy"
-      ],
-      "id": "lc_040",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "hard",
-      "title": "Count All Valid Pickup And Delivery Options",
-      "frequency": 100,
-      "acceptance_rate": 0.65,
-      "link": "https://leetcode.com/problems/count-all-valid-pickup-and-delivery-options",
-      "topics": [
-        "Math",
-        "Dynamic Programming",
-        "Combinatorics"
-      ],
-      "id": "lc_041",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "hard",
-      "title": "Text Justification",
-      "frequency": 100,
-      "acceptance_rate": 0.48,
-      "link": "https://leetcode.com/problems/text-justification",
-      "topics": [
-        "Array",
-        "String",
-        "Simulation"
-      ],
-      "id": "lc_042",
-      "question_type": "coding"
-    },
-    {
-      "difficulty": "hard",
-      "title": "Minimum Window Substring",
-      "frequency": 100,
-      "acceptance_rate": 0.45,
-      "link": "https://leetcode.com/problems/minimum-window-substring",
-      "topics": [
-        "Hash Table",
-        "String",
-        "Sliding Window"
-      ],
-      "id": "lc_043",
-      "question_type": "coding"
+      "question_type": "coding",
+      "question_text": "Out Of Boundary Paths"
     },
     {
       "difficulty": "hard",
@@ -597,8 +55,9 @@
         "String",
         "Dynamic Programming"
       ],
-      "id": "lc_044",
-      "question_type": "coding"
+      "id": "lc_004",
+      "question_type": "coding",
+      "question_text": "Check If An Original String Exists Given Two Encoded Strings"
     },
     {
       "difficulty": "hard",
@@ -611,50 +70,202 @@
         "Graph",
         "Memoization"
       ],
-      "id": "lc_045",
-      "question_type": "coding"
+      "id": "lc_005",
+      "question_type": "coding",
+      "question_text": "Count Visited Nodes In A Directed Graph"
     },
     {
       "difficulty": "hard",
-      "title": "Merge K Sorted Lists",
-      "frequency": 100,
-      "acceptance_rate": 0.57,
-      "link": "https://leetcode.com/problems/merge-k-sorted-lists",
+      "title": "Count Palindromic Subsequences",
+      "frequency": 81,
+      "acceptance_rate": 0.39,
+      "link": "https://leetcode.com/problems/count-palindromic-subsequences",
       "topics": [
-        "Linked List",
-        "Divide And Conquer",
-        "Heap (Priority Queue)",
-        "Merge Sort"
+        "String",
+        "Dynamic Programming"
       ],
-      "id": "lc_046",
-      "question_type": "coding"
+      "id": "lc_006",
+      "question_type": "coding",
+      "question_text": "Count Palindromic Subsequences"
     },
     {
       "difficulty": "hard",
-      "title": "Maximum Xor Of Two Non-Overlapping Subtrees",
-      "frequency": 100,
-      "acceptance_rate": 0.5,
-      "link": "https://leetcode.com/problems/maximum-xor-of-two-non-overlapping-subtrees",
+      "title": "Minimum Operations To Make Numbers Non-Positive",
+      "frequency": 78,
+      "acceptance_rate": 0.42,
+      "link": "https://leetcode.com/problems/minimum-operations-to-make-numbers-non-positive",
       "topics": [
+        "Array",
+        "Binary Search"
+      ],
+      "id": "lc_007",
+      "question_type": "coding",
+      "question_text": "Minimum Operations To Make Numbers Non-Positive"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Number Of Good Binary Strings",
+      "frequency": 76,
+      "acceptance_rate": 0.52,
+      "link": "https://leetcode.com/problems/number-of-good-binary-strings",
+      "topics": [
+        "Dynamic Programming"
+      ],
+      "id": "lc_008",
+      "question_type": "coding",
+      "question_text": "Number Of Good Binary Strings"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Regular Expression Matching",
+      "frequency": 76,
+      "acceptance_rate": 0.29,
+      "link": "https://leetcode.com/problems/regular-expression-matching",
+      "topics": [
+        "String",
+        "Dynamic Programming",
+        "Recursion"
+      ],
+      "id": "lc_009",
+      "question_type": "coding",
+      "question_text": "Regular Expression Matching"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Scramble String",
+      "frequency": 100,
+      "acceptance_rate": 0.42,
+      "link": "https://leetcode.com/problems/scramble-string",
+      "topics": [
+        "String",
+        "Dynamic Programming"
+      ],
+      "id": "lc_010",
+      "question_type": "coding",
+      "question_text": "Scramble String"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Find The Sum Of The Power Of All Subsequences",
+      "frequency": 77,
+      "acceptance_rate": 0.37,
+      "link": "https://leetcode.com/problems/find-the-sum-of-the-power-of-all-subsequences",
+      "topics": [
+        "Array",
+        "Dynamic Programming"
+      ],
+      "id": "lc_011",
+      "question_type": "coding",
+      "question_text": "Find The Sum Of The Power Of All Subsequences"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Difference Between Maximum And Minimum Price Sum",
+      "frequency": 100,
+      "acceptance_rate": 0.32,
+      "link": "https://leetcode.com/problems/difference-between-maximum-and-minimum-price-sum",
+      "topics": [
+        "Array",
+        "Dynamic Programming",
+        "Tree",
+        "Depth-First Search"
+      ],
+      "id": "lc_012",
+      "question_type": "coding",
+      "question_text": "Difference Between Maximum And Minimum Price Sum"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Minimum Window Subsequence",
+      "frequency": 95,
+      "acceptance_rate": 0.44,
+      "link": "https://leetcode.com/problems/minimum-window-subsequence",
+      "topics": [
+        "String",
+        "Dynamic Programming",
+        "Sliding Window"
+      ],
+      "id": "lc_013",
+      "question_type": "coding",
+      "question_text": "Minimum Window Subsequence"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Maximize Sum Of Weights After Edge Removals",
+      "frequency": 100,
+      "acceptance_rate": 0.29,
+      "link": "https://leetcode.com/problems/maximize-sum-of-weights-after-edge-removals",
+      "topics": [
+        "Dynamic Programming",
+        "Tree",
+        "Depth-First Search"
+      ],
+      "id": "lc_014",
+      "question_type": "coding",
+      "question_text": "Maximize Sum Of Weights After Edge Removals"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Collect Coins In A Tree",
+      "frequency": 90,
+      "acceptance_rate": 0.36,
+      "link": "https://leetcode.com/problems/collect-coins-in-a-tree",
+      "topics": [
+        "Array",
+        "Tree",
+        "Graph",
+        "Topological Sort"
+      ],
+      "id": "lc_015",
+      "question_type": "coding",
+      "question_text": "Collect Coins In A Tree"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Longest Path With Different Adjacent Characters",
+      "frequency": 98,
+      "acceptance_rate": 0.54,
+      "link": "https://leetcode.com/problems/longest-path-with-different-adjacent-characters",
+      "topics": [
+        "Array",
+        "String",
         "Tree",
         "Depth-First Search",
         "Graph",
-        "Trie"
+        "Topological Sort"
       ],
-      "id": "lc_047",
-      "question_type": "coding"
+      "id": "lc_016",
+      "question_type": "coding",
+      "question_text": "Longest Path With Different Adjacent Characters"
     },
     {
       "difficulty": "hard",
-      "title": "K-Th Smallest In Lexicographical Order",
+      "title": "Minimum Time To Break Locks Ii",
       "frequency": 100,
-      "acceptance_rate": 0.46,
-      "link": "https://leetcode.com/problems/k-th-smallest-in-lexicographical-order",
+      "acceptance_rate": 0.43,
+      "link": "https://leetcode.com/problems/minimum-time-to-break-locks-ii",
       "topics": [
-        "Trie"
+        "Array",
+        "Depth-First Search",
+        "Graph"
       ],
-      "id": "lc_048",
-      "question_type": "coding"
+      "id": "lc_017",
+      "question_type": "coding",
+      "question_text": "Minimum Time To Break Locks Ii"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Best Time To Buy And Sell Stock Iv",
+      "frequency": 83,
+      "acceptance_rate": 0.47,
+      "link": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv",
+      "topics": [
+        "Array",
+        "Dynamic Programming"
+      ],
+      "id": "lc_018",
+      "question_type": "coding",
+      "question_text": "Best Time To Buy And Sell Stock Iv"
     },
     {
       "difficulty": "hard",
@@ -668,142 +279,1548 @@
         "Graph",
         "Topological Sort"
       ],
-      "id": "lc_049",
-      "question_type": "coding"
+      "id": "lc_019",
+      "question_type": "coding",
+      "question_text": "Longest Cycle In A Graph"
     },
     {
       "difficulty": "hard",
-      "title": "Range Module",
-      "frequency": 100,
-      "acceptance_rate": 0.44,
-      "link": "https://leetcode.com/problems/range-module",
+      "title": "Frog Jump",
+      "frequency": 84,
+      "acceptance_rate": 0.47,
+      "link": "https://leetcode.com/problems/frog-jump",
       "topics": [
-        "Design",
-        "Segment Tree",
-        "Ordered Set"
+        "Array",
+        "Dynamic Programming"
       ],
-      "id": "lc_050",
-      "question_type": "coding"
+      "id": "lc_020",
+      "question_type": "coding",
+      "question_text": "Frog Jump"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Sum Of Special Evenly-Spaced Elements In Array",
+      "frequency": 100,
+      "acceptance_rate": 0.49,
+      "link": "https://leetcode.com/problems/sum-of-special-evenly-spaced-elements-in-array",
+      "topics": [
+        "Array",
+        "Dynamic Programming"
+      ],
+      "id": "lc_021",
+      "question_type": "coding",
+      "question_text": "Sum Of Special Evenly-Spaced Elements In Array"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Count Number Of Ways To Place Houses",
+      "frequency": 100,
+      "acceptance_rate": 0.43,
+      "link": "https://leetcode.com/problems/count-number-of-ways-to-place-houses",
+      "topics": [
+        "Dynamic Programming"
+      ],
+      "id": "lc_022",
+      "question_type": "coding",
+      "question_text": "Count Number Of Ways To Place Houses"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Selling Pieces Of Wood",
+      "frequency": 79,
+      "acceptance_rate": 0.52,
+      "link": "https://leetcode.com/problems/selling-pieces-of-wood",
+      "topics": [
+        "Array",
+        "Dynamic Programming",
+        "Memoization"
+      ],
+      "id": "lc_023",
+      "question_type": "coding",
+      "question_text": "Selling Pieces Of Wood"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Non-Negative Integers Without Consecutive Ones",
+      "frequency": 100,
+      "acceptance_rate": 0.4,
+      "link": "https://leetcode.com/problems/non-negative-integers-without-consecutive-ones",
+      "topics": [
+        "Dynamic Programming"
+      ],
+      "id": "lc_024",
+      "question_type": "coding",
+      "question_text": "Non-Negative Integers Without Consecutive Ones"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Distinct Subsequences",
+      "frequency": 80,
+      "acceptance_rate": 0.5,
+      "link": "https://leetcode.com/problems/distinct-subsequences",
+      "topics": [
+        "String",
+        "Dynamic Programming"
+      ],
+      "id": "lc_025",
+      "question_type": "coding",
+      "question_text": "Distinct Subsequences"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Painting The Walls",
+      "frequency": 80,
+      "acceptance_rate": 0.49,
+      "link": "https://leetcode.com/problems/painting-the-walls",
+      "topics": [
+        "Array",
+        "Dynamic Programming"
+      ],
+      "id": "lc_026",
+      "question_type": "coding",
+      "question_text": "Painting The Walls"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Minimum Edge Weight Equilibrium Queries In A Tree",
+      "frequency": 100,
+      "acceptance_rate": 0.43,
+      "link": "https://leetcode.com/problems/minimum-edge-weight-equilibrium-queries-in-a-tree",
+      "topics": [
+        "Array",
+        "Tree",
+        "Graph",
+        "Strongly Connected Component"
+      ],
+      "id": "lc_027",
+      "question_type": "coding",
+      "question_text": "Minimum Edge Weight Equilibrium Queries In A Tree"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Number Of Great Partitions",
+      "frequency": 90,
+      "acceptance_rate": 0.32,
+      "link": "https://leetcode.com/problems/number-of-great-partitions",
+      "topics": [
+        "Array",
+        "Dynamic Programming"
+      ],
+      "id": "lc_028",
+      "question_type": "coding",
+      "question_text": "Number Of Great Partitions"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Remove Boxes",
+      "frequency": 98,
+      "acceptance_rate": 0.48,
+      "link": "https://leetcode.com/problems/remove-boxes",
+      "topics": [
+        "Array",
+        "Dynamic Programming",
+        "Memoization"
+      ],
+      "id": "lc_029",
+      "question_type": "coding",
+      "question_text": "Remove Boxes"
+    },
+    {
+      "difficulty": "hard",
+      "title": "String Compression Ii",
+      "frequency": 100,
+      "acceptance_rate": 0.52,
+      "link": "https://leetcode.com/problems/string-compression-ii",
+      "topics": [
+        "String",
+        "Dynamic Programming"
+      ],
+      "id": "lc_030",
+      "question_type": "coding",
+      "question_text": "String Compression Ii"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Domino And Tromino Tiling",
+      "frequency": 83,
+      "acceptance_rate": 0.52,
+      "link": "https://leetcode.com/problems/domino-and-tromino-tiling",
+      "topics": [
+        "Dynamic Programming"
+      ],
+      "id": "lc_031",
+      "question_type": "coding",
+      "question_text": "Domino And Tromino Tiling"
+    },
+    {
+      "difficulty": "hard",
+      "title": "K Inverse Pairs Array",
+      "frequency": 100,
+      "acceptance_rate": 0.49,
+      "link": "https://leetcode.com/problems/k-inverse-pairs-array",
+      "topics": [
+        "Dynamic Programming"
+      ],
+      "id": "lc_032",
+      "question_type": "coding",
+      "question_text": "K Inverse Pairs Array"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Shortest Cycle In A Graph",
+      "frequency": 100,
+      "acceptance_rate": 0.37,
+      "link": "https://leetcode.com/problems/shortest-cycle-in-a-graph",
+      "topics": [
+        "Breadth-First Search",
+        "Graph"
+      ],
+      "id": "lc_033",
+      "question_type": "coding",
+      "question_text": "Shortest Cycle In A Graph"
     }
   ],
   "system_design": [
     {
+      "difficulty": "medium",
+      "title": "Design Commenting System",
+      "topics": [
+        "Database Design",
+        "Scalability",
+        "Microservices",
+        "Cache Management"
+      ],
       "id": "sd_001",
-      "title": "Design a URL Shortener",
-      "difficulty": "medium",
-      "topics": [
-        "scalability",
-        "hashing",
-        "databases"
-      ],
-      "question_text": "Design a URL shortening service like bit.ly. Users should be able to submit a long URL and get a shortened URL. When they visit the short URL, they should be redirected to the original. How would you handle billions of URLs, ensure uniqueness, and design the database schema?",
-      "question_type": "system_design"
+      "question_type": "system_design",
+      "question_text": "Design Commenting System"
     },
     {
+      "difficulty": "medium",
+      "title": "Design Subscription Based Sports Website Which Can Display Scores, Game Status, History For Any Games.",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Real-time Data Processing",
+        "Microservices Architecture"
+      ],
       "id": "sd_002",
-      "title": "Design a Chat Application",
-      "difficulty": "hard",
-      "topics": [
-        "real-time",
-        "websockets",
-        "message-queues"
-      ],
-      "question_text": "Design a real-time chat application like WhatsApp or Slack. Consider how you would handle message delivery, read receipts, group chats, message persistence, and handling millions of concurrent users.",
-      "question_type": "system_design"
+      "question_type": "system_design",
+      "question_text": "Design Subscription Based Sports Website Which Can Display Scores, Game Status, History For Any Games."
     },
     {
+      "difficulty": "hard",
+      "title": "Design Netflix => Search, Video Serving, Authentication, Encryption, Dns Lookup,caching Strategy,serving Multi Quality Video Etc",
+      "topics": [
+        "Video Streaming",
+        "Caching Strategy",
+        "Authentication And Authorization",
+        "Content Delivery Network (cdn)"
+      ],
       "id": "sd_003",
-      "title": "Design a Notification System",
-      "difficulty": "medium",
-      "topics": [
-        "scalability",
-        "queues",
-        "pub-sub"
-      ],
-      "question_text": "Design a notification system that can send millions of push notifications, emails, and SMS daily. How would you ensure high availability, handle user preferences, rate limiting, and retry failed deliveries?",
-      "question_type": "system_design"
+      "question_type": "system_design",
+      "question_text": "Design Netflix => Search, Video Serving, Authentication, Encryption, Dns Lookup,caching Strategy,serving Multi Quality Video Etc"
     },
     {
+      "difficulty": "medium",
+      "title": "Design A Latency Management System",
+      "topics": [
+        "Scalability",
+        "Distributed Systems",
+        "Networking",
+        "Performance Optimization"
+      ],
       "id": "sd_004",
-      "title": "Design a Rate Limiter",
-      "difficulty": "medium",
-      "topics": [
-        "algorithms",
-        "distributed-systems",
-        "caching"
-      ],
-      "question_text": "Design a rate limiter that can limit the number of API requests a user can make within a given time window. Consider different algorithms (token bucket, sliding window), distributed environments, and how to handle bursts.",
-      "question_type": "system_design"
+      "question_type": "system_design",
+      "question_text": "Design A Latency Management System"
     },
     {
-      "id": "sd_005",
-      "title": "Design a Video Streaming Platform",
-      "difficulty": "hard",
+      "difficulty": "medium",
+      "title": "Design A Library Management System",
       "topics": [
-        "cdn",
-        "encoding",
-        "storage",
-        "scalability"
+        "Database Design",
+        "Microservices Architecture",
+        "Api Design",
+        "Scalability"
       ],
-      "question_text": "Design a video streaming platform like YouTube or Netflix. How would you handle video upload, transcoding, storage, content delivery via CDN, adaptive bitrate streaming, and recommendations?",
-      "question_type": "system_design"
+      "id": "sd_005",
+      "question_type": "system_design",
+      "question_text": "Design A Library Management System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Notification Service",
+      "topics": [
+        "Scalability",
+        "Microservices",
+        "Database Design",
+        "Queueing Systems"
+      ],
+      "id": "sd_006",
+      "question_type": "system_design",
+      "question_text": "Design A Notification Service"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Espn/cricinfo/cricbuzz",
+      "topics": [
+        "Scalability",
+        "Real-time Data Processing",
+        "Caching",
+        "Database Design"
+      ],
+      "id": "sd_007",
+      "question_type": "system_design",
+      "question_text": "Design Espn/cricinfo/cricbuzz"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Uber",
+      "topics": [
+        "Scalability",
+        "Microservices",
+        "Geospatial Mapping",
+        "Realtime Systems"
+      ],
+      "id": "sd_008",
+      "question_type": "system_design",
+      "question_text": "Design Uber"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Whatsapp",
+      "topics": [
+        "Scalability",
+        "Realtime Systems",
+        "Database Design",
+        "Network Architecture"
+      ],
+      "id": "sd_009",
+      "question_type": "system_design",
+      "question_text": "Design Whatsapp"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Quora",
+      "topics": [
+        "Database Design",
+        "Scalability",
+        "Caching",
+        "Load Balancing"
+      ],
+      "id": "sd_010",
+      "question_type": "system_design",
+      "question_text": "Design Quora"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Lookahead System",
+      "topics": [
+        "Caching",
+        "Queueing Systems",
+        "Load Balancing",
+        "Scalability"
+      ],
+      "id": "sd_011",
+      "question_type": "system_design",
+      "question_text": "Design Lookahead System"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Google Docs/ Collaborative Editing Service",
+      "topics": [
+        "Realtime Data Synchronization",
+        "Conflict Resolution",
+        "Scalability",
+        "Distributed Systems"
+      ],
+      "id": "sd_012",
+      "question_type": "system_design",
+      "question_text": "Design Google Docs/ Collaborative Editing Service"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Url Shortner Service",
+      "topics": [
+        "Database Design",
+        "Scalability",
+        "Caching",
+        "Load Balancing"
+      ],
+      "id": "sd_013",
+      "question_type": "system_design",
+      "question_text": "Design Url Shortner Service"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Redbus",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Cache Management"
+      ],
+      "id": "sd_014",
+      "question_type": "system_design",
+      "question_text": "Design Redbus"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Bookmyshow",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Cache Management"
+      ],
+      "id": "sd_015",
+      "question_type": "system_design",
+      "question_text": "Design Bookmyshow"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Domain Backdooring System",
+      "topics": [
+        "Security",
+        "Network Architecture",
+        "System Integration",
+        "Malware Detection"
+      ],
+      "id": "sd_016",
+      "question_type": "system_design",
+      "question_text": "Design Domain Backdooring System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Amazon Locker",
+      "topics": [
+        "Scalability",
+        "Availability",
+        "Security",
+        "Distributed Systems"
+      ],
+      "id": "sd_017",
+      "question_type": "system_design",
+      "question_text": "Design Amazon Locker"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Movies Review Aggregator System > Data Should Be Fetched From Movie Rating Providers Like Imdb, Rotten Tomatoes, Etc",
+      "topics": [
+        "Data Ingestion",
+        "Api Integration",
+        "Data Processing",
+        "Cache Layer"
+      ],
+      "id": "sd_018",
+      "question_type": "system_design",
+      "question_text": "Design Movies Review Aggregator System > Data Should Be Fetched From Movie Rating Providers Like Imdb, Rotten Tomatoes, Etc"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Offline Caching System For Ecommerce Platform",
+      "topics": [
+        "Cache System Design",
+        "Database Systems",
+        "Distributed Systems",
+        "Storage Systems"
+      ],
+      "id": "sd_019",
+      "question_type": "system_design",
+      "question_text": "Design Offline Caching System For Ecommerce Platform"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Amazon E-commerce",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Cache And Load Balancing"
+      ],
+      "id": "sd_020",
+      "question_type": "system_design",
+      "question_text": "Design Amazon E-commerce"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Online Chess Game/multiplayer Game",
+      "topics": [
+        "Realtime Communication",
+        "Scalability",
+        "Game State Management",
+        "Concurrency Control"
+      ],
+      "id": "sd_021",
+      "question_type": "system_design",
+      "question_text": "Design Online Chess Game/multiplayer Game"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Gaming Platform. A Number Of Games Can Be Hosted On This Platform. User Can Login And Select A Particular Game",
+      "topics": [
+        "Microservices Architecture",
+        "Load Balancing",
+        "Database Design",
+        "Scalability"
+      ],
+      "id": "sd_022",
+      "question_type": "system_design",
+      "question_text": "Design Gaming Platform. A Number Of Games Can Be Hosted On This Platform. User Can Login And Select A Particular Game"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Last-mile Delivery Platform In Case Of Peak Seasons",
+      "topics": [
+        "Scalability",
+        "Load Balancing",
+        "Queue Management",
+        "Geospatial Mapping"
+      ],
+      "id": "sd_023",
+      "question_type": "system_design",
+      "question_text": "Design A Last-mile Delivery Platform In Case Of Peak Seasons"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Zomato/swiggy/foodpanda",
+      "topics": [
+        "Microservices Architecture",
+        "Database Design",
+        "Scalability And Performance",
+        "Api Design"
+      ],
+      "id": "sd_024",
+      "question_type": "system_design",
+      "question_text": "Design Zomato/swiggy/foodpanda"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Meeting Calendar System",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Concurrency",
+        "Api Design"
+      ],
+      "id": "sd_025",
+      "question_type": "system_design",
+      "question_text": "Design Meeting Calendar System"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Spotify",
+      "topics": [
+        "Scalability",
+        "Microservices",
+        "Database Design",
+        "Content Delivery Network (cdn)"
+      ],
+      "id": "sd_026",
+      "question_type": "system_design",
+      "question_text": "Design Spotify"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Promo Code Api By Taking Into Account Amazon's Customer Traffic Into Picture",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Api Design",
+        "Caching"
+      ],
+      "id": "sd_027",
+      "question_type": "system_design",
+      "question_text": "Design Promo Code Api By Taking Into Account Amazon's Customer Traffic Into Picture"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Splitwise",
+      "topics": [
+        "Microservices Architecture",
+        "Database Design",
+        "Scalability",
+        "Payment Gateway Integration"
+      ],
+      "id": "sd_028",
+      "question_type": "system_design",
+      "question_text": "Design Splitwise"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Google Pay At Scale",
+      "topics": [
+        "Payment Processing",
+        "Scalability",
+        "Security",
+        "Microservices Architecture"
+      ],
+      "id": "sd_029",
+      "question_type": "system_design",
+      "question_text": "Design Google Pay At Scale"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Job Schedular => Scalability, Fault Tolerance, High Availability, How Scheduler Picks Up Job,",
+      "topics": [
+        "Scalability",
+        "Fault Tolerance",
+        "High Availability",
+        "Distributed Systems"
+      ],
+      "id": "sd_030",
+      "question_type": "system_design",
+      "question_text": "Design A Job Schedular => Scalability, Fault Tolerance, High Availability, How Scheduler Picks Up Job,"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Meeting Scheduler",
+      "topics": [
+        "Calendar Systems",
+        "Scheduling Algorithms",
+        "Database Design",
+        "Scalability"
+      ],
+      "id": "sd_031",
+      "question_type": "system_design",
+      "question_text": "Design Meeting Scheduler"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Debugger",
+      "topics": [
+        "Logging And Monitoring",
+        "Error Handling",
+        "System Integration",
+        "Troubleshooting"
+      ],
+      "id": "sd_032",
+      "question_type": "system_design",
+      "question_text": "Design Debugger"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Automatic Parking System",
+      "topics": [
+        "Concurrency",
+        "Scalability",
+        "Database Design",
+        "Algorithm Design"
+      ],
+      "id": "sd_033",
+      "question_type": "system_design",
+      "question_text": "Design Automatic Parking System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Amazon Cart System",
+      "topics": [
+        "Database Design",
+        "Cache Management",
+        "Scalability",
+        "Concurrency Control"
+      ],
+      "id": "sd_034",
+      "question_type": "system_design",
+      "question_text": "Design Amazon Cart System"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Google Search",
+      "topics": [
+        "Scalability",
+        "Distributed Systems",
+        "Caching",
+        "Information Retrieval"
+      ],
+      "id": "sd_035",
+      "question_type": "system_design",
+      "question_text": "Design Google Search"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Twitter",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Cache Management",
+        "Load Balancing"
+      ],
+      "id": "sd_036",
+      "question_type": "system_design",
+      "question_text": "Design Twitter"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Facebook",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Cache Management",
+        "Load Balancing"
+      ],
+      "id": "sd_037",
+      "question_type": "system_design",
+      "question_text": "Design Facebook"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Snapchat",
+      "topics": [
+        "Scalability",
+        "Real-time Systems",
+        "Data Storage",
+        "Cache Management"
+      ],
+      "id": "sd_038",
+      "question_type": "system_design",
+      "question_text": "Design Snapchat"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Instagram",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Cache Management",
+        "Load Balancing"
+      ],
+      "id": "sd_039",
+      "question_type": "system_design",
+      "question_text": "Design Instagram"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design App-store",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Caching",
+        "Load Balancing"
+      ],
+      "id": "sd_040",
+      "question_type": "system_design",
+      "question_text": "Design App-store"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Music Player Application",
+      "topics": [
+        "Microservices",
+        "Database Design",
+        "Scalability",
+        "Cache Management"
+      ],
+      "id": "sd_041",
+      "question_type": "system_design",
+      "question_text": "Design A Music Player Application"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Distributed Lru Cache",
+      "topics": [
+        "Caching",
+        "Distributed Systems",
+        "Data Structures",
+        "Scalability"
+      ],
+      "id": "sd_042",
+      "question_type": "system_design",
+      "question_text": "Design A Distributed Lru Cache"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Gmail",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Load Balancing"
+      ],
+      "id": "sd_043",
+      "question_type": "system_design",
+      "question_text": "Design Gmail"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Recommendation System",
+      "topics": [
+        "Data Processing",
+        "Algorithm Design",
+        "Scalability",
+        "Machine Learning"
+      ],
+      "id": "sd_044",
+      "question_type": "system_design",
+      "question_text": "Design A Recommendation System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Food Sharing Application",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Api Design",
+        "Security"
+      ],
+      "id": "sd_045",
+      "question_type": "system_design",
+      "question_text": "Design A Food Sharing Application"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Payment Module For Uber App",
+      "topics": [
+        "Payment Gateway Integration",
+        "Transaction Processing",
+        "Scalability",
+        "Security"
+      ],
+      "id": "sd_046",
+      "question_type": "system_design",
+      "question_text": "Design Payment Module For Uber App"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Truecaller Type Of System",
+      "topics": [
+        "Database Design",
+        "Scalability",
+        "Caching",
+        "Data Processing"
+      ],
+      "id": "sd_047",
+      "question_type": "system_design",
+      "question_text": "Design Truecaller Type Of System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Performance Management System (appraisal Workflow System) That Can Be Used Across Companies.",
+      "topics": [
+        "Microservices Architecture",
+        "Database Design",
+        "Scalability",
+        "Workflow Management"
+      ],
+      "id": "sd_048",
+      "question_type": "system_design",
+      "question_text": "Design Performance Management System (appraisal Workflow System) That Can Be Used Across Companies."
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Comment System Like Disqus",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Caching",
+        "Microservices"
+      ],
+      "id": "sd_049",
+      "question_type": "system_design",
+      "question_text": "Design Comment System Like Disqus"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Flight System",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Load Balancing"
+      ],
+      "id": "sd_050",
+      "question_type": "system_design",
+      "question_text": "Design Flight System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Tinder",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Cache Optimization",
+        "Load Balancing"
+      ],
+      "id": "sd_051",
+      "question_type": "system_design",
+      "question_text": "Design Tinder"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Survey Site Like Surveymonkey",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Load Balancing"
+      ],
+      "id": "sd_052",
+      "question_type": "system_design",
+      "question_text": "Design Survey Site Like Surveymonkey"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design A Geographically Partitioned Multi-player Card Game, That Supports Multiple Players, Multiple Games At A Time. Each Game Will Have One Contractor Like Ones We Have In A Bar, He Can Play A Game Or Just Watch It. Integrate Payment Systems",
+      "topics": [
+        "Scalability",
+        "Distributed Systems",
+        "Real-time Systems",
+        "Payment Gateway Integration"
+      ],
+      "id": "sd_053",
+      "question_type": "system_design",
+      "question_text": "Design A Geographically Partitioned Multi-player Card Game, That Supports Multiple Players, Multiple Games At A Time. Each Game Will Have One Contractor Like Ones We Have In A Bar, He Can Play A Game Or Just Watch It. Integrate Payment Systems"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Kind Of Kindle Fire Application Where We Can Subscribe News Channel And Read The News From All Publishers As A Digital Format",
+      "topics": [
+        "Microservices Architecture",
+        "Database Design",
+        "Api Design",
+        "Scalability"
+      ],
+      "id": "sd_054",
+      "question_type": "system_design",
+      "question_text": "Design A Kind Of Kindle Fire Application Where We Can Subscribe News Channel And Read The News From All Publishers As A Digital Format"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design A Realtime Video Chat Like Google Duo",
+      "topics": [
+        "Scalability",
+        "Realtime Communication",
+        "Video Streaming",
+        "Network Architecture"
+      ],
+      "id": "sd_055",
+      "question_type": "system_design",
+      "question_text": "Design A Realtime Video Chat Like Google Duo"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design News Paper & Magazine Subscription System",
+      "topics": [
+        "Subscription Management",
+        "Payment Gateway Integration",
+        "Content Delivery",
+        "User Management"
+      ],
+      "id": "sd_056",
+      "question_type": "system_design",
+      "question_text": "Design News Paper & Magazine Subscription System"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design A System Like Hackerrank/codechef/topcoder",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Load Balancing",
+        "Microservices Architecture"
+      ],
+      "id": "sd_057",
+      "question_type": "system_design",
+      "question_text": "Design A System Like Hackerrank/codechef/topcoder"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Concurrent Hashmap",
+      "topics": [
+        "Concurrent Data Structures",
+        "Hash Tables",
+        "Lock Striping",
+        "Synchronization"
+      ],
+      "id": "sd_058",
+      "question_type": "system_design",
+      "question_text": "Design A Concurrent Hashmap"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design An Atm Machine System Which Can Support Massive Amount Of Transactions",
+      "topics": [
+        "Scalability",
+        "Concurrency",
+        "Database Design",
+        "Network Architecture"
+      ],
+      "id": "sd_059",
+      "question_type": "system_design",
+      "question_text": "Design An Atm Machine System Which Can Support Massive Amount Of Transactions"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Airport Baggage System",
+      "topics": [
+        "Concurrency",
+        "Scalability",
+        "Database Design",
+        "Queueing Systems"
+      ],
+      "id": "sd_060",
+      "question_type": "system_design",
+      "question_text": "Design Airport Baggage System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Flight Information Display System",
+      "topics": [
+        "Real-time Data Processing",
+        "Data Storage",
+        "Scalability",
+        "Cache Management"
+      ],
+      "id": "sd_061",
+      "question_type": "system_design",
+      "question_text": "Design Flight Information Display System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Conference Room Booking System For A Company Which Can Have Offices In Multiple Cities, Each City Can Have Multiple Buildings, Each Building Can Have Multiple Floors, Each Floor Can Have Multiple Rooms. Each Room Can Have Features Like Capacitiy, Video Conferencing Available, Etc.",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Api Design"
+      ],
+      "id": "sd_062",
+      "question_type": "system_design",
+      "question_text": "Design A Conference Room Booking System For A Company Which Can Have Offices In Multiple Cities, Each City Can Have Multiple Buildings, Each Building Can Have Multiple Floors, Each Floor Can Have Multiple Rooms. Each Room Can Have Features Like Capacitiy, Video Conferencing Available, Etc."
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Newsfeed Feature Of Facebook",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Cache System",
+        "Load Balancing"
+      ],
+      "id": "sd_063",
+      "question_type": "system_design",
+      "question_text": "Design Newsfeed Feature Of Facebook"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design An Efficient Mail Delivery System",
+      "topics": [
+        "Scalability",
+        "Microservices",
+        "Queueing Systems",
+        "Database Design"
+      ],
+      "id": "sd_064",
+      "question_type": "system_design",
+      "question_text": "Design An Efficient Mail Delivery System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Like/dislike Feature At Youtube Scale.",
+      "topics": [
+        "Database Design",
+        "Scalability",
+        "Caching",
+        "Load Balancing"
+      ],
+      "id": "sd_065",
+      "question_type": "system_design",
+      "question_text": "Design Like/dislike Feature At Youtube Scale."
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Paypal",
+      "topics": [
+        "Payment Gateway",
+        "Microservices Architecture",
+        "Database Design",
+        "Scalability"
+      ],
+      "id": "sd_066",
+      "question_type": "system_design",
+      "question_text": "Design Paypal"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Air Traffic Control System",
+      "topics": [
+        "Scalability",
+        "Concurrency",
+        "Realtime Systems",
+        "Distributed Systems"
+      ],
+      "id": "sd_067",
+      "question_type": "system_design",
+      "question_text": "Design Air Traffic Control System"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design A Realtime Service Which Tells Your Friends Who Is Online",
+      "topics": [
+        "Scalability",
+        "Realtime Systems",
+        "Cache Management",
+        "Websockets"
+      ],
+      "id": "sd_068",
+      "question_type": "system_design",
+      "question_text": "Design A Realtime Service Which Tells Your Friends Who Is Online"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Google Maps",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Geospatial Algorithms",
+        "Real-time Systems"
+      ],
+      "id": "sd_069",
+      "question_type": "system_design",
+      "question_text": "Design Google Maps"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Grammarly",
+      "topics": [
+        "Scalability",
+        "Natural Language Processing",
+        "Microservices Architecture",
+        "Real-time Processing"
+      ],
+      "id": "sd_070",
+      "question_type": "system_design",
+      "question_text": "Design Grammarly"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Airbnb",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Cache Optimization"
+      ],
+      "id": "sd_071",
+      "question_type": "system_design",
+      "question_text": "Design Airbnb"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Zoom",
+      "topics": [
+        "Scalability",
+        "Real-time Communication",
+        "Video Streaming",
+        "Distributed Systems"
+      ],
+      "id": "sd_072",
+      "question_type": "system_design",
+      "question_text": "Design Zoom"
+    },
+    {
+      "difficulty": "medium",
+      "title": "Design Online Examination Portal Like Byju's",
+      "topics": [
+        "Scalability",
+        "Database Design",
+        "Microservices Architecture",
+        "Load Balancing"
+      ],
+      "id": "sd_073",
+      "question_type": "system_design",
+      "question_text": "Design Online Examination Portal Like Byju's"
+    },
+    {
+      "difficulty": "hard",
+      "title": "Design Dropbox Or Google Drive",
+      "topics": [
+        "Cloud Storage",
+        "Distributed Systems",
+        "File Systems",
+        "Scalability"
+      ],
+      "id": "sd_074",
+      "question_type": "system_design",
+      "question_text": "Design Dropbox Or Google Drive"
     }
   ],
   "behavioral": [
     {
+      "difficulty": "medium",
+      "topics": [
+        "Teamwork",
+        "Conflict Resolution",
+        "Communication",
+        "Problem Solving"
+      ],
       "id": "beh_001",
-      "title": "Conflict Resolution",
-      "difficulty": "medium",
-      "topics": [
-        "teamwork",
-        "communication"
-      ],
-      "question_text": "Tell me about a time you had a significant disagreement with a teammate on a technical decision. How did you handle it, and what was the outcome?",
-      "question_type": "behavioral"
+      "question_type": "behavioral",
+      "question_text": "Describe a time you had to resolve a conflict with a teammate.",
+      "title": "Describe a time you had to resolve a conflict with a teammat..."
     },
     {
+      "difficulty": "easy",
+      "topics": [
+        "Time Management",
+        "Prioritization",
+        "Adaptability",
+        "Productivity"
+      ],
       "id": "beh_002",
-      "title": "Failure and Learning",
-      "difficulty": "medium",
-      "topics": [
-        "resilience",
-        "growth"
-      ],
-      "question_text": "Describe a project or task where you failed to meet a deadline or deliver the expected result. What went wrong, and what did you learn from the experience?",
-      "question_type": "behavioral"
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you had to meet a tight deadline.",
+      "title": "Tell me about a time you had to meet a tight deadline."
     },
     {
+      "difficulty": "medium",
+      "topics": [
+        "Leadership",
+        "Team Management",
+        "Problem Solving",
+        "Communication"
+      ],
       "id": "beh_003",
-      "title": "Leadership Under Pressure",
-      "difficulty": "hard",
-      "topics": [
-        "leadership",
-        "decision-making"
-      ],
-      "question_text": "Tell me about a time when you had to lead a team through a critical situation with tight deadlines. How did you prioritize tasks and keep the team motivated?",
-      "question_type": "behavioral"
+      "question_type": "behavioral",
+      "question_text": "Describe a situation where you demonstrated leadership.",
+      "title": "Describe a situation where you demonstrated leadership."
     },
     {
+      "difficulty": "medium",
+      "topics": [
+        "Adaptability",
+        "Change Management",
+        "Resilience",
+        "Problem Solving"
+      ],
       "id": "beh_004",
-      "title": "Ambiguity and Initiative",
-      "difficulty": "medium",
-      "topics": [
-        "initiative",
-        "problem-solving"
-      ],
-      "question_text": "Describe a situation where you had to work with unclear or incomplete requirements. How did you handle the ambiguity and move the project forward?",
-      "question_type": "behavioral"
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you had to adapt to a significant change.",
+      "title": "Tell me about a time you had to adapt to a significant chang..."
     },
     {
-      "id": "beh_005",
-      "title": "Cross-Team Collaboration",
       "difficulty": "medium",
       "topics": [
-        "collaboration",
-        "communication"
+        "Problem Solving",
+        "Critical Thinking",
+        "Adaptability",
+        "Resilience"
       ],
-      "question_text": "Tell me about a time you had to collaborate with a team outside your own department. What challenges did you face, and how did you build trust and ensure alignment?",
-      "question_type": "behavioral"
+      "id": "beh_005",
+      "question_type": "behavioral",
+      "question_text": "Describe a time you solved a difficult problem.",
+      "title": "Describe a time you solved a difficult problem."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Receiving Feedback",
+        "Adaptability",
+        "Personal Growth",
+        "Professional Development"
+      ],
+      "id": "beh_006",
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you received critical feedback.",
+      "title": "Tell me about a time you received critical feedback."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Time Management",
+        "Prioritization",
+        "Organization",
+        "Productivity"
+      ],
+      "id": "beh_007",
+      "question_type": "behavioral",
+      "question_text": "Describe a time when you had to prioritize multiple tasks.",
+      "title": "Describe a time when you had to prioritize multiple tasks."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Problem Solving",
+        "Adaptability",
+        "Communication",
+        "Leadership"
+      ],
+      "id": "beh_008",
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you improved a process.",
+      "title": "Tell me about a time you improved a process."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Teamwork",
+        "Conflict Resolution",
+        "Communication",
+        "Adaptability"
+      ],
+      "id": "beh_009",
+      "question_type": "behavioral",
+      "question_text": "Describe a time you had to work with a difficult coworker.",
+      "title": "Describe a time you had to work with a difficult coworker."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Problem Solving",
+        "Accountability",
+        "Adaptability",
+        "Communication"
+      ],
+      "id": "beh_010",
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you made a mistake and how you handled it.",
+      "title": "Tell me about a time you made a mistake and how you handled ..."
+    },
+    {
+      "difficulty": "easy",
+      "topics": [
+        "Teamwork",
+        "Collaboration",
+        "Leadership",
+        "Communication"
+      ],
+      "id": "beh_011",
+      "question_type": "behavioral",
+      "question_text": "Describe a time when you helped a teammate succeed.",
+      "title": "Describe a time when you helped a teammate succeed."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Adaptability",
+        "Learning Ability",
+        "Problem Solving",
+        "Time Management"
+      ],
+      "id": "beh_012",
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you had to learn something quickly.",
+      "title": "Tell me about a time you had to learn something quickly."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Influence and Persuasion",
+        "Communication",
+        "Conflict Resolution",
+        "Leadership"
+      ],
+      "id": "beh_013",
+      "question_type": "behavioral",
+      "question_text": "Describe a situation where you had to persuade someone.",
+      "title": "Describe a situation where you had to persuade someone."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Decision Making",
+        "Problem Solving",
+        "Leadership",
+        "Adaptability"
+      ],
+      "id": "beh_014",
+      "question_type": "behavioral",
+      "question_text": "Tell me about a time you had to make a difficult decision.",
+      "title": "Tell me about a time you had to make a difficult decision."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Conflict Resolution",
+        "Teamwork",
+        "Communication",
+        "Problem Solving"
+      ],
+      "id": "beh_015",
+      "question_type": "behavioral",
+      "question_text": "What would you do if two teammates strongly disagreed during a project?",
+      "title": "What would you do if two teammates strongly disagreed during..."
+    },
+    {
+      "difficulty": "easy",
+      "topics": [
+        "Adaptability",
+        "Problem Solving",
+        "Learning Ability",
+        "Initiative"
+      ],
+      "id": "beh_016",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you were assigned a task you had never done before?",
+      "title": "What would you do if you were assigned a task you had never ..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Time Management",
+        "Adaptability",
+        "Prioritization",
+        "Problem Solving"
+      ],
+      "id": "beh_017",
+      "question_type": "behavioral",
+      "question_text": "What would you do if your project deadline was suddenly moved earlier?",
+      "title": "What would you do if your project deadline was suddenly move..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Problem Solving",
+        "Communication",
+        "Time Management",
+        "Ethics"
+      ],
+      "id": "beh_018",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you noticed a serious bug just before release?",
+      "title": "What would you do if you noticed a serious bug just before r..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Conflict Resolution",
+        "Communication",
+        "Problem Solving",
+        "Teamwork"
+      ],
+      "id": "beh_019",
+      "question_type": "behavioral",
+      "question_text": "What would you do if your manager disagreed with your technical decision?",
+      "title": "What would you do if your manager disagreed with your techni..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Time Management",
+        "Prioritization",
+        "Stakeholder Management",
+        "Adaptability"
+      ],
+      "id": "beh_020",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you were overloaded with tasks from multiple stakeholders?",
+      "title": "What would you do if you were overloaded with tasks from mul..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Teamwork",
+        "Communication",
+        "Conflict Resolution",
+        "Problem Solving"
+      ],
+      "id": "beh_021",
+      "question_type": "behavioral",
+      "question_text": "What would you do if a teammate was not contributing to the project?",
+      "title": "What would you do if a teammate was not contributing to the ..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Leadership",
+        "Problem Solving",
+        "Adaptability",
+        "Initiative"
+      ],
+      "id": "beh_022",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you were asked to lead a project with little guidance?",
+      "title": "What would you do if you were asked to lead a project with l..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Problem Solving",
+        "Customer Service",
+        "Communication",
+        "Conflict Resolution"
+      ],
+      "id": "beh_023",
+      "question_type": "behavioral",
+      "question_text": "What would you do if a customer reported a critical production issue?",
+      "title": "What would you do if a customer reported a critical producti..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Adaptability",
+        "Problem Solving",
+        "Decision Making",
+        "Communication"
+      ],
+      "id": "beh_024",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you discovered a better solution after implementation started?",
+      "title": "What would you do if you discovered a better solution after ..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Adaptability",
+        "Problem Solving",
+        "Communication",
+        "Time Management"
+      ],
+      "id": "beh_025",
+      "question_type": "behavioral",
+      "question_text": "What would you do if a project requirement kept changing frequently?",
+      "title": "What would you do if a project requirement kept changing fre..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Conflict Resolution",
+        "Communication",
+        "Teamwork",
+        "Integrity"
+      ],
+      "id": "beh_026",
+      "question_type": "behavioral",
+      "question_text": "What would you do if your teammate took credit for your work?",
+      "title": "What would you do if your teammate took credit for your work..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Problem Solving",
+        "Communication",
+        "Adaptability",
+        "Time Management"
+      ],
+      "id": "beh_027",
+      "question_type": "behavioral",
+      "question_text": "What would you do if you had to deliver a project with incomplete information?",
+      "title": "What would you do if you had to deliver a project with incom..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Time Management",
+        "Team Management",
+        "Problem Solving",
+        "Leadership"
+      ],
+      "id": "beh_028",
+      "question_type": "behavioral",
+      "question_text": "What would you do if your team was consistently missing deadlines?",
+      "title": "What would you do if your team was consistently missing dead..."
+    },
+    {
+      "difficulty": "medium",
+      "topics": [
+        "Conflict Resolution",
+        "Stakeholder Management",
+        "Communication",
+        "Problem Solving"
+      ],
+      "id": "beh_029",
+      "question_type": "behavioral",
+      "question_text": "What would you do if a stakeholder requested something unrealistic?",
+      "title": "What would you do if a stakeholder requested something unrea..."
     }
   ]
 }
