@@ -1,15 +1,11 @@
-from huggingface_hub import InferenceClient
+from groq import Groq
 from config import Config
 import json
 import re
 
 class LLMService:
     def __init__(self):
-        # Swapped to Llama 3 or Qwen Coder, which are much better at strictly following formatting
-        self.client = InferenceClient(
-            model="Qwen/Qwen2.5-Coder-7B-Instruct", 
-            token=Config.HF_TOKEN
-        )
+        self.client = Groq(api_key=Config.GROQ_API_KEY)
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """
@@ -95,7 +91,8 @@ class LLMService:
             {"role": "user", "content": user_prompt}
         ]
         
-        response = self.client.chat_completion(
+        response = self.client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=messages,
             max_tokens=2500, 
             temperature=0.1
