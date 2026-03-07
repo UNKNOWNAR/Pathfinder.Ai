@@ -531,7 +531,12 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
   transition: opacity 0.15s;
 }
 .photo-wrap:hover { opacity: 0.85; }
-.photo-img { width: 100%; height: 100%; object-fit: cover; }
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .hero-info {
   flex: 1;
   min-width: 240px;
