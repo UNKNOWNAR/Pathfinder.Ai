@@ -71,14 +71,9 @@ PHASE_ORDER = ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 
 
 class AgentService:
     def __init__(self):
-        self.bedrock_client = boto3.client(
-            service_name='bedrock-runtime',
-            region_name='us-east-1'
-        )
-        self.api_key = os.getenv('BEDROCK_API_KEY')
-        # Use Inference Profile prefix 'us.' as required for newest Claude 4.5+ models in us-east-1
-        self.model_id = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-        self.endpoint = "https://bedrock-runtime.us-east-1.amazonaws.com"
+        self.api_key = os.getenv('GROQ_API_KEY')
+        self.model_id = "llama3-70b-8192"
+        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         self.voice_service = VoiceService()
 
     def process_step(self, user_answer, current_phase, profile_json, local_context_history,
@@ -349,51 +344,38 @@ class AgentService:
     # ─── Helper Methods ──────────────────────────────────────────────────
 
     def _call_bedrock(self, system_prompt, user_prompt):
-        """Call AWS Bedrock Claude and return the text response."""
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 500,
-            "system": system_prompt,
-            "messages": [
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.7
-        })
-
+        """Call Groq API and return the text response."""
         import requests
+        
+        if not self.api_key:
+            logger.error("GROQ_API_KEY is missing.")
+            return "I am currently offline due to a missing AI configuration."
+
         headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Authorization": f"Bearer {self.api_key}"
         }
-        if self.api_key:
-            headers["X-Api-Key"] = self.api_key
+        
+        body = {
+            "model": self.model_id,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.5,
+            "max_tokens": 500
+        }
 
-        # Bedrock Marketplace API Key use case or standard IAM fallback
-        if self.api_key:
-            url = f"{self.endpoint}/model/{self.model_id}/invoke"
-            response = requests.post(url, headers=headers, data=body, timeout=30)
-            if response.status_code == 200:
-                response_body = response.json()
-            else:
-                logger.error(f"Bedrock Key call failed: {response.status_code} - {response.text}")
-                # Fallback to standard IAM client
-                invoke_response = self.bedrock_client.invoke_model(
-                    body=body,
-                    modelId=self.model_id,
-                    accept='application/json',
-                    contentType='application/json'
-                )
-                response_body = json.loads(invoke_response.get('body').read())
-        else:
-            invoke_response = self.bedrock_client.invoke_model(
-                body=body,
-                modelId=self.model_id,
-                accept='application/json',
-                contentType='application/json'
-            )
-            response_body = json.loads(invoke_response.get('body').read())
-
-        return response_body.get('content', [{}])[0].get('text', '').strip()
+        try:
+            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Groq API call failed: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Response body: {e.response.text}")
+            return "I apologize, but I am having trouble connecting to my thought engine. Could you check the API keys?"
 
     def _evaluate_answer(self, user_answer, question_context, context_history):
         """Evaluate the user's answer and return a score + feedback."""
