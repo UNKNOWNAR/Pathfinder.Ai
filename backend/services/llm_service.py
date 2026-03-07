@@ -10,10 +10,11 @@ class LLMService:
         # Using us-east-1 or us-west-2 depending on where you enable models in AWS Bedrock
         self.bedrock_client = boto3.client(
             service_name='bedrock-runtime',
-            region_name='us-east-1' # Hardcoded region to simplify setup unless provided in Config
+            region_name='us-east-1'
         )
-        # Using Claude 3 Haiku which is fully supported in Bedrock us-east-1
-        self.model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+        self.api_key = os.getenv('BEDROCK_API_KEY')
+        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
+        self.endpoint = "https://bedrock-runtime.us-east-1.amazonaws.com"
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """
@@ -108,15 +109,40 @@ class LLMService:
             "temperature": 0.1
         })
 
-        try:
-            response = self.bedrock_client.invoke_model(
-                body=body,
-                modelId=self.model_id,
-                accept='application/json',
-                contentType='application/json'
-            )
+        import requests
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        if self.api_key:
+            headers["X-Api-Key"] = self.api_key
 
-            response_body = json.loads(response.get('body').read())
+        try:
+            # First attempt: requests with API key (most direct for Bedrock Marketplace / specialized keys)
+            if self.api_key:
+                url = f"{self.endpoint}/model/{self.model_id}/invoke"
+                response = requests.post(url, headers=headers, data=body, timeout=30)
+                if response.status_code == 200:
+                    response_body = response.json()
+                else:
+                    # Fallback to boto3 if API key mode fails
+                    invoke_response = self.bedrock_client.invoke_model(
+                        body=body,
+                        modelId=self.model_id,
+                        accept='application/json',
+                        contentType='application/json'
+                    )
+                    response_body = json.loads(invoke_response.get('body').read())
+            else:
+                # Standard boto3 path
+                invoke_response = self.bedrock_client.invoke_model(
+                    body=body,
+                    modelId=self.model_id,
+                    accept='application/json',
+                    contentType='application/json'
+                )
+                response_body = json.loads(invoke_response.get('body').read())
+
             raw_output = response_body.get('content')[0].get('text')
 
             # BULLETPROOF REGEX EXTRACTION

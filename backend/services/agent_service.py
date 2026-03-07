@@ -75,7 +75,9 @@ class AgentService:
             service_name='bedrock-runtime',
             region_name='us-east-1'
         )
-        self.model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+        self.api_key = os.getenv('BEDROCK_API_KEY')
+        self.model_id = "anthropic.claude-haiku-4-5-20251001-v1:0"
+        self.endpoint = "https://bedrock-runtime.us-east-1.amazonaws.com"
         self.voice_service = VoiceService()
 
     def process_step(self, user_answer, current_phase, profile_json, local_context_history,
@@ -357,13 +359,38 @@ class AgentService:
             "temperature": 0.7
         })
 
-        response = self.bedrock_client.invoke_model(
-            body=body,
-            modelId=self.model_id,
-            accept='application/json',
-            contentType='application/json'
-        )
-        response_body = json.loads(response.get('body').read())
+        import requests
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        if self.api_key:
+            headers["X-Api-Key"] = self.api_key
+
+        # Bedrock Marketplace API Key use case or standard IAM fallback
+        if self.api_key:
+            url = f"{self.endpoint}/model/{self.model_id}/invoke"
+            response = requests.post(url, headers=headers, data=body, timeout=30)
+            if response.status_code == 200:
+                response_body = response.json()
+            else:
+                # Fallback to standard IAM client
+                invoke_response = self.bedrock_client.invoke_model(
+                    body=body,
+                    modelId=self.model_id,
+                    accept='application/json',
+                    contentType='application/json'
+                )
+                response_body = json.loads(invoke_response.get('body').read())
+        else:
+            invoke_response = self.bedrock_client.invoke_model(
+                body=body,
+                modelId=self.model_id,
+                accept='application/json',
+                contentType='application/json'
+            )
+            response_body = json.loads(invoke_response.get('body').read())
+
         return response_body.get('content', [{}])[0].get('text', '').strip()
 
     def _evaluate_answer(self, user_answer, question_context, context_history):
