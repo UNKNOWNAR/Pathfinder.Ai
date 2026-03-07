@@ -22,6 +22,15 @@ const answeredQuestionIds = ref([]); // Tracks questions already answered by gho
 const currentPhase = ref('introduction'); // Tracks which phase the interview is in
 const lastEvaluation = ref(null); // Stores the evaluation from the last answer
 
+// Ghost Timer
+const timerSeconds = ref(1800); // 30 minutes
+let ghostTimerInterval = null;
+const formattedTimer = computed(() => {
+  const m = Math.floor(timerSeconds.value / 60);
+  const s = timerSeconds.value % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+});
+
 // Setup form
 const selectedTopic = ref(null);
 const selectedDifficulty = ref('medium');
@@ -100,6 +109,14 @@ async function startSession() {
   loading.value = true;
   error.value = '';
   currentPhase.value = 'introduction';
+
+  // Start Ghost Timer
+  timerSeconds.value = 1800; // 30 minutes
+  if (ghostTimerInterval) clearInterval(ghostTimerInterval);
+  ghostTimerInterval = setInterval(() => {
+    if (timerSeconds.value > 0) timerSeconds.value--;
+  }, 1000);
+
   try {
     const res = await api.post('/api/interview/ghost_step', {
       user_answer: '',
@@ -322,6 +339,11 @@ function resetSession() {
   currentPhase.value = 'introduction';
   lastEvaluation.value = null;
   codeAnswer.value = '';
+
+  if (ghostTimerInterval) {
+    clearInterval(ghostTimerInterval);
+    ghostTimerInterval = null;
+  }
   // profileData is not reset as it's fetched on mount and persists
 }
 
@@ -374,7 +396,7 @@ function scoreClass(score) {
               </div>
             </div>
             <button class="primary-btn" @click="startSession" :disabled="loading">
-              {{ loading ? 'STARTING...' : 'START GHOST INTERVIEW' }}
+              {{ loading ? 'STARTING...' : 'Start Interview' }}
             </button>
           </div>
         </div>
@@ -382,6 +404,11 @@ function scoreClass(score) {
 
       <!-- ─── Active Ghost Interview ──────────────────────────── -->
       <template v-else-if="ghostSessionActive">
+        <!-- Timer -->
+        <div class="timer-display" style="text-align: right; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: var(--accent);">
+          ⏱ Time Remaining: {{ formattedTimer }}
+        </div>
+
         <!-- Phase Indicator -->
         <div class="box phase-indicator">
           <div
