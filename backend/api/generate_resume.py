@@ -5,12 +5,15 @@ from services.llm_service import LLMService
 from services.compiler_service import CompilerService
 from models.profile import Profile
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from limiter import limiter
 
 # Initialize services
 llm_service = LLMService()
 compiler_service = CompilerService()
 
 class GenerateResume(Resource):
+    decorators = [limiter.limit("5 per hour", key_func=get_jwt_identity)]
+
     @jwt_required()
     def post(self):
         try:

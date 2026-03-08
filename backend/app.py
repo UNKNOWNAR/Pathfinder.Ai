@@ -9,6 +9,7 @@ from user_datastore import user_datastore
 from api import init_routes
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from limiter import limiter
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +18,7 @@ def create_app():
     db.init_app(app)
     Security(app, user_datastore)
     JWTManager(app)
+    limiter.init_app(app)
 
     api = Api(app)
     return app, api

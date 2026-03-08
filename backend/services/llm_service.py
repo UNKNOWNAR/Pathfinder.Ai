@@ -1,15 +1,27 @@
-import boto3
 import os
-from config import Config
 import json
 import re
 import logging
+import requests
 
 class LLMService:
+    # ─── Primary: Amazon Bedrock (Qwen 3 Next 80B) ───────────────────────────
+    BEDROCK_API_KEY  = os.getenv('BEDROCK_API_KEY', '')
+    BEDROCK_REGION   = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+    BEDROCK_MODEL    = 'qwen.qwen3-next-80b-a3b'
+
+    # ─── Final Fallback: Groq ─────────────────────────────────────────────────
+    # If Bedrock/Qwen fails, Qwen siblings share the same access path and
+    # will fail together — skip straight to Groq.
+    GROQ_API_KEY   = os.getenv('GROQ_API_KEY', '')
+    GROQ_MODEL     = 'llama-3.3-70b-versatile'
+    GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions'
+
     def __init__(self):
-        self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama-3.3-70b-versatile"
-        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
+        # Keep legacy attr names so nothing else in codebase breaks
+        self.api_key   = self.GROQ_API_KEY
+        self.model_id  = self.GROQ_MODEL
+        self.endpoint  = self.GROQ_ENDPOINT
 
     def generate_latex_resume(self, jd_text: str, student_profile: dict) -> str:
         system_prompt = """
@@ -90,35 +102,10 @@ class LLMService:
 
         user_prompt = f"Here is the Job Description:\n{jd_text}\n\nHere is the candidate's profile data:\n{json.dumps(student_profile)}\n\nGenerate the complete LaTeX document matching the requested structure."
 
-        import requests
-        
-        if not self.api_key:
-            logging.error("GROQ_API_KEY is missing.")
-            raise ValueError("Groq API configuration missing")
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-        
-        body = {
-            "model": self.model_id,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.1,
-            "max_tokens": 2500
-        }
-
         try:
-            response = requests.post(self.endpoint, headers=headers, json=body, timeout=60)
-            response.raise_for_status()
-            data = response.json()
-            raw_output = data["choices"][0]["message"]["content"]
+            raw_output = self._call_llm(system_prompt, user_prompt, max_tokens=2500, temperature=0.1)
 
             # BULLETPROOF REGEX EXTRACTION
-            # This grabs everything from \documentclass to \end{document} and ignores the rest
             latex_match = re.search(r'(\\documentclass.*?\\end\{document\})', raw_output, re.DOTALL)
 
             if latex_match:
@@ -126,8 +113,6 @@ class LLMService:
             else:
                 logging.warning("Regex failed to find complete LaTeX document. Falling back to raw output.")
                 latex_code = raw_output.strip()
-
-                # Legacy cleanup just in case
                 if latex_code.startswith("```latex"):
                     latex_code = latex_code[8:]
                 elif latex_code.startswith("```"):
@@ -138,5 +123,91 @@ class LLMService:
             return latex_code.strip()
 
         except Exception as e:
-            logging.error(f"Error generating LaTeX resume with AWS Bedrock: {e}")
+            logging.error(f"Error generating LaTeX resume: {e}")
+            raise
+
+    # ─── Unified LLM Caller: Bedrock-first, Groq-fallback ────────────────────
+
+    def _call_llm(self, system_prompt: str, user_prompt: str,
+                  max_tokens: int = 500, temperature: float = 0.5) -> str:
+        """
+        Try Bedrock Qwen 3 Next 80B first.
+        If it fails, skip straight to Groq — Qwen siblings share the same
+        access path so trying them would be wasted latency.
+        """
+        # 1️⃣ Try Bedrock (Qwen 3 Next 80B)
+        result = self._call_bedrock_direct(
+            self.BEDROCK_MODEL, system_prompt, user_prompt, max_tokens, temperature
+        )
+        if result:
+            return result
+
+        # 2️⃣ Bedrock unavailable — fall back to Groq immediately
+        logging.warning("Bedrock unavailable. Falling back to Groq.")
+        return self._call_groq(system_prompt, user_prompt, max_tokens, temperature)
+
+    def _call_bedrock_direct(self, model_id: str, system_prompt: str,
+                              user_prompt: str, max_tokens: int, temperature: float) -> str | None:
+        """
+        Call Amazon Bedrock via Bearer token API key (ABSK key).
+        Returns the text response, or None if the call fails.
+        """
+        if not self.BEDROCK_API_KEY:
+            logging.debug("BEDROCK_API_KEY not set, skipping Bedrock call.")
+            return None
+
+        url = (f"https://bedrock-runtime.{self.BEDROCK_REGION}.amazonaws.com"
+               f"/model/{model_id}/converse")
+        headers = {
+            "Authorization": f"Bearer {self.BEDROCK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "system": [{"text": system_prompt}],
+            "messages": [{"role": "user", "content": [{"text": user_prompt}]}],
+            "inferenceConfig": {"maxTokens": max_tokens, "temperature": temperature}
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
+            if response.status_code == 200:
+                content = (response.json()
+                           .get('output', {})
+                           .get('message', {})
+                           .get('content', [{}])[0]
+                           .get('text', ''))
+                return content.strip()
+            else:
+                logging.warning(f"Bedrock [{model_id}] returned {response.status_code}: {response.text[:200]}")
+                return None
+        except Exception as e:
+            logging.warning(f"Bedrock [{model_id}] exception: {e}")
+            return None
+
+    def _call_groq(self, system_prompt: str, user_prompt: str,
+                   max_tokens: int, temperature: float) -> str:
+        """Call Groq API as the final fallback."""
+        if not self.GROQ_API_KEY:
+            logging.error("GROQ_API_KEY is also missing — all LLM options exhausted.")
+            raise ValueError("No LLM backend available. Please configure BEDROCK_API_KEY or GROQ_API_KEY.")
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.GROQ_API_KEY}"
+        }
+        body = {
+            "model": self.GROQ_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt}
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        try:
+            resp = requests.post(self.GROQ_ENDPOINT, headers=headers, json=body, timeout=60)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            logging.error(f"Groq API call also failed: {e}")
             raise
