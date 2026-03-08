@@ -259,7 +259,6 @@ onMounted(async () => {
 .trigger-title { font-size: 18px; font-weight: 900; }
 .trigger-sub { font-size: 12px; font-weight: 600; opacity: 0.7; }
 .trigger-quota { font-size: 12px; font-weight: 700; color: #d63031; margin-top: 4px; }
-.adzuna-btn { background: #ffeaa7; }
 .jsearch-btn { background: #74b9ff; }
 .internships-btn { background: #55efc4; }
 .google-btn { background: #fab1a0; }
