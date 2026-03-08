@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.VUE_APP_API_URL || 'http://127.0.0.1:5000'
+    baseURL: process.env.VUE_APP_API_URL || 'https://api.pathfinderai.me'
 });
 
 api.interceptors.request.use(config => {
