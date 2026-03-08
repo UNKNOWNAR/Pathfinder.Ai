@@ -146,12 +146,6 @@ onMounted(async () => {
       <!-- Triggers Grid -->
       <h3 class="section-title">▤ HARDWARE / API TRIGGERS</h3>
       <div class="grid trigger-grid">
-         <button class="box trigger-btn adzuna-btn" @click="triggerHarvest('Adzuna')" :disabled="harvesting || isQuotaExhausted('Adzuna')">
-            <span class="trigger-title">⚡ FETCH ADZUNA</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(India Specialized)' }}</span>
-            <span class="trigger-quota">{{ getRemainingStr('Adzuna') }}</span>
-         </button>
-
          <button class="box trigger-btn jsearch-btn" @click="triggerHarvest('LinkedIn')" :disabled="harvesting || isQuotaExhausted('LinkedIn')">
             <span class="trigger-title">⚡ FETCH JSEARCH</span>
             <span class="trigger-sub">{{ harvesting ? 'Running...' : '(LinkedIn via RapidAPI)' }}</span>
@@ -185,6 +179,12 @@ onMounted(async () => {
             <span class="trigger-title">⚡ FETCH WWR</span>
             <span class="trigger-sub">{{ harvesting ? 'Running...' : '(RSS - High Quality)' }}</span>
             <span class="trigger-quota">{{ getRemainingStr('WeWorkRemotely') }}</span>
+         </button>
+
+         <button class="box trigger-btn remotive-btn" @click="triggerHarvest('Remotive')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH REMOTIVE</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(JSON API - Worldwide)' }}</span>
+            <span class="trigger-quota">{{ getRemainingStr('Remotive') }}</span>
          </button>
 
 
@@ -266,6 +266,7 @@ onMounted(async () => {
 .arbeitnow-btn { background: #a29bfe; }
 .remoteok-btn { background: #fd79a8; }
 .wwr-btn { background: #fdcb6e; }
+.remotive-btn { background: #f1f2f6; }
 
 .master-btn { background: var(--admin-accent); color: white; }
 .master-btn .trigger-quota { color: #fff; }

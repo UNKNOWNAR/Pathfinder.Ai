@@ -55,3 +55,29 @@ def fetch_weworkremotely_jobs():
     logger.info(f"WeWorkRemotely RSS fetched {len(jobs)} jobs")
 
     return jobs
+
+
+def fetch_remotive_jobs():
+    """Fetches jobs from Remotive's JSON API."""
+    url = "https://remotive.com/api/remote-jobs?category=software-dev"
+    try:
+        res = requests.get(url, timeout=20)
+        res.raise_for_status()
+        data = res.json()
+        raw_jobs = data.get("jobs", [])
+
+        jobs = []
+        for j in raw_jobs:
+            jobs.append({
+                "title": j.get("title"),
+                "company": j.get("company_name"),
+                "location": j.get("candidate_required_location", "Remote"),
+                "description": j.get("description", ""),
+                "url": j.get("url")
+            })
+
+        logger.info(f"Remotive API fetched {len(jobs)} jobs")
+        return jobs
+    except Exception as e:
+        logger.error(f"Remotive fetch failed: {e}")
+        return []

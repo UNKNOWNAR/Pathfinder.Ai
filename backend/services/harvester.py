@@ -9,7 +9,8 @@ from services.utils import make_job_hash, is_fresher_role
 from services.embedding import store_job_embedding
 from services.rss_sources import (
     fetch_remoteok_jobs,
-    fetch_weworkremotely_jobs
+    fetch_weworkremotely_jobs,
+    fetch_remotive_jobs
 )
 
 # ── Configuration & Logging ────────────────────────────────────────────────────
@@ -42,17 +43,6 @@ DEFAULT_LOCATIONS = ["India", "United States", "Remote", "Europe"]
 
 # Source Registry: Centralizing URLs, hosts, and mapping logic
 SOURCES = {
-    "Adzuna": {
-        "url": "https://api.adzuna.com/v1/api/jobs/in/search/1",
-        "type": "adzuna",
-        "mapping": {
-            "title": "title",
-            "company": lambda item: item.get("company", {}).get("display_name", "Unknown"),
-            "location": lambda item: item.get("location", {}).get("display_name", "India"),
-            "description": "description",
-            "url": "redirect_url"
-        }
-    },
     "Arbeitnow": {
         "url": "https://arbeitnow.com/api/job-board-api",
         "type": "direct",
@@ -107,6 +97,7 @@ SOURCES = {
     },
     "RemoteOK": {"type": "rss", "fn": fetch_remoteok_jobs},
     "WeWorkRemotely": {"type": "rss", "fn": fetch_weworkremotely_jobs},
+    "Remotive": {"type": "rss", "fn": fetch_remotive_jobs},
 }
 
 # ── Fetching Logic ─────────────────────────────────────────────────────────────
@@ -194,31 +185,6 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                 api_calls += 1
             except Exception as e:
                 logger.error(f"RSS fetch {source_id} failed: {e}")
-
-        elif conf.get("type") == "adzuna":
-            # Adzuna uses App ID and App Key in params
-            app_id = app_config.get("ADZUNA_APP_ID")
-            app_key = app_config.get("ADZUNA_APP_KEY")
-            if not app_id or not app_key:
-                logger.warning("Adzuna App ID/Key missing.")
-                return [], 0
-            
-            for role in active_roles:
-                try:
-                    res = requests.get(conf["url"], params={
-                        "app_id": app_id,
-                        "app_key": app_key,
-                        "what": f"{role} junior fresher",
-                        "results_per_page": 50,
-                        "content-type": "application/json"
-                    }, timeout=timeout)
-                    api_calls += 1
-                    res.raise_for_status()
-                    raw_jobs.extend(res.json().get("results", []))
-                except Exception as e:
-                    logger.error(f"Adzuna fetch failed for {role}: {e}")
-            
-
     except Exception as e:
         logger.error(f"Fetch failed for {source_id}: {e}")
         return raw_jobs, api_calls

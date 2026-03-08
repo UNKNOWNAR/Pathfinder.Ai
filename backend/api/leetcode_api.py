@@ -31,7 +31,7 @@ def _generate_advice(stats):
 
         llm = LLMService()
         system_prompt = "You are a concise, encouraging coding mentor. Respond with exactly 2 sentences."
-        response = llm._call_llm(system_prompt, prompt, max_tokens=150, temperature=0.7)
+        response = llm.call_llm(system_prompt, prompt, max_tokens=150, temperature=0.7)
         return response
     except Exception as e:
         logger.error(f"AI advice generation failed: {e}")
