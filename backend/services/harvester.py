@@ -69,7 +69,7 @@ SOURCES = {
         "url": "https://jsearch.p.rapidapi.com/search",
         "host": "jsearch.p.rapidapi.com",
         "type": "rapidapi",
-        "config_key": "JSEARCH_API_KEY",
+        "config_key": "RAPIDAPI_KEY",
         "timeout": 60,
         "mapping": {
             "title": "job_title",
@@ -83,7 +83,7 @@ SOURCES = {
         "url": "https://internships-api.p.rapidapi.com/active-jb-7d",
         "host": "internships-api.p.rapidapi.com",
         "type": "rapidapi",
-        "config_key": "INTERNSHIPS_API_KEY",
+        "config_key": "RAPIDAPI_KEY",
         "mapping": {
             "title": "title",
             "company": "organization",
@@ -96,7 +96,7 @@ SOURCES = {
         "url": "https://google-jobs-api.p.rapidapi.com/google-jobs",
         "host": "google-jobs-api.p.rapidapi.com",
         "type": "rapidapi",
-        "config_key": "GOOGLE_JOBS_API_KEY",
+        "config_key": "RAPIDAPI_KEY",
         "mapping": {
             "title": "title",
             "company": "company",

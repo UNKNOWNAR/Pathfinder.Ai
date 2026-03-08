@@ -187,15 +187,7 @@ onMounted(async () => {
             <span class="trigger-quota">{{ getRemainingStr('WeWorkRemotely') }}</span>
          </button>
 
-         <button class="box trigger-btn simply-btn" disabled>
-            <span class="trigger-title">⚡ SIMPLYHIRED</span>
-            <span class="trigger-sub">(Coming Soon)</span>
-         </button>
 
-         <button class="box trigger-btn zip-btn" disabled>
-            <span class="trigger-title">⚡ ZIPRECRUITER</span>
-            <span class="trigger-sub">(Coming Soon)</span>
-         </button>
 
          <button class="box trigger-btn master-btn" @click="triggerHarvest('all')" :disabled="harvesting">
             <span class="trigger-title">🚀 RUN MASTER HARVEST</span>
@@ -274,8 +266,7 @@ onMounted(async () => {
 .arbeitnow-btn { background: #a29bfe; }
 .remoteok-btn { background: #fd79a8; }
 .wwr-btn { background: #fdcb6e; }
-.simply-btn { background: #d1d8e0; opacity: 0.6; }
-.zip-btn { background: #d1d8e0; opacity: 0.6; }
+
 .master-btn { background: var(--admin-accent); color: white; }
 .master-btn .trigger-quota { color: #fff; }
 @media (max-width: 860px) {

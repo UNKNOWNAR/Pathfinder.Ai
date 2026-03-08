@@ -30,14 +30,11 @@ class Config:
     # Move Flask-Security's built-in routes away from /login so our API can use it
     SECURITY_URL_PREFIX = '/security'
 
-    # JSearch API (RapidAPI) — used for LinkedIn-sourced job results
-    JSEARCH_API_KEY = os.getenv('JSEARCH_API_KEY', '')
-
-    # Internships API (RapidAPI) — internship & fresher job listings
-    INTERNSHIPS_API_KEY = os.getenv('INTERNSHIPS_API_KEY', '')
-
-    # Google Jobs API (RapidAPI) — aggregates LinkedIn, Indeed, Glassdoor etc.
-    GOOGLE_JOBS_API_KEY = os.getenv('GOOGLE_JOBS_API_KEY', '')
+    # RapidAPI Key — Used for LinkedIn, Internships, and Google Jobs
+    RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY', '')
+    JSEARCH_API_KEY = RAPIDAPI_KEY
+    INTERNSHIPS_API_KEY = RAPIDAPI_KEY
+    GOOGLE_JOBS_API_KEY = RAPIDAPI_KEY
 
     # Groq API — used for AI Tech Interview (llama-3.3-70b-versatile)
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
