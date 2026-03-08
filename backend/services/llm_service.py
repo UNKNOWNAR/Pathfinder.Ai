@@ -103,7 +103,7 @@ class LLMService:
         user_prompt = f"Here is the Job Description:\n{jd_text}\n\nHere is the candidate's profile data:\n{json.dumps(student_profile)}\n\nGenerate the complete LaTeX document matching the requested structure."
 
         try:
-            raw_output = self._call_llm(system_prompt, user_prompt, max_tokens=2500, temperature=0.1)
+            raw_output = self.call_llm(system_prompt, user_prompt, max_tokens=2500, temperature=0.1)
 
             # BULLETPROOF REGEX EXTRACTION
             latex_match = re.search(r'(\\documentclass.*?\\end\{document\})', raw_output, re.DOTALL)
@@ -128,7 +128,7 @@ class LLMService:
 
     # ─── Unified LLM Caller: Bedrock-first, Groq-fallback ────────────────────
 
-    def _call_llm(self, system_prompt: str, user_prompt: str,
+    def call_llm(self, system_prompt: str, user_prompt: str,
                   max_tokens: int = 500, temperature: float = 0.5) -> str:
         """
         Try Bedrock Qwen 3 Next 80B first.

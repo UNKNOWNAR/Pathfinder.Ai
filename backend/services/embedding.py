@@ -96,33 +96,75 @@ def store_student_embedding(student_id, skills, headline, summary):
 def find_similar_jobs(student_vector, limit=10):
     """
     Given a student's profile vector, query PostgreSQL using pgvector <=> operator for closest matching jobs.
-    Returns a list of dicts with job_id and similarity_score.
+    Falls back to Python-based cosine similarity if pgvector is not available in the DB.
     """
     if student_vector is None or len(student_vector) == 0:
         return []
 
     try:
-        # Use PGVector for fast cosine distance matching
-        results = db.session.query(
-            Job.job_id,
-            Job.embedding.cosine_distance(student_vector).label('distance')
-        ).filter(
-            Job.embedding.isnot(None)
-        ).order_by('distance').limit(limit).all()
+        # 1. Attempt Native PGVector Search (Efficient)
+        try:
+            results = db.session.query(
+                Job.job_id,
+                Job.embedding.cosine_distance(student_vector).label('distance')
+            ).filter(
+                Job.embedding.isnot(None)
+            ).order_by('distance').limit(limit).all()
 
-        matches = []
-        for r in results:
-            # Map pgvector cosine distance (0-2) to a 0-100 similarity score
-            distance = float(r.distance) if r.distance is not None else 1.0
-            similarity_score = (1.0 - distance) * 100
-            similarity_score = max(0, min(100, similarity_score))
+            matches = []
+            for r in results:
+                # Map pgvector cosine distance (0-2) to a 0-100 similarity score
+                distance = float(r.distance) if r.distance is not None else 1.0
+                similarity_score = (1.0 - distance) * 100
+                similarity_score = max(0, min(100, similarity_score))
 
-            matches.append({
-                'job_id': r.job_id,
-                'match_score': round(similarity_score, 1)
-            })
+                matches.append({
+                    'job_id': r.job_id,
+                    'match_score': round(similarity_score, 1)
+                })
+            return matches
 
-        return matches
+        except Exception as pg_err:
+            # If this failed, it's likely because pgvector isn't installed in the DB
+            # or the column is JSON instead of Vector. Fall back to Python.
+            logger.warning(f"Native pgvector search failed (falling back to Python): {pg_err}")
+
+            # 2. Fallback: Python-based Cosine Similarity (Slower, for small-mid datasets)
+            import numpy as np
+
+            # Fetch all jobs with embeddings
+            jobs = Job.query.filter(Job.embedding.isnot(None)).all()
+            if not jobs:
+                return []
+
+            student_vec = np.array(student_vector)
+            student_norm = np.linalg.norm(student_vec)
+
+            matches = []
+            for j in jobs:
+                try:
+                    # Handle if j.embedding is stored as a string or list
+                    j_vec = np.array(j.embedding)
+
+                    # Manual Cosine Similarity: (A . B) / (||A|| * ||B||)
+                    dot_product = np.dot(student_vec, j_vec)
+                    j_norm = np.linalg.norm(j_vec)
+
+                    if student_norm > 0 and j_norm > 0:
+                        similarity = dot_product / (student_norm * j_norm)
+                    else:
+                        similarity = 0
+
+                    matches.append({
+                        'job_id': j.job_id,
+                        'match_score': round(float(similarity) * 100, 1)
+                    })
+                except Exception:
+                    continue
+
+            # Sort by match_score descending
+            matches.sort(key=lambda x: x['match_score'], reverse=True)
+            return matches[:limit]
 
     except Exception as e:
         logger.error(f"Failed to search for similar jobs: {str(e)}")

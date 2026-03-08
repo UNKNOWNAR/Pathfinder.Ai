@@ -1,5 +1,11 @@
 from . import db
 
+try:
+    from pgvector.sqlalchemy import Vector
+    HAS_PGVECTOR = True
+except ImportError:
+    HAS_PGVECTOR = False
+
 class Profile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'),primary_key=True, unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -20,10 +26,11 @@ class Profile(db.Model):
     projects = db.Column(db.JSON, nullable=True)
     achievements = db.Column(db.JSON, nullable=True)
 
-    # Stores the raw JSON array vector from sentence-transformers for PG compatibility later
-    # 384 dimensions for all-MiniLM-L6-v2
-    # Using JSON fallback since pgvector is not installed natively
-    embedding = db.Column(db.JSON, nullable=True)
+    # Use Vector type (1024 dims for Titan v2) if available, else fallback to JSON
+    if HAS_PGVECTOR:
+        embedding = db.Column(Vector(1024), nullable=True)
+    else:
+        embedding = db.Column(db.JSON, nullable=True)
 
     def __repr__(self):
         return f'<Profile {self.name}>'

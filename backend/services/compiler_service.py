@@ -1,5 +1,8 @@
 import requests
+import logging
 from services.s3_service import S3Service
+
+logger = logging.getLogger(__name__)
 
 class CompilerService:
     def __init__(self):
@@ -8,7 +11,7 @@ class CompilerService:
     def compile_latex_to_pdf(self, latex_string: str, user_id: int) -> dict:
         # 1. Primary Attempt: TeXLive.net (Highly reliable, backed by LearnLaTeX)
         try:
-            print("Attempting compilation via TeXLive.net...")
+            logger.info("Attempting compilation via TeXLive.net...")
             response = requests.post(
                 "https://texlive.net/cgi-bin/latexcgi",
                 files={
@@ -20,7 +23,7 @@ class CompilerService:
                 timeout=15
             )
             response.raise_for_status()
-            
+
             # Verify the response is actually a PDF (starts with PDF magic bytes)
             if response.content.startswith(b'%PDF'):
                 pdf_bytes = response.content
@@ -35,14 +38,14 @@ class CompilerService:
                     "url": presigned_url
                 }
             else:
-                print("TeXLive returned a response, but it was not a valid PDF. Checking fallback...")
+                logger.warning("TeXLive returned a response, but it was not a valid PDF. Checking fallback...")
 
         except requests.exceptions.RequestException as e:
-            print(f"TeXLive API failed: {e}")
+            logger.error(f"TeXLive API failed: {e}")
 
         # 2. Fallback Attempt: YtoTech LaTeX-on-HTTP
         try:
-            print("Falling back to YtoTech API...")
+            logger.info("Falling back to YtoTech API...")
             response = requests.post(
                 "https://latex.ytotech.com/builds/sync",
                 json={
@@ -70,8 +73,8 @@ class CompilerService:
                     "s3_key": s3_key,
                     "url": presigned_url
                 }
-                
+
         except requests.exceptions.RequestException as e:
-            print(f"YtoTech API failed: {e}")
-            
+            logger.error(f"YtoTech API failed: {e}")
+
         raise Exception("All cloud LaTeX compilers failed. The LLM may have generated invalid LaTeX syntax.")

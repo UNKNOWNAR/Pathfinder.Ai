@@ -6,8 +6,9 @@ import api from '@/services/api';
 const systemLogs = ref(["> [SYSTEM] Connecting to database..."]);
 const harvesting = ref(false);
 
-const roles = ref('software engineer'); // default selection
-const locations = ref('');
+const roles = ref('software developer'); // default selection
+const experience = ref('fresher'); // default: fresher, internship, senior
+const locations = ref('India, Remote');
 
 const quotas = ref({
   usage: {},
@@ -28,7 +29,7 @@ const loadLogs = async () => {
         dateStyle: 'short',
         timeStyle: 'medium'
       });
-      return `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${istTime} (IST)`;
+      return `> [${l.status.toUpperCase()}] ${l.source.toUpperCase()} — Run #${l.log_id} — ${l.jobs_added} jobs added @ ${istTime} (IST)`;
     });
   } catch {
     systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
@@ -73,9 +74,16 @@ const triggerHarvest = async (sourceTarget = 'all') => {
   systemLogs.value.push(`> [SYSTEM] Harvest triggered for ${label} — running in background...`);
 
   const payload = { source: sourceTarget };
-  if (roles.value.trim()) {
-      payload.roles = roles.value.split(',').map(r => r.trim()).filter(r => r);
+  
+  // Combine role and experience for more refined search
+  const baseRole = roles.value.trim();
+  const expLevel = experience.value.trim();
+  const searchRole = expLevel ? `${baseRole} ${expLevel}` : baseRole;
+
+  if (searchRole) {
+      payload.roles = [searchRole];
   }
+  
   if (locations.value.trim()) {
       payload.locations = locations.value.split(',').map(l => l.trim()).filter(l => l);
   }
@@ -110,29 +118,38 @@ onMounted(async () => {
           <div class="input-group">
             <label>ROLES</label>
             <select v-model="roles" class="brutal-input brutal-select">
-              <option value="software engineer">Software Engineer</option>
+              <option value="software developer">Software Developer</option>
               <option value="data scientist">Data Scientist</option>
-              <option value="data engineer">Data Engineer</option>
-              <option value="machine learning engineer">Machine Learning Engineer</option>
-              <option value="frontend developer">Frontend Developer</option>
-              <option value="backend developer">Backend Developer</option>
-              <option value="full stack developer">Full Stack Developer</option>
+              <option value="memory engineer">Memory Engineer</option>
+              <option value="machine learning engineer">ML Engineer</option>
+              <option value="frontend developer">Frontend</option>
+              <option value="backend developer">Backend</option>
+              <option value="full stack developer">Full Stack</option>
             </select>
           </div>
           <div class="input-group">
-            <label>LOCATIONS (comma-separated)</label>
-            <input v-model="locations" type="text" placeholder="e.g. India, Remote, United States" class="brutal-input"/>
-            <small class="helper-text">Leave blank for default locations.</small>
+            <label>EXPERIENCE LEVEL</label>
+            <select v-model="experience" class="brutal-input brutal-select">
+              <option value="fresher">Fresher</option>
+              <option value="internship">Internship</option>
+              <option value="senior">Senior / Lead</option>
+              <option value="">Any (Broad Search)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>LOCATIONS</label>
+            <input v-model="locations" type="text" placeholder="e.g. India, Remote, USA, Europe" class="brutal-input"/>
+            <small class="helper-text">Separated by commas.</small>
           </div>
       </div>
 
       <!-- Triggers Grid -->
       <h3 class="section-title">▤ HARDWARE / API TRIGGERS</h3>
       <div class="grid trigger-grid">
-         <button class="box trigger-btn remotive-btn" @click="triggerHarvest('Remotive')" :disabled="harvesting">
-            <span class="trigger-title">⚡ FETCH REMOTIVE</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Tier A - Rapid Fetch)' }}</span>
-            <span class="trigger-quota">{{ getRemainingStr('Remotive') }}</span>
+         <button class="box trigger-btn adzuna-btn" @click="triggerHarvest('Adzuna')" :disabled="harvesting || isQuotaExhausted('Adzuna')">
+            <span class="trigger-title">⚡ FETCH ADZUNA</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(India Specialized)' }}</span>
+            <span class="trigger-quota">{{ getRemainingStr('Adzuna') }}</span>
          </button>
 
          <button class="box trigger-btn jsearch-btn" @click="triggerHarvest('LinkedIn')" :disabled="harvesting || isQuotaExhausted('LinkedIn')">
@@ -153,10 +170,31 @@ onMounted(async () => {
             <span class="trigger-quota">{{ getRemainingStr('GoogleJobs') }}</span>
          </button>
 
-         <button class="box trigger-btn faang-btn" @click="triggerHarvest('FaangWatch')" :disabled="harvesting || isQuotaExhausted('FaangWatch')">
-            <span class="trigger-title">⚡ FETCH FAANG.WATCH</span>
-            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(FAANG Careers API)' }}</span>
-            <span class="trigger-quota">{{ getRemainingStr('FaangWatch') }}</span>
+         <button class="box trigger-btn arbeitnow-btn" @click="triggerHarvest('Arbeitnow')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH ARBEITNOW</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(Public - EU/Global)' }}</span>
+         </button>
+
+         <button class="box trigger-btn remoteok-btn" @click="triggerHarvest('RemoteOK')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH REMOTEOK</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(RSS - Remote Only)' }}</span>
+            <span class="trigger-quota">{{ getRemainingStr('RemoteOK') }}</span>
+         </button>
+
+         <button class="box trigger-btn wwr-btn" @click="triggerHarvest('WeWorkRemotely')" :disabled="harvesting">
+            <span class="trigger-title">⚡ FETCH WWR</span>
+            <span class="trigger-sub">{{ harvesting ? 'Running...' : '(RSS - High Quality)' }}</span>
+            <span class="trigger-quota">{{ getRemainingStr('WeWorkRemotely') }}</span>
+         </button>
+
+         <button class="box trigger-btn simply-btn" disabled>
+            <span class="trigger-title">⚡ SIMPLYHIRED</span>
+            <span class="trigger-sub">(Coming Soon)</span>
+         </button>
+
+         <button class="box trigger-btn zip-btn" disabled>
+            <span class="trigger-title">⚡ ZIPRECRUITER</span>
+            <span class="trigger-sub">(Coming Soon)</span>
          </button>
 
          <button class="box trigger-btn master-btn" @click="triggerHarvest('all')" :disabled="harvesting">
@@ -181,12 +219,13 @@ onMounted(async () => {
 
 <style scoped>
 .page {
-   /* Red accent for admin */}
+   /* Red accent for admin */
+}
 .main { max-width: 1100px; width: 100%; margin: 0 auto; padding: 28px 28px 60px; display: flex; flex-direction: column; gap: 24px; }
 .config-box {
     padding: 20px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
 }
 .input-group {
@@ -228,11 +267,15 @@ onMounted(async () => {
 .trigger-title { font-size: 18px; font-weight: 900; }
 .trigger-sub { font-size: 12px; font-weight: 600; opacity: 0.7; }
 .trigger-quota { font-size: 12px; font-weight: 700; color: #d63031; margin-top: 4px; }
-.remotive-btn { background: #ffeaa7; }
+.adzuna-btn { background: #ffeaa7; }
 .jsearch-btn { background: #74b9ff; }
 .internships-btn { background: #55efc4; }
 .google-btn { background: #fab1a0; }
-.faang-btn { background: #a29bfe; }
+.arbeitnow-btn { background: #a29bfe; }
+.remoteok-btn { background: #fd79a8; }
+.wwr-btn { background: #fdcb6e; }
+.simply-btn { background: #d1d8e0; opacity: 0.6; }
+.zip-btn { background: #d1d8e0; opacity: 0.6; }
 .master-btn { background: var(--admin-accent); color: white; }
 .master-btn .trigger-quota { color: #fff; }
 @media (max-width: 860px) {

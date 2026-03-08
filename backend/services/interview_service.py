@@ -1,17 +1,14 @@
 import json
 import logging
-import boto3
+import requests
 from config import Config
+from services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
-
 class InterviewService:
     def __init__(self):
-        import os
-        self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama-3.3-70b-versatile"
-        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
+        self.llm_service = LLMService()
 
     def generate_questions(self, topic_name, difficulty, count=5):
         """Generate interview questions for a given topic and difficulty."""
@@ -29,52 +26,25 @@ class InterviewService:
             f"questions where appropriate."
         )
 
-        import requests
-        if not self.api_key:
-            logger.error("GROQ_API_KEY is missing.")
+        raw = self.llm_service.call_llm(system_prompt, user_prompt)
+        if not raw:
             return []
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-        
-        body = {
-            "model": self.model_id,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.5,
-            "max_tokens": 2000
-        }
-
         try:
-            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            raw = data["choices"][0]["message"]["content"].strip()
-
-            # The model may wrap the array in markdown json blocks
-            if raw.startswith("```json"):
-                raw = raw[7:]
-            elif raw.startswith("```"):
-                raw = raw[3:]
-            if raw.endswith("```"):
-                raw = raw[:-3]
+            # Clean markdown if present
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0]
+            elif "```" in raw:
+                raw = raw.split("```")[1].split("```")[0]
 
             parsed = json.loads(raw.strip())
-
-            # The model may wrap the array in an object key
             if isinstance(parsed, dict):
                 for v in parsed.values():
                     if isinstance(v, list):
-                        parsed = v
-                        break
-            
+                        return v
             return parsed
         except Exception as e:
-            logger.error(f"Error generating questions with Groq: {e}")
+            logger.error(f"Failed to parse generated questions: {e}")
             return []
 
     def evaluate_answer(self, question_text, question_type, voice_answer=None, code_answer=None):
@@ -109,41 +79,16 @@ class InterviewService:
             f"Evaluate this answer thoroughly."
         )
 
-        import requests
-        if not self.api_key:
-            logger.error("GROQ_API_KEY is missing.")
+        raw = self.llm_service.call_llm(system_prompt, user_prompt, temperature=0.3)
+        if not raw:
             return None
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-        
-        body = {
-            "model": self.model_id,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.3,
-            "max_tokens": 1500
-        }
-
         try:
-            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            raw = data["choices"][0]["message"]["content"].strip()
-
-            # The model may wrap the array in markdown json blocks
-            if raw.startswith("```json"):
-                raw = raw[7:]
-            elif raw.startswith("```"):
-                raw = raw[3:]
-            if raw.endswith("```"):
-                raw = raw[:-3]
-
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0]
+            elif "```" in raw:
+                raw = raw.split("```")[1].split("```")[0]
             return json.loads(raw.strip())
         except Exception as e:
-            logger.error(f"Groq evaluation failed: {e}")
+            logger.error(f"Evaluation parsing failed: {e}")
             return None

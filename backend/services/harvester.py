@@ -9,11 +9,7 @@ from services.utils import make_job_hash, is_fresher_role
 from services.embedding import store_job_embedding
 from services.rss_sources import (
     fetch_remoteok_jobs,
-    fetch_weworkremotely_jobs,
-    fetch_naukri_jobs,
-    fetch_indeed_jobs,
-    fetch_stackoverflow_jobs,
-    fetch_wellfound_jobs
+    fetch_weworkremotely_jobs
 )
 
 # ── Configuration & Logging ────────────────────────────────────────────────────
@@ -22,38 +18,39 @@ logger = logging.getLogger(__name__)
 
 INDIA_CITIES = [
     "Bangalore", "Hyderabad", "Pune", "Chennai", "Mumbai", 
-    "Delhi", "Gurgaon", "Noida", "Kolkata"
+    "Delhi", "Gurgaon", "Noida", "Kolkata", "Ahmedabad", "Jaipur"
 ]
+
+EUROPE_COUNTRIES = ["germany", "uk", "france", "netherlands", "switzerland", "poland", "spain", "italy"]
 
 def is_allowed_location(location):
     if not location:
         return False
     loc = location.lower()
-    allowed_words = ["india", "remote", "worldwide", "anywhere", "global"]
+    allowed_words = ["india", "remote", "worldwide", "anywhere", "global", "usa", "united states", "europe"]
     for w in allowed_words:
         if w in loc:
             return True
-    for c in INDIA_CITIES:
+    for c in INDIA_CITIES + EUROPE_COUNTRIES:
         if c.lower() in loc:
             return True
     return False
 
 # Base roles if none are provided
-DEFAULT_ROLES = ["software engineer", "data engineer", "machine learning engineer"]
-DEFAULT_LOCATIONS = ["India", "United States", "Remote"]
+DEFAULT_ROLES = ["software developer", "data scientist", "memory engineer", "machine learning"]
+DEFAULT_LOCATIONS = ["India", "United States", "Remote", "Europe"]
 
 # Source Registry: Centralizing URLs, hosts, and mapping logic
 SOURCES = {
-    "Remotive": {
-        "url": "https://remotive.com/api/remote-jobs",
-        "params": {"search": "junior entry level fresher"},
-        "type": "direct",
+    "Adzuna": {
+        "url": "https://api.adzuna.com/v1/api/jobs/in/search/1",
+        "type": "adzuna",
         "mapping": {
             "title": "title",
-            "company": "company_name",
-            "location": "candidate_required_location",
+            "company": lambda item: item.get("company", {}).get("display_name", "Unknown"),
+            "location": lambda item: item.get("location", {}).get("display_name", "India"),
             "description": "description",
-            "url": "url"
+            "url": "redirect_url"
         }
     },
     "Arbeitnow": {
@@ -108,40 +105,8 @@ SOURCES = {
             "url": "link"
         }
     },
-    "FaangWatch": {
-        "url": "https://faang-watch-api.p.rapidapi.com/search",
-        "host": "faang-watch-api.p.rapidapi.com",
-        "type": "rapidapi",
-        "config_key": "FAANG_WATCH_API_KEY",
-        "mapping": {
-            "title": "title",
-            "company": "company",
-            "location": lambda item: (
-                f"{item['parsed_locations'][0].get('city', '')}, {item['parsed_locations'][0].get('state', '')}, {item['parsed_locations'][0].get('country', '')}".strip(", ")
-                if item.get("parsed_locations") and len(item["parsed_locations"]) > 0
-                else (item.get("locations") or ["Remote"])[0]
-            ),
-            "description": "description",
-            "url": "company_url"
-        }
-    },
-    "Adzuna": {
-        "url": "https://api.adzuna.com/v1/api/jobs/in/search",
-        "type": "direct",
-        "mapping": {
-            "title": "title",
-            "company": lambda item: item.get("company", {}).get("display_name"),
-            "location": lambda item: item.get("location", {}).get("display_name"),
-            "description": "description",
-            "url": "redirect_url"
-        }
-    },
     "RemoteOK": {"type": "rss", "fn": fetch_remoteok_jobs},
     "WeWorkRemotely": {"type": "rss", "fn": fetch_weworkremotely_jobs},
-    "Naukri": {"type": "rss", "fn": fetch_naukri_jobs},
-    "Indeed": {"type": "rss", "fn": fetch_indeed_jobs},
-    "StackOverflow": {"type": "rss", "fn": fetch_stackoverflow_jobs},
-    "Wellfound": {"type": "rss", "fn": fetch_wellfound_jobs},
 }
 
 # ── Fetching Logic ─────────────────────────────────────────────────────────────
@@ -193,7 +158,7 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
         elif source_id == "LinkedIn":
             for loc in active_locations:
                 for role in active_roles:
-                    q = f"entry level junior fresher {role} {loc}"
+                    q = f"{role} {loc} junior"
                     try:
                         res = requests.get(conf["url"], headers=headers, params={
                             "query": q,
@@ -223,41 +188,6 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
                 except Exception as e:
                     logger.error(f"Internships fetch failed: {e}")
 
-        elif source_id == "FaangWatch":
-            for loc in active_locations:
-                for role in active_roles:
-                    try:
-                        res = requests.get(conf["url"], headers=headers, params={
-                            "text": role, "location": loc, "min_years_of_experience": 0,
-                            "seniority": "Junior", "page_size": 20
-                        }, timeout=timeout)
-                        api_calls += 1
-                        res.raise_for_status()
-                        data = res.json()
-                        raw_jobs.extend(data if isinstance(data, list) else data.get("hits", []))
-                        time.sleep(2)
-                    except Exception as e:
-                        logger.error(f"FaangWatch query '{role}' failed: {e}")
-
-        elif source_id == "Adzuna":
-            app_id = app_config.get("ADZUNA_APP_ID")
-            app_key = app_config.get("ADZUNA_APP_KEY")
-            if not app_id or not app_key:
-                logger.warning("Adzuna credentials missing.")
-                return [], 0
-            for page in range(1, 4):
-                try:
-                    res = requests.get(f"{conf['url']}/{page}", params={
-                        "app_id": app_id, "app_key": app_key, 
-                        "results_per_page": 50, "what": active_roles[0]
-                    }, timeout=timeout)
-                    api_calls += 1
-                    res.raise_for_status()
-                    raw_jobs.extend(res.json().get("results", []))
-                    time.sleep(1)
-                except Exception as e:
-                    logger.error(f"Adzuna page {page} failed: {e}")
-
         elif conf.get("type") == "rss" and "fn" in conf:
             try:
                 raw_jobs = conf["fn"]()
@@ -265,18 +195,29 @@ def _fetch_source_raw(source_id, app_config, roles=None, locations=None):
             except Exception as e:
                 logger.error(f"RSS fetch {source_id} failed: {e}")
 
-        else:
-            # Standard GET request for public APIs
-            # We can try to append roles to the search param for remotive
-            params = conf.get("params", {}).copy()
-            if "search" in params and active_roles:
-                params["search"] = f"junior entry level fresher {active_roles[0]}"
-
-            res = requests.get(conf["url"], headers=headers, params=params, timeout=timeout)
-            api_calls += 1
-            res.raise_for_status()
-            data = res.json()
-            raw_jobs = data.get("jobs") or data.get("data") or (data if isinstance(data, list) else [])
+        elif conf.get("type") == "adzuna":
+            # Adzuna uses App ID and App Key in params
+            app_id = app_config.get("ADZUNA_APP_ID")
+            app_key = app_config.get("ADZUNA_APP_KEY")
+            if not app_id or not app_key:
+                logger.warning("Adzuna App ID/Key missing.")
+                return [], 0
+            
+            for role in active_roles:
+                try:
+                    res = requests.get(conf["url"], params={
+                        "app_id": app_id,
+                        "app_key": app_key,
+                        "what": f"{role} junior fresher",
+                        "results_per_page": 50,
+                        "content-type": "application/json"
+                    }, timeout=timeout)
+                    api_calls += 1
+                    res.raise_for_status()
+                    raw_jobs.extend(res.json().get("results", []))
+                except Exception as e:
+                    logger.error(f"Adzuna fetch failed for {role}: {e}")
+            
 
     except Exception as e:
         logger.error(f"Fetch failed for {source_id}: {e}")

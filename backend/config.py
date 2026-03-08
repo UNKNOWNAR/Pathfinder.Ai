@@ -30,10 +30,6 @@ class Config:
     # Move Flask-Security's built-in routes away from /login so our API can use it
     SECURITY_URL_PREFIX = '/security'
 
-    HF_TOKEN = os.getenv('HUGGINGFACEHUB_API_TOKEN')
-    if not HF_TOKEN:
-        raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
-
     # JSearch API (RapidAPI) — used for LinkedIn-sourced job results
     JSEARCH_API_KEY = os.getenv('JSEARCH_API_KEY', '')
 
@@ -43,11 +39,18 @@ class Config:
     # Google Jobs API (RapidAPI) — aggregates LinkedIn, Indeed, Glassdoor etc.
     GOOGLE_JOBS_API_KEY = os.getenv('GOOGLE_JOBS_API_KEY', '')
 
-    # Faang.watch API
-    FAANG_WATCH_API_KEY = os.getenv('FAANG_WATCH_API_KEY', '')
-
     # Groq API — used for AI Tech Interview (llama-3.3-70b-versatile)
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+
+    # Amazon Bedrock — Primary LLM Strategy
+    BEDROCK_API_KEY = os.getenv('BEDROCK_API_KEY', '')
+    AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+
+    # AWS S3 Storage & Polly
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    AWS_REGION = os.getenv('AWS_REGION', 'ap-south-1')
+    AWS_S3_BUCKET_NAME = os.getenv('AWS_S3_BUCKET_NAME', '')
 
 
 

@@ -7,7 +7,10 @@ from models.profile import Profile
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from limiter import limiter
 
+import logging
+
 # Initialize services
+logger = logging.getLogger(__name__)
 llm_service = LLMService()
 compiler_service = CompilerService()
 
@@ -19,7 +22,7 @@ class GenerateResume(Resource):
         try:
             data = request.get_json()
             jd_text = data.get('jd_text') if data else None
-            
+
             user_id = get_jwt_identity()
             profile = Profile.query.filter_by(user_id=user_id).first()
             if not profile:
@@ -27,24 +30,24 @@ class GenerateResume(Resource):
 
             if not jd_text:
                 return {'message': 'Job Description (jd_text) is required'}, 400
-            
+
             student_data = profile.to_dict()
-            
-            print("Generating LaTeX code via Hugging Face...")
+
+            logger.info(f"Generating LaTeX code via LLM for user {user_id}...")
             latex_code = llm_service.generate_latex_resume(
-                jd_text=jd_text, 
+                jd_text=jd_text,
                 student_profile=student_data
             )
-            
-            print("Compiling LaTeX to PDF...")
+
+            logger.info(f"Compiling LaTeX to PDF for user {user_id}...")
             compile_result = compiler_service.compile_latex_to_pdf(latex_code, profile.user_id)
             pdf_bytes = compile_result["pdf_bytes"]
             s3_key = compile_result["s3_key"]
             presigned_url = compile_result["url"]
 
-            print(f"Successfully generated PDF and uploaded to S3: {s3_key}")
+            logger.info(f"Successfully generated PDF and uploaded to S3: {s3_key}")
 
-            # Update Profile Resumes Array (Max 2)
+            # Update Profile Resumes Array (Max 10)
             from models import db
             current_resumes = profile.resumes or []
 
@@ -66,7 +69,7 @@ class GenerateResume(Resource):
                     if old_s3_key:
                         compiler_service.s3_service.delete_file(old_s3_key)
                 except Exception as del_err:
-                    print(f"Failed to delete old resume from S3: {del_err}")
+                    logger.error(f"Failed to delete old resume from S3: {del_err}")
 
             # Need to create a new list or SQLAlchemy JSON mutation won't be detected
             profile.resumes = list(current_resumes)

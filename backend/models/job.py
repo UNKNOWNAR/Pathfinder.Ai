@@ -1,6 +1,12 @@
 from . import db
 from datetime import datetime
 
+try:
+    from pgvector.sqlalchemy import Vector
+    HAS_PGVECTOR = True
+except ImportError:
+    HAS_PGVECTOR = False
+
 class Job(db.Model):
     __tablename__ = 'job'
 
@@ -9,12 +15,15 @@ class Job(db.Model):
     company     = db.Column(db.String(255), nullable=False)
     location    = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
-    source      = db.Column(db.String(80), nullable=False)   # e.g. 'Adzuna', 'LinkedIn'
+    source      = db.Column(db.String(80), nullable=False)   # e.g. 'LinkedIn', 'Remotive'
     url         = db.Column(db.String(512), nullable=True)
     hash        = db.Column(db.String(64), unique=True, nullable=False)  # SHA-256 dedup key
 
-    # Using JSON fallback since pgvector is not installed natively
-    embedding   = db.Column(db.JSON, nullable=True)
+    # Use Vector type (1024 dims for Titan v2) if available, else fallback to JSON
+    if HAS_PGVECTOR:
+        embedding = db.Column(Vector(1024), nullable=True)
+    else:
+        embedding = db.Column(db.JSON, nullable=True)
 
     def __repr__(self):
         return f'<Job {self.title} @ {self.company}>'
