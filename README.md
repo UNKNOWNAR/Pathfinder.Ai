@@ -89,4 +89,4 @@ The platform is fully automated for the "Set it and forget it" production experi
 - **User Experience**: Adheres to a high-contrast design system optimized for accessibility and low eye strain.
 
 ---
-*Created for the 2026 AI Innovation Hackathon - Pathfinder.Ai Team* 🚀🛥️
+*Created for the 2026 AI for BharatHackathon - Pathfinder.Ai Team* 🚀🛥️
