@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
 
@@ -158,6 +158,16 @@ const fetchJobs = async () => {
     loading.value = false;
   }
 };
+
+// Dynamic search: debounce 400ms so every keystroke doesn't fire an API call
+let _searchDebounce = null;
+watch(searchQuery, () => {
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(() => {
+    currentPage.value = 1;
+    fetchJobs();
+  }, 400);
+});
 
 const toggleReadiness = async (job) => {
   if (activeReadiness.value === job.job_id) {
