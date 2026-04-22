@@ -90,4 +90,4 @@ python seed_db.py
 
 ---
 
-**Developed for IIT Madras MAD-2 Project.** 
+**Developed for IIT Madras MAD-2 Project.**
