@@ -22,8 +22,9 @@ lxml==5.2.2
 feedparser==6.0.11
 
 # PDF Generation
-xhtml2pdf
-reportlab
+python-bidi==0.4.2
+xhtml2pdf==0.2.16
+reportlab==4.2.5
 
 # Supabase Storage (free 1GB, no credit card)
 supabase>=2.4.0

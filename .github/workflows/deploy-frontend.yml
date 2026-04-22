@@ -3,11 +3,11 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches:
-      - gh-pages
+      - master
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -34,10 +34,8 @@ jobs:
       - name: Build Vue App 🏗️
         working-directory: ./frontend
         run: npm run build
-        # Make sure VUE_APP_API_URL and VUE_APP_BASE_URL are correctly set in your Github Secrets 
-        # or production .env file if you don't commit it.
-        # env:
-        #   VUE_APP_API_URL: ${{ secrets.PROD_API_URL }}
+        env:
+          VUE_APP_API_URL: ${{ secrets.RENDER_BACKEND_URL }}
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
