@@ -22,7 +22,6 @@ import json
 import os
 import logging
 import random
-import boto3
 from services.voice_service import VoiceService
 
 logger = logging.getLogger(__name__)
@@ -381,17 +380,17 @@ class AgentService:
         """Call Groq API and return the text response."""
         import requests
         
-        if not self.api_key:
+        if not self.GROQ_API_KEY:
             logger.error("GROQ_API_KEY is missing.")
             return "I am currently offline due to a missing AI configuration."
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
+            "Authorization": f"Bearer {self.GROQ_API_KEY}"
         }
         
         body = {
-            "model": self.model_id,
+            "model": self.GROQ_MODEL,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -401,7 +400,7 @@ class AgentService:
         }
 
         try:
-            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
+            response = requests.post(self.GROQ_ENDPOINT, headers=headers, json=body, timeout=30)
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"].strip()

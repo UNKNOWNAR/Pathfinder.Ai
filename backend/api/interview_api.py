@@ -159,31 +159,10 @@ class InterviewQuestionAudio(Resource):
         if not session or session.user_id != int(get_jwt_identity()):
             return {'message': 'Not authorized.'}, 403
 
-        try:
-            # We use boto3 polly client directly inside the VoiceService to get the bytes if synthesize_speech does not return bytes.
-            # But the VoiceService was just modified to return S3 URL by the user, so let's check it.
-            # Based on the user changes:
-            s3_key = voice_service.synthesize_speech(question.question_text)
-            if not s3_key:
-                return {'message': 'Failed to generate audio.'}, 500
-
-            # Since the frontend expects audio bytes from this endpoint in the way we wrote it earlier (blob),
-            # we should either fetch it from S3 and return the bytes, or return the presigned URL and let frontend download it.
-            # Let's fetch the object from S3 and return the bytes to keep compatibility with the frontend blob logic.
-            import boto3
-            s3_client = boto3.client('s3')
-            response = s3_client.get_object(Bucket=voice_service.bucket_name, Key=s3_key)
-            audio_bytes = response['Body'].read()
-
-            return send_file(
-                io.BytesIO(audio_bytes),
-                mimetype="audio/mpeg",
-                as_attachment=False,
-                download_name=f"question_{question_id}.mp3"
-            )
-        except Exception as e:
-            logger.error(f"Failed to generate audio for question {question_id}: {e}")
-            return {'message': 'Failed to generate audio.'}, 500
+        return {
+            'message': 'Audio is handled by browser TTS.',
+            'text': question.question_text
+        }, 200
 
 
 # ─── Answer Submission ───────────────────────────────────────────────
