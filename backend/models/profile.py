@@ -6,7 +6,7 @@ class Profile(db.Model):
     email = db.Column(db.String(100), nullable=False)
     headline = db.Column(db.Text, nullable=True)
     avatar_url = db.Column(db.Text, nullable=True) # S3 Public Object URL for Profile Picture
-    resumes = db.Column(db.JSON, nullable=True, default=[]) # Array of S3 Presigned URLs or Object Keys (Max 2)
+    resumes = db.Column(db.JSON, nullable=True, default=list) # Array of S3 Presigned URLs or Object Keys (Max 2)
     location = db.Column(db.String(255), nullable=True)
     phone = db.Column(db.String(255), nullable=True)
     summary = db.Column(db.Text, nullable=True)

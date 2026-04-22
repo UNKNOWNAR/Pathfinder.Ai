@@ -13,6 +13,7 @@ Setup:
 2. Copy your API key from the dashboard
 3. Set the env var: JINA_API_KEY=jina_...
 """
+import json
 import os
 import logging
 import requests

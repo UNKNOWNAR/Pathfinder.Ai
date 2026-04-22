@@ -1,5 +1,5 @@
 from . import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Job(db.Model):
     __tablename__ = 'job'
@@ -28,7 +28,7 @@ class HarvestLog(db.Model):
     status     = db.Column(db.String(20), nullable=False, default='running')  # 'running', 'completed', 'failed'
     jobs_added = db.Column(db.Integer, nullable=False, default=0)
     api_calls  = db.Column(db.Integer, nullable=False, default=1)  # Tracks how many API requests were made during this run
-    timestamp  = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    timestamp  = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f'<HarvestLog {self.log_id} — {self.source} — {self.status}>'

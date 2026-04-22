@@ -137,10 +137,10 @@ class CompanyJobs(Resource):
         db.session.commit()
 
         # Generate embedding for the new job
-        store_job_embedding(new_job.id, new_job.title, new_job.description)
+        store_job_embedding(new_job.job_id, new_job.title, new_job.description)
 
         return {
             'message': 'Job posted successfully.',
-            'job_id': new_job.id
+            'job_id': new_job.job_id
         }, 201
 

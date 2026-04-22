@@ -1,22 +1,15 @@
 import logging
+import os
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models.profile import Profile
 from services.leetcode_client import LeetCodeClient
-from huggingface_hub import InferenceClient
-from config import Config
+from groq import Groq
 
 logger = logging.getLogger(__name__)
 
-_hf_client = InferenceClient(
-    model="Qwen/Qwen2.5-Coder-7B-Instruct",
-    token=Config.HF_TOKEN,
-)
-
-
 def _generate_advice(stats):
-    """Build a prompt from the LeetCode stats and ask the LLM for 2 sentences of advice."""
-    # Identify weak topics (bottom 5)
+    """Build a prompt from the LeetCode stats and ask Groq for 2 sentences of advice."""
     topics = stats.get("topics", {})
     sorted_topics = sorted(topics.items(), key=lambda x: x[1])
     weak = [t[0] for t in sorted_topics[:5]] if sorted_topics else []
@@ -35,7 +28,9 @@ def _generate_advice(stats):
     )
 
     try:
-        response = _hf_client.chat_completion(
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a concise, encouraging coding mentor. Respond with exactly 2 sentences."},
                 {"role": "user", "content": prompt},
@@ -76,7 +71,6 @@ class LeetCodeStats(Resource):
                 'message': f'Could not fetch data for LeetCode user "{username}". Check if the username is correct.',
             }, 502
 
-        # Generate AI advice from the stats
         advice = _generate_advice(stats)
 
         return {
