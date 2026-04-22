@@ -1,6 +1,5 @@
 import json
 import logging
-from flask import send_file
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models import db
@@ -10,8 +9,7 @@ from models.interview_question import InterviewQuestion
 from models.interview_evaluation import InterviewEvaluation
 from services.interview_service import InterviewService
 from services.voice_service import VoiceService
-from services.agent_service import AgentService # Import AgentService
-import io
+from services.agent_service import AgentService
 
 logger = logging.getLogger(__name__)
 

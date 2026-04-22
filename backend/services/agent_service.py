@@ -21,7 +21,6 @@ Phases:
 import json
 import os
 import logging
-import random
 from services.voice_service import VoiceService
 
 logger = logging.getLogger(__name__)

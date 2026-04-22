@@ -1,5 +1,4 @@
 import os
-from config import Config
 import json
 import re
 import logging
