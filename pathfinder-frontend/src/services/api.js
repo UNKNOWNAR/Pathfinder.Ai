@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:5000'
+    baseURL: 'http://localhost:5000'
 });
 
 api.interceptors.request.use(config => {
@@ -9,7 +9,18 @@ api.interceptors.request.use(config => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
+    return config; // Always return config, even without a token (for login/signup)
 });
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear expired credentials and gracefully boot out the user
+      localStorage.clear();
+      window.location.href = '#/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

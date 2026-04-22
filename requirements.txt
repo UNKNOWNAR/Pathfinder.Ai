@@ -1,21 +1,29 @@
-# --- Core Framework ---
+# --- Web Framework & Core ---
 Flask==3.0.3
+Werkzeug==3.0.1
+setuptools<70.0.0
 
-# --- Database (Local SQLite) ---
+# --- Database & Models ---
 Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.29
 
-# --- Authentication (JWT & Security) ---
-Flask-JWT-Extended==4.6.0
+# --- Authentication & Security ---
 flask-security-too==5.3.3
-setuptools
-werkzeug==3.0.1
-
-# --- Security & Utilities ---
+Flask-JWT-Extended==4.6.0
 Flask-CORS==4.0.0
+bcrypt==3.2.0
+cryptography==42.0.5
+passlib==1.7.4
+email-validator==2.1.1
+
+# --- API & Services ---
+flask-restful==0.3.10
+flask-mail==0.9.1
 python-dotenv==1.0.1
+requests==2.31.0
+xhtml2pdf==0.2.16
 
-# --- Resume-Tailor Dependencies ---
-langchain-huggingface
-huggingface_hub
-requests
-
+# --- Background Jobs & Caching ---
+celery==5.3.6
+redis==5.0.3
+Flask-Caching==2.3.0

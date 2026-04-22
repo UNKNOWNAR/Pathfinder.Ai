@@ -1,24 +1,50 @@
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from celery.schedules import crontab
+
 load_dotenv()
 
-class Config:
-    DEBUG = True
-    SECRET_KEY = 'your-secret-key'
-    SECURITY_PASSWORD_SALT = 'your-password-salt'
-
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+class Config(object):
+    DEBUG = False
+    TESTING = False
+    SECRET_KEY = os.environ.get("SECRET_KEY", "super-secret-key")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///pathfinder.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = 'your-jwt-secret-key'
+    
+    # Flask-Security settings
+    SECURITY_PASSWORD_SALT = "salt-key"
+    SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-Token"
+    SECURITY_REGISTER_BLUEPRINT = False  # Disable default Flask-Security routes to use our own
+    
+    # JWT Config
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "pathfinder-jwt-secret-key-2026-secure!!")
+    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour in seconds
 
-    # Disable CSRF — this is a REST API using token-based auth, not forms
-    WTF_CSRF_ENABLED = False
-    SECURITY_WTF_CSRF_ENABLED = False
+    # Cache Configuration
+    CACHE_TYPE = "RedisCache"
+    CACHE_REDIS_URL = "redis://localhost:6379/0" 
+    CACHE_DEFAULT_TIMEOUT = 300 
 
-    # Move Flask-Security's built-in routes away from /login so our API can use it
-    SECURITY_URL_PREFIX = '/security'
+    # Celery Configuration
+    CELERY_BROKER_URL = "redis://localhost:6379/1" 
+    CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+    CELERY_TIMEZONE = "UTC"
+    CELERY_BEAT_SCHEDULE = {
+        'send-daily-reminders': {
+            'task': 'services.AdminStudentCSV.daily_reminder_task',
+            'schedule': crontab(hour=0, minute=0),  # Every day at midnight
+        },
+        'generate-monthly-report': {
+            'task': 'services.AdminStudentCSV.monthly_report_task',
+            'schedule': crontab(day_of_month=1, hour=0, minute=0),  # 1st of every month
+        },
+    }
 
-    HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-    if not HF_TOKEN:
-        raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing in the .env file.")
-
+    # Mail Configuration (Gmail SSL Setup)
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 465
+    MAIL_USE_SSL = True
+    MAIL_USE_TLS = False
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "REDACTED_EMAIL")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "REDACTED")
+    MAIL_DEFAULT_SENDER = MAIL_USERNAME

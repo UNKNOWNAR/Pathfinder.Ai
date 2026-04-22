@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Pathfinder Placement Portal API
+  description: Official API specification for the Pathfinder.Ai recruitment and placement ecosystem.
+  version: 2.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local API Server
+
+paths:
+  /login:
+    post:
+      summary: User Authentication
+      description: Exchanges credentials for a JWT access token and user role.
+      responses:
+        '200':
+          description: OK
+
+  /student/stats:
+    get:
+      summary: Dashboard Metrics
+      description: Returns Chart.js data for student progress.
+      security:
+        - BearerAuth: []
+
+  /student/drives:
+    get:
+      summary: Eligible Placement Drives
+      description: Returns a cached list of drives based on student CGPA and Branch.
+      security:
+        - BearerAuth: []
+    put:
+      summary: Apply to Drive
+      description: Submits a new application.
+
+  /company/application/{application_id}:
+    put:
+      summary: Update Selection Status
+      description: Company updates student status. If 'Selected', an automated PDF Offer Letter is generated and sent via Celery.
+      parameters:
+        - name: application_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+
+  /admin/monthly-report:
+    get:
+      summary: Trigger Monthly Report
+      description: Admin manually executes the background PDF reporting task.
+      security:
+        - BearerAuth: []
+
+  /admin/toggle-status/{user_id}:
+    post:
+      summary: Blacklist/Deactivate User
+      description: Toggle the active status for any student or company account.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - BearerAuth: []
+
+  /company/profile:
+    get:
+      summary: Company Profile
+      description: Returns the logged-in company's profile details.
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

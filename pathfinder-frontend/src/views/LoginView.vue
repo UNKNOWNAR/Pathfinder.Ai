@@ -14,18 +14,39 @@ const signupData = reactive({ username: '', email: '', password: '', role: 'stud
 const handleLogin = async () => {
   try {
     const res = await api.post('/login', loginData);
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('role', res.data.role);
-    router.push('/dashboard');
+    const token = res.data.access_token;
+    const role = res.data.role;
+    const username = res.data.username || loginData.username_or_email;
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', role);
+    localStorage.setItem('username', username);
+    
+    // Redirect based on role to match existing routes
+    if (role === 'admin') {
+      router.push('/admin/dashboard');
+    } else if (role === 'company') {
+      router.push('/company/dashboard');
+    } else {
+      router.push('/dashboard'); // Student Dashboard
+    }
   } catch (err) {
-    alert(err.response?.data?.message || 'Login failed');
+    console.error('[LOGIN ERROR]', err);
+    const msg = err.response?.data?.message || 'Login failed. Make sure the backend is running.';
+    alert(msg);
   }
 };
 
 const handleSignup = async () => {
   try {
-    await api.post('/signup', signupData);
-    alert('Account created! Please log in.');
+    if (signupData.role === 'company') {
+      // Logic for company specific registration if any, otherwise standard signup
+      await api.post('/signup', signupData);
+      alert('Company account created! Please wait for admin approval (if required) and log in.');
+    } else {
+      await api.post('/signup', signupData);
+      alert('Account created! Please log in.');
+    }
     isSignUp.value = false;
   } catch (err) {
     alert(err.response?.data?.message || 'Signup failed');
@@ -36,6 +57,10 @@ const handleSignup = async () => {
 <template>
   <div class="wrapper">
     <div class="login-container">
+      <div class="header-text">
+        <h1 class="nb-logo-text">Pathfinder.Ai</h1>
+        <p class="nb-sub-text">Placement Portal V2</p>
+      </div>
 
       <!-- Toggle row -->
       <div class="toggle-row">
@@ -68,7 +93,7 @@ const handleSignup = async () => {
         <div class="flip-card__back">
           <div class="title">Sign up</div>
           <form class="flip-card__form" @submit.prevent="handleSignup">
-            <input class="flip-card__input" v-model="signupData.username" placeholder="Name" type="text" required />
+            <input class="flip-card__input" v-model="signupData.username" placeholder="Full Name" type="text" required />
             <input class="flip-card__input" v-model="signupData.email" placeholder="Email" type="email" required />
             <div class="password-wrapper">
               <input class="flip-card__input" v-model="signupData.password" placeholder="Password" :type="showSignupPassword ? 'text' : 'password'" required />
@@ -85,19 +110,11 @@ const handleSignup = async () => {
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <style scoped>
-:root {
-  --input-focus: #2d8cf0;
-  --font-color: #323232;
-  --main-color: #323232;
-  --bg-color: #fff;
-}
-
 .wrapper {
   display: flex;
   justify-content: center;
@@ -105,32 +122,43 @@ const handleSignup = async () => {
   min-height: 100vh;
   background-color: #e0e0e0;
 }
-
 .login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 28px;
 }
-
+.header-text {
+  text-align: center;
+}
+.nb-logo-text {
+  font-size: 3rem;
+  font-weight: 900;
+  margin: 0;
+  color: #323232;
+  text-shadow: 3px 3px 0px #ffffff;
+}
+.nb-sub-text {
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
 /* --- Toggle Row --- */
 .toggle-row {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-
 .side-label {
   font-size: 14px;
   font-weight: 600;
   color: #666;
   transition: color 0.3s;
 }
-
 .side-label.active {
   color: #323232;
 }
-
 .switch-toggle {
   position: relative;
   display: inline-block;
@@ -138,13 +166,11 @@ const handleSignup = async () => {
   height: 20px;
   cursor: pointer;
 }
-
 .toggle-input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   inset: 0;
@@ -154,7 +180,6 @@ const handleSignup = async () => {
   background-color: #fff;
   transition: 0.3s;
 }
-
 .slider::before {
   content: '';
   position: absolute;
@@ -169,29 +194,24 @@ const handleSignup = async () => {
   transition: 0.3s;
   box-sizing: border-box;
 }
-
 .toggle-input:checked + .slider {
   background-color: #2d8cf0;
 }
-
 .toggle-input:checked + .slider::before {
   transform: translateX(30px);
 }
-
 /* --- Flip Card --- */
 .flip-card__inner {
-  width: 300px;
-  height: 380px;
+  width: 320px;
+  height: 420px;
   position: relative;
   perspective: 1000px;
   transform-style: preserve-3d;
   transition: transform 0.8s;
 }
-
 .flip-card__inner.flipped {
   transform: rotateY(180deg);
 }
-
 .flip-card__front,
 .flip-card__back {
   position: absolute;
@@ -202,17 +222,15 @@ const handleSignup = async () => {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: lightgrey;
+  background: white;
   border-radius: 5px;
   border: 2px solid #323232;
   box-shadow: 4px 4px #323232;
   backface-visibility: hidden;
 }
-
 .flip-card__back {
   transform: rotateY(180deg);
 }
-
 .flip-card__form {
   display: flex;
   flex-direction: column;
@@ -220,13 +238,11 @@ const handleSignup = async () => {
   gap: 14px;
   width: 100%;
 }
-
 .title {
   font-size: 25px;
   font-weight: 900;
   color: #323232;
 }
-
 .flip-card__input {
   width: 250px;
   height: 40px;
@@ -240,10 +256,9 @@ const handleSignup = async () => {
   outline: none;
   box-sizing: border-box;
 }
-
 .flip-card__btn {
   margin-top: 6px;
-  width: 120px;
+  width: 140px;
   height: 40px;
   border-radius: 5px;
   border: 2px solid #323232;
@@ -254,7 +269,6 @@ const handleSignup = async () => {
   cursor: pointer;
   transition: box-shadow 0.1s, transform 0.1s;
 }
-
 .flip-card__btn:active {
   box-shadow: 0px 0px #323232;
   transform: translate(3px, 3px);
@@ -264,13 +278,11 @@ const handleSignup = async () => {
   position: relative;
   width: 250px;
 }
-
 .password-wrapper .flip-card__input {
   width: 100%;
   padding-right: 62px;
   box-sizing: border-box;
 }
-
 .show-pass-switch {
   position: absolute;
   right: 5px;
@@ -281,14 +293,12 @@ const handleSignup = async () => {
   height: 24px;
   cursor: pointer;
 }
-
 .pass-toggle {
   opacity: 0;
   width: 0;
   height: 0;
   position: absolute;
 }
-
 .pass-slider {
   position: absolute;
   inset: 0;
@@ -299,7 +309,6 @@ const handleSignup = async () => {
   transition: background-color 0.3s;
   box-sizing: border-box;
 }
-
 .pass-slider::before {
   content: "off";
   box-sizing: border-box;
@@ -318,11 +327,9 @@ const handleSignup = async () => {
   line-height: 14px;
   transition: transform 0.3s;
 }
-
 .pass-toggle:checked + .pass-slider {
   background-color: #2d8cf0;
 }
-
 .pass-toggle:checked + .pass-slider::before {
   content: "on";
   transform: translateX(26px);

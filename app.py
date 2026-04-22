@@ -1,51 +1,74 @@
 from flask import Flask
-from models import db
+from models import db, cache, mail, user_datastore
 from models.user import User
-from routes.generate_resume import resume_bp  # Import your new blueprint
 from config import Config
 from flask_security import Security
 from flask_restful import Api
-from user_datastore import user_datastore
-from api.auth_apis import LoginUser, SignUpUser,LogoutUser
-from api.profile_api import ProfileAPI
-from api.generate_resume import GenerateResume
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from api import init_api
+from celery import Celery, Task
+from flask_security.utils import hash_password
+
+# ── Must be at module level for Windows spawn pickling ──
+class FlaskTask(Task):
+    """
+    A Celery Task subclass that ensures every task runs inside a Flask
+    application context. Defined at module level (not inside a function)
+    so that Windows' spawn-based multiprocessing can pickle it.
+    """
+    def __call__(self, *args, **kwargs):
+        with app.app_context():
+            return self.run(*args, **kwargs)
+
+def celery_init_app(flask_app):
+    celery = Celery(flask_app.import_name, task_cls=FlaskTask)
+    celery.config_from_object(flask_app.config["CELERY"])
+    celery.set_default()
+    flask_app.extensions["celery"] = celery
+    return celery
 
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
+    flask_app = Flask(__name__)
+    flask_app.config.from_object(Config)
+    flask_app.config.from_mapping(
+        CELERY=dict(
+            broker_url=Config.CELERY_BROKER_URL,
+            result_backend=Config.CELERY_RESULT_BACKEND,
+            task_ignore_result=True,
+            beat_schedule=Config.CELERY_BEAT_SCHEDULE,
+            imports=['services.AdminStudentCSV'],
+        ),
+    )
 
-    db.init_app(app)
-    Security(app, user_datastore)
-    JWTManager(app)
+    celery_init_app(flask_app)
+    db.init_app(flask_app)
+    cache.init_app(flask_app)
+    mail.init_app(flask_app)
+    Security(flask_app, user_datastore)
+    JWTManager(flask_app)
 
-    api = Api(app)
-    app.register_blueprint(resume_bp)
+    api = Api(flask_app)
+    api = init_api(api)
 
-    return app,api
+    return flask_app, api
 
 def init_db():
     with app.app_context():
         db.create_all()
-        if not User.query.filter_by(email='admin@example.com').first():
+        if not User.query.filter_by(email='amiarinjaysarkar@gmail.com').first():
             user_datastore.create_user(
                 username='admin',
-                email='admin@example.com',
-                password='admin',
+                email='amiarinjaysarkar@gmail.com',
+                password=hash_password('admin'),
                 role='admin'
             )
             db.session.commit()
 
-app,api = create_app()
+app, api = create_app()
+celery_app = app.extensions["celery"]
 CORS(app)
-init_db()
-api.add_resource(LoginUser, '/login')
-api.add_resource(SignUpUser, '/signup')
-api.add_resource(LogoutUser, '/logout')
-api.add_resource(ProfileAPI, '/profile')
-api.add_resource(GenerateResume, '/generate-resume')
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     init_db()
     app.run(debug=True)

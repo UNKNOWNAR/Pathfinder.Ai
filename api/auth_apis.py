@@ -1,21 +1,18 @@
 from flask_restful import Resource
 from flask import request
-from models.user import db,User
-from models.profile import Profile
-from user_datastore import user_datastore
+from models import db, User, Student, Company, user_datastore
 from sqlalchemy import or_
 from flask_jwt_extended import create_access_token, jwt_required
 
 class LoginUser(Resource):
     def post(self):
-        login_data = request.get_json()
+        login_data = request.get_json(silent=True)
+        
+        if not login_data:
+            return {'message': 'JSON payload required', 'status': 'error'}, 400
 
-        if not login_data or not login_data.get('username_or_email') or not login_data.get('password'):
-            result = {
-                'message': 'No data provided',
-                'status': 'error'
-            }
-            return result, 400
+        if not login_data.get('username_or_email') or not login_data.get('password'):
+            return {'message': 'Username/Email and Password are required', 'status': 'error'}, 400
 
         identity = login_data.get('username_or_email')
         password = login_data.get('password')
@@ -49,7 +46,9 @@ class LoginUser(Resource):
         
         result = {
             'message': 'Login successful',
-            'access_token': access_token
+            'access_token': access_token,
+            'role': user.role,
+            'username': user.username
         }
         return result, 200
 
@@ -76,7 +75,7 @@ class SignUpUser(Resource):
                 'status': 'error'
             }
             return result, 403
-
+            
         username = register_data.get('username')
         email = register_data.get('email')
         password = register_data.get('password')
@@ -102,9 +101,18 @@ class SignUpUser(Resource):
             role=role,
             active=active
         )
-        db.session.flush() #forces SQLite to assign user_id NOW
-        db.session.add(Profile(user_id=user.user_id,name = user.username,email = user.email))
+        db.session.flush()
+        
+        # Auto-create the profile based on the role
+        if role == 'student':
+            student_entry = Student(user_id=user.user_id, name=username, email=email)
+            db.session.add(student_entry)
+        elif role == 'company':
+            company_entry = Company(user_id=user.user_id, name=username, email=email, status='pending')
+            db.session.add(company_entry)
+            
         db.session.commit()
+        
         result = {
             'message': 'User registered successfully',
             'status': 'success'
