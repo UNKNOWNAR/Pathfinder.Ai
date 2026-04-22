@@ -1,7 +1,8 @@
 """
 Ghost Recruiter Agent Service
 =============================
-A stateless, event-driven AI interviewer powered by AWS Bedrock (Claude Haiku 4.5) and AWS Polly.
+A stateless, event-driven AI interviewer powered by AWS Bedrock (Qwen 3 Next 80B) and AWS Polly.
+Falls back to Bedrock secondary models, then Groq as a final safety net.
 
 Architecture:
   1. Frontend sends: { user_answer, current_phase, profile_json, local_context_history, answered_question_ids, difficulty }
@@ -22,7 +23,7 @@ import json
 import os
 import logging
 import random
-import boto3
+import requests
 from services.voice_service import VoiceService
 
 logger = logging.getLogger(__name__)
@@ -70,10 +71,19 @@ PHASE_ORDER = ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 
 
 
 class AgentService:
+    # ─── Primary: Amazon Bedrock (Qwen 3 Next 80B) ───────────────────────────
+    BEDROCK_API_KEY  = os.getenv('BEDROCK_API_KEY', '')
+    BEDROCK_REGION   = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+    BEDROCK_MODEL    = 'qwen.qwen3-next-80b-a3b'
+
+    # ─── Final Fallback: Groq ─────────────────────────────────────────────────
+    # If Bedrock/Qwen fails, all Qwen models share the same access path and
+    # will fail together — so we skip straight to Groq.
+    GROQ_API_KEY   = os.getenv('GROQ_API_KEY', '')
+    GROQ_MODEL     = 'llama-3.3-70b-versatile'
+    GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions'
+
     def __init__(self):
-        self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama-3.1-8b-instant"
-        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         self.voice_service = VoiceService()
 
     def process_step(self, user_answer, current_phase, profile_json, local_context_history,
@@ -375,39 +385,85 @@ class AgentService:
 
     # ─── Helper Methods ──────────────────────────────────────────────────
 
-    def _call_bedrock(self, system_prompt, user_prompt):
-        """Call Groq API and return the text response."""
-        import requests
-        
-        if not self.api_key:
-            logger.error("GROQ_API_KEY is missing.")
-            return "I am currently offline due to a missing AI configuration."
+    def _call_bedrock(self, system_prompt: str, user_prompt: str,
+                      max_tokens: int = 500, temperature: float = 0.5) -> str:
+        """
+        Unified LLM caller: Bedrock Qwen 3 Next 80B first, Groq as fallback.
+        If Bedrock fails, we skip straight to Groq — Qwen models share the
+        same access path so trying siblings would be wasted latency.
+        """
+        # 1️⃣ Try Bedrock (Qwen 3 Next 80B)
+        result = self._call_bedrock_model(
+            self.BEDROCK_MODEL, system_prompt, user_prompt, max_tokens, temperature
+        )
+        if result:
+            return result
+
+        # 2️⃣ Bedrock unavailable — fall back to Groq immediately
+        logger.warning("Bedrock unavailable. Falling back to Groq.")
+        return self._call_groq(system_prompt, user_prompt, max_tokens, temperature)
+
+    def _call_bedrock_model(self, model_id: str, system_prompt: str,
+                             user_prompt: str, max_tokens: int, temperature: float) -> str | None:
+        """Call a specific Bedrock model via Bearer token. Returns None on failure."""
+        if not self.BEDROCK_API_KEY:
+            logger.debug("BEDROCK_API_KEY not set, skipping Bedrock call.")
+            return None
+
+        url = (f"https://bedrock-runtime.{self.BEDROCK_REGION}.amazonaws.com"
+               f"/model/{model_id}/converse")
+        headers = {
+            "Authorization": f"Bearer {self.BEDROCK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "system": [{"text": system_prompt}],
+            "messages": [{"role": "user", "content": [{"text": user_prompt}]}],
+            "inferenceConfig": {"maxTokens": max_tokens, "temperature": temperature}
+        }
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            if response.status_code == 200:
+                content = (response.json()
+                           .get('output', {})
+                           .get('message', {})
+                           .get('content', [{}])[0]
+                           .get('text', ''))
+                return content.strip()
+            else:
+                logger.warning(f"Bedrock [{model_id}] {response.status_code}: {response.text[:200]}")
+                return None
+        except Exception as e:
+            logger.warning(f"Bedrock [{model_id}] exception: {e}")
+            return None
+
+    def _call_groq(self, system_prompt: str, user_prompt: str,
+                   max_tokens: int, temperature: float) -> str:
+        """Call Groq API as the final fallback."""
+        if not self.GROQ_API_KEY:
+            logger.error("GROQ_API_KEY also missing — all LLM options exhausted.")
+            return "I am currently offline. Please configure BEDROCK_API_KEY or GROQ_API_KEY."
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
+            "Authorization": f"Bearer {self.GROQ_API_KEY}"
         }
-        
         body = {
-            "model": self.model_id,
+            "model": self.GROQ_MODEL,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user",   "content": user_prompt}
             ],
-            "temperature": 0.5,
-            "max_tokens": 500
+            "temperature": temperature,
+            "max_tokens": max_tokens
         }
-
         try:
-            response = requests.post(self.endpoint, headers=headers, json=body, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"].strip()
-        except requests.exceptions.RequestException as e:
+            resp = requests.post(self.GROQ_ENDPOINT, headers=headers, json=body, timeout=30)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+        except Exception as e:
             logger.error(f"Groq API call failed: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"Response body: {e.response.text}")
-            return "I apologize, but I am having trouble connecting to my thought engine. Could you check the API keys?"
+            return "I apologize, but I am having trouble connecting. Please check your API configuration."
 
     def _evaluate_answer(self, user_answer, question_context, context_history):
         """Evaluate the user's answer and return a score + feedback."""

@@ -12,6 +12,7 @@ from services.interview_service import InterviewService
 from services.voice_service import VoiceService
 from services.agent_service import AgentService # Import AgentService
 import io
+from limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,7 @@ class InterviewSessionDetail(Resource):
 # ─── Questions ───────────────────────────────────────────────────────
 class InterviewQuestionGenerate(Resource):
     @jwt_required()
+    @limiter.limit("20 per day")
     def post(self, session_id):
         err = _student_only()
         if err:
@@ -247,6 +249,7 @@ class InterviewAnswerSubmit(Resource):
 # ─── Ghost Recruiter Endpoint ─────────────────────────────────────────
 class GhostInterviewStep(Resource):
     @jwt_required()
+    @limiter.limit("100 per hour")
     def post(self):
         err = _student_only()
         if err:

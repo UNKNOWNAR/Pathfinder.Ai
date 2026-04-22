@@ -98,3 +98,61 @@ class ProfileAPI(Resource):
             'message': 'Profile updated successfully',
             'profile': _format_profile_data(profile)
         }, 200
+
+class ResumeResource(Resource):
+    method_decorators = [jwt_required()]
+
+    def delete(self, index):
+        user_id = get_jwt_identity()
+        profile = Profile.query.filter_by(user_id=user_id).first()
+        if not profile:
+            return {"message": "Profile not found"}, 404
+        
+        try:
+            resumes = list(profile.resumes or [])
+            if not (0 <= index < len(resumes)):
+                return {"message": "Invalid resume index"}, 400
+            
+            resume = resumes.pop(index)
+            s3_key = resume.get("s3_key")
+            
+            # Delete from S3
+            if s3_key:
+                try:
+                    s3_service.delete_file(s3_key)
+                except Exception as e:
+                    import logging
+                    logging.error(f"S3 Delete failed: {e}")
+            
+            profile.resumes = resumes
+            db.session.commit()
+            return {"message": "Resume deleted successfully", "resumes": _format_profile_data(profile)['resumes']}, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    def patch(self, index):
+        data = request.get_json()
+        new_filename = data.get("filename")
+        if not new_filename:
+            return {"message": "Filename required"}, 400
+            
+        user_id = get_jwt_identity()
+        profile = Profile.query.filter_by(user_id=user_id).first()
+        if not profile:
+            return {"message": "Profile not found"}, 404
+
+        try:
+            resumes = list(profile.resumes or [])
+            if not (0 <= index < len(resumes)):
+                return {"message": "Invalid resume index"}, 400
+                
+            # Ensure it ends with .pdf
+            if not new_filename.lower().endswith('.pdf'):
+                new_filename += '.pdf'
+                
+            resumes[index]["filename"] = new_filename
+            profile.resumes = resumes
+            db.session.commit()
+            return {"message": "Resume renamed successfully", "resumes": _format_profile_data(profile)['resumes']}, 200
+        except Exception as e:
+            return {"error": str(e)}, 500

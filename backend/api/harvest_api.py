@@ -94,9 +94,11 @@ class AdminQuotas(Resource):
             "LinkedIn": 200,
             "Internships": 200,
             "GoogleJobs": 100,
-            "FaangWatch": 100,
-            "Remotive": -1, # Unlimited
-            "Arbeitnow": -1 # Unlimited
+            "Adzuna": 2000,   # Free Tier: 2000 per month
+            "Arbeitnow": -1,  # Unlimited
+            "RemoteOK": -1,   # RSS - Unlimited
+            "WeWorkRemotely": -1, # RSS - Unlimited
+            "Remotive": -1    # JSON API - Unlimited
         }
 
         return {

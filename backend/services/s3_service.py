@@ -77,6 +77,7 @@ class S3Service:
                 ContentType='application/pdf'
             )
 
+            logger.info(f"S3: Successfully uploaded resume for user {user_id} to {s3_key}")
             return s3_key
 
         except ClientError as e:

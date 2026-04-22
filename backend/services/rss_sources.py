@@ -57,103 +57,27 @@ def fetch_weworkremotely_jobs():
     return jobs
 
 
-def fetch_naukri_jobs():
-
-    url = "https://www.naukri.com/code-360/jobs-feed"
-
+def fetch_remotive_jobs():
+    """Fetches jobs from Remotive's JSON API."""
+    url = "https://remotive.com/api/remote-jobs?category=software-dev"
     try:
-
-        res = requests.get(url, timeout=10)
-
-        feed = feedparser.parse(res.content)
+        res = requests.get(url, timeout=20)
+        res.raise_for_status()
+        data = res.json()
+        raw_jobs = data.get("jobs", [])
 
         jobs = []
-
-        for entry in feed.entries:
-
+        for j in raw_jobs:
             jobs.append({
-                "title": entry.get("title"),
-                "company": "Naukri",
-                "location": "India",
-                "description": entry.get("summary", ""),
-                "url": entry.get("link")
+                "title": j.get("title"),
+                "company": j.get("company_name"),
+                "location": j.get("candidate_required_location", "Remote"),
+                "description": j.get("description", ""),
+                "url": j.get("url")
             })
 
-        logger.info(f"Naukri RSS fetched {len(jobs)} jobs")
-
+        logger.info(f"Remotive API fetched {len(jobs)} jobs")
         return jobs
-
     except Exception as e:
-
-        logger.error(f"Naukri RSS failed: {e}")
-
+        logger.error(f"Remotive fetch failed: {e}")
         return []
-
-
-def fetch_indeed_jobs():
-
-    url = "https://www.indeed.co.in/rss?q=software+engineer&l=India"
-
-    feed = feedparser.parse(url)
-
-    jobs = []
-
-    for entry in feed.entries:
-
-        jobs.append({
-            "title": entry.get("title"),
-            "company": "Indeed",
-            "location": "India",
-            "description": entry.get("summary", ""),
-            "url": entry.get("link")
-        })
-
-    logger.info(f"Indeed RSS fetched {len(jobs)} jobs")
-
-    return jobs
-
-
-def fetch_stackoverflow_jobs():
-
-    url = "https://stackoverflow.com/jobs/feed"
-
-    feed = feedparser.parse(url)
-
-    jobs = []
-
-    for entry in feed.entries:
-
-        jobs.append({
-            "title": entry.get("title"),
-            "company": "StackOverflow",
-            "location": "Global",
-            "description": entry.get("summary", ""),
-            "url": entry.get("link")
-        })
-
-    logger.info(f"StackOverflow RSS fetched {len(jobs)} jobs")
-
-    return jobs
-
-
-def fetch_wellfound_jobs():
-
-    url = "https://wellfound.com/jobs.rss"
-
-    feed = feedparser.parse(url)
-
-    jobs = []
-
-    for entry in feed.entries:
-
-        jobs.append({
-            "title": entry.get("title"),
-            "company": "Wellfound",
-            "location": "Startup",
-            "description": entry.get("summary", ""),
-            "url": entry.get("link")
-        })
-
-    logger.info(f"Wellfound RSS fetched {len(jobs)} jobs")
-
-    return jobs

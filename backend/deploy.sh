@@ -31,7 +31,7 @@ sudo fuser -k 5000/tcp
 
 # 4. Start the new Server as a Daemon
 echo "🔥 Launching new Gunicorn workers..."
-gunicorn --workers 3 \
+gunicorn --workers 6 \
          --bind 127.0.0.1:5000 \
          --access-logfile "$ACCESS_LOG" \
          --error-logfile "$ERROR_LOG" \
