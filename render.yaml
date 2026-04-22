@@ -15,21 +15,17 @@ services:
         generateValue: true
       - key: GROQ_API_KEY
         sync: false
+      - key: JINA_API_KEY
+        sync: false
       - key: RAPIDAPI_KEY
         sync: false
       - key: ADZUNA_APP_ID
         sync: false
       - key: ADZUNA_APP_KEY
         sync: false
-      - key: R2_ACCOUNT_ID
+      - key: SUPABASE_URL
         sync: false
-      - key: R2_ACCESS_KEY_ID
-        sync: false
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_BUCKET_NAME
-        sync: false
-      - key: R2_PUBLIC_URL
+      - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: FLASK_ENV
         value: production

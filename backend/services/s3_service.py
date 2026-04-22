@@ -1,116 +1,111 @@
 """
-Storage Service — Cloudflare R2 Edition
-=========================================
-AWS S3 has been replaced with Cloudflare R2, which is S3-compatible.
-R2 Free Tier: 10 GB storage, 1M write ops, 10M read ops per month.
+Storage Service — Supabase Edition
+=====================================
+AWS S3 has been replaced with Supabase Storage (free 1GB, no credit card).
+
+Buckets:
+  - avatars  (public)  → profile pictures
+  - resumes  (private) → generated PDF resumes (signed URLs)
 
 Setup:
-1. Go to dash.cloudflare.com → R2 → Create bucket
-2. Go to R2 → Manage R2 API Tokens → Create API Token (with Object Read & Write)
-3. Note your Account ID from the R2 dashboard URL
-4. Set these env vars:
-   - R2_ACCOUNT_ID
-   - R2_ACCESS_KEY_ID
-   - R2_SECRET_ACCESS_KEY
-   - R2_BUCKET_NAME
+1. Create project at supabase.com
+2. Create two buckets: 'avatars' (public) and 'resumes' (private)
+3. Set env vars: SUPABASE_URL and SUPABASE_SERVICE_KEY
 """
 import os
-import boto3
-from botocore.exceptions import ClientError
 import uuid
 import logging
+from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
 
+SUPABASE_URL = os.getenv('SUPABASE_URL', '')
+SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '')
+
+def _get_client() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
 
 class S3Service:
-    """
-    Storage service backed by Cloudflare R2.
-    The boto3 SDK works identically — only the endpoint_url changes.
-    """
+    """Storage service backed by Supabase. Interface is identical to the old S3Service."""
+
     def __init__(self):
-        account_id = os.getenv('R2_ACCOUNT_ID', '')
-        self.s3_client = boto3.client(
-            's3',
-            endpoint_url=f'https://{account_id}.r2.cloudflarestorage.com',
-            aws_access_key_id=os.getenv('R2_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('R2_SECRET_ACCESS_KEY'),
-            region_name='auto',  # R2 uses 'auto' as the region
-        )
-        self.bucket_name = os.getenv('R2_BUCKET_NAME')
-        self.public_url_base = os.getenv('R2_PUBLIC_URL', '')  # e.g. https://pub-xxx.r2.dev
         self.environment = os.getenv('ENVIRONMENT', 'development')
 
     def _get_prefix(self, folder):
         return f"{self.environment}/{folder}"
 
     def upload_avatar(self, file_obj, filename, user_id):
-        """Uploads a profile avatar to R2 and returns the object key."""
+        """Uploads a profile avatar to Supabase Storage and returns the object path."""
         try:
             ext = os.path.splitext(filename)[1].lower()
             safe_filename = f"user_{user_id}_{uuid.uuid4().hex[:8]}{ext}"
-            s3_key = f"{self._get_prefix('avatars')}/{safe_filename}"
+            path = f"{self._get_prefix('avatars')}/{safe_filename}"
+            content_type = self._get_content_type(filename)
 
-            self.s3_client.upload_fileobj(
-                file_obj,
-                self.bucket_name,
-                s3_key,
-                ExtraArgs={'ContentType': self._get_content_type(filename)}
+            file_bytes = file_obj.read()
+            client = _get_client()
+            client.storage.from_('avatars').upload(
+                path=path,
+                file=file_bytes,
+                file_options={"content-type": content_type, "upsert": "true"}
             )
-            return s3_key
-        except ClientError as e:
-            logger.error(f"R2 Avatar Upload Error: {e}")
+            return path
+        except Exception as e:
+            logger.error(f"Supabase avatar upload error: {e}")
             return None
 
-    def get_public_url(self, s3_key):
-        """Returns a direct public URL for assets (requires R2 public bucket or custom domain)."""
-        if not s3_key:
+    def get_public_url(self, path):
+        """Returns a permanent public URL for avatars bucket."""
+        if not path:
             return None
-        if self.public_url_base:
-            return f"{self.public_url_base.rstrip('/')}/{s3_key}"
-        # Fallback: generate a presigned URL if no public domain is set
-        return self.get_presigned_url(s3_key)
+        try:
+            client = _get_client()
+            return client.storage.from_('avatars').get_public_url(path)
+        except Exception as e:
+            logger.error(f"Supabase public URL error: {e}")
+            return None
 
     def upload_resume_pdf(self, pdf_bytes, user_id):
-        """Uploads a generated PDF resume to R2 and returns the object key."""
+        """Uploads a generated PDF resume to Supabase and returns the object path."""
         try:
             safe_filename = f"resume_user_{user_id}_{uuid.uuid4().hex[:8]}.pdf"
-            s3_key = f"{self._get_prefix('resumes')}/{safe_filename}"
+            path = f"{self._get_prefix('resumes')}/{safe_filename}"
 
-            self.s3_client.put_object(
-                Bucket=self.bucket_name,
-                Key=s3_key,
-                Body=pdf_bytes,
-                ContentType='application/pdf'
+            client = _get_client()
+            client.storage.from_('resumes').upload(
+                path=path,
+                file=pdf_bytes,
+                file_options={"content-type": "application/pdf", "upsert": "true"}
             )
-            return s3_key
-        except ClientError as e:
-            logger.error(f"R2 Resume Upload Error: {e}")
+            return path
+        except Exception as e:
+            logger.error(f"Supabase resume upload error: {e}")
             return None
 
-    def get_presigned_url(self, s3_key, expires_in=3600):
-        """Generates a presigned URL for private assets like resumes (expires in 1 hour)."""
-        if not s3_key:
+    def get_presigned_url(self, path, expires_in=3600):
+        """Returns a signed URL for private resume access (expires in 1 hour)."""
+        if not path:
             return None
         try:
-            return self.s3_client.generate_presigned_url(
-                'get_object',
-                Params={'Bucket': self.bucket_name, 'Key': s3_key},
-                ExpiresIn=expires_in
-            )
-        except ClientError as e:
-            logger.error(f"R2 Presigned URL Error: {e}")
+            client = _get_client()
+            result = client.storage.from_('resumes').create_signed_url(path, expires_in)
+            return result.get('signedURL') or result.get('signed_url')
+        except Exception as e:
+            logger.error(f"Supabase signed URL error: {e}")
             return None
 
-    def delete_file(self, s3_key):
-        """Deletes a file from R2."""
-        if not s3_key:
+    def delete_file(self, path):
+        """Deletes a file from its respective bucket."""
+        if not path:
             return False
         try:
-            self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_key)
+            client = _get_client()
+            bucket = 'resumes' if '/resumes/' in path else 'avatars'
+            client.storage.from_(bucket).remove([path])
             return True
-        except ClientError as e:
-            logger.error(f"R2 Delete Error: {e}")
+        except Exception as e:
+            logger.error(f"Supabase delete error: {e}")
             return False
 
     def _get_content_type(self, filename):
