@@ -1,0 +1,35 @@
+name: Daily Job Harvest
+
+on:
+  schedule:
+    # Runs every day at 12:00 AM UTC (5:30 AM IST)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows you to manually trigger it from GitHub UI
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Job Harvest on Render
+        run: |
+          echo "Waking up Render server and triggering harvest..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.RENDER_BACKEND_URL }}/admin/harvest")
+          
+          echo "HTTP Status: $response"
+          
+          if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+            echo "✅ Harvest triggered successfully!"
+          else
+            echo "❌ Harvest failed with status $response"
+            exit 1
+          fi
+
+      - name: Wait and verify harvest completed
+        run: |
+          echo "Waiting 60 seconds for harvest to complete..."
+          sleep 60
+          echo "Done! Check Render logs for harvest results."

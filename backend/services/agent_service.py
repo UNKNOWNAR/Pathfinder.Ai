@@ -70,10 +70,12 @@ PHASE_ORDER = ['introduction', 'resume_drilldown', 'leetcode', 'system_design', 
 
 
 class AgentService:
+    # ─── Groq — Only LLM ────────────────────────────────────────────────────
+    GROQ_API_KEY   = os.getenv('GROQ_API_KEY', '')
+    GROQ_MODEL     = 'llama-3.3-70b-versatile'
+    GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions'
+
     def __init__(self):
-        self.api_key = os.getenv('GROQ_API_KEY')
-        self.model_id = "llama-3.1-8b-instant"
-        self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         self.voice_service = VoiceService()
 
     def process_step(self, user_answer, current_phase, profile_json, local_context_history,
