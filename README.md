@@ -25,6 +25,11 @@ Pathfinder.Ai automates the entire student job search lifecycle — from harvest
 
 ## 🏛️ Architecture & AWS Infrastructure
 
+<div align="center">
+  <img src="pathfinder_final_official_architecture_v3_1772981525302.png" alt="Pathfinder.Ai Architecture" width="800">
+</div>
+
+
 | Service | Component | Role | Monthly Cost |
 |---|---|---|---|
 | **EC2** | `t3.small` | Gunicorn/Flask API Server | $15.18 |
