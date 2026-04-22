@@ -160,6 +160,6 @@ bash backend/deploy.sh
 
 <div align="center">
 
-*Built for the 2026 AI Innovation Hackathon* 🛥️
+*Built for Ai for Bharat* 🛥️
 
 </div>

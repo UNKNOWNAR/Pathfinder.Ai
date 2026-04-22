@@ -3,9 +3,11 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches:
-      - master
+      - main # Change this to your default branch (usually main or master)
     paths:
-      - 'pathfinder-frontend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
 
 permissions:
   contents: write
@@ -13,31 +15,33 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository 🛎️
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node.js ⚙️
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '18' # Vue 3 works well with node 18
           cache: 'npm'
-          cache-dependency-path: pathfinder-frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install Dependencies 🔧
+        working-directory: ./frontend
         run: npm ci
-        working-directory: pathfinder-frontend
 
-      - name: Build
+      - name: Build Vue App 🏗️
+        working-directory: ./frontend
         run: npm run build
-        working-directory: pathfinder-frontend
-        env:
-          VUE_APP_BASE_URL: /Pathfinder.Ai/
+        # Make sure VUE_APP_API_URL and VUE_APP_BASE_URL are correctly set in your Github Secrets 
+        # or production .env file if you don't commit it.
+        # env:
+        #   VUE_APP_API_URL: ${{ secrets.PROD_API_URL }}
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: pathfinder-frontend/dist
-          publish_branch: gh-pages
+          folder: frontend/dist # The folder where Vue CLI builds the app
+          branch: gh-pages      # The branch the action should deploy to
+          clean: true
