@@ -90,4 +90,4 @@ python seed_db.py
 
 ---
 
-**Developed for Pathfinder.Ai Placement Solutions.** 🥂🚀
+**Developed for IIT Madras MAD-2 Project.** 
