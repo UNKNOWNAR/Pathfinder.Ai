@@ -1,7 +1,7 @@
 """
 Ghost Recruiter Agent Service
 =============================
-A stateless, event-driven AI interviewer powered by AWS Bedrock (Claude Haiku 4.5) and AWS Polly.
+A stateless, event-driven AI interviewer powered by Groq LLM and browser TTS.
 
 Architecture:
   1. Frontend sends: { user_answer, current_phase, profile_json, local_context_history, answered_question_ids, difficulty }
