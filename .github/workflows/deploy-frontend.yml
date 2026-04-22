@@ -3,7 +3,7 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches:
-      - main # Change this to your default branch (usually main or master)
+      - gh-pages
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
