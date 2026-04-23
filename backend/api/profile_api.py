@@ -11,15 +11,15 @@ s3_service = S3Service()
 def _format_profile_data(profile):
     data = profile.to_dict()
     
-    # 1. Generate active presigned URL for avatar if it's stored in S3
+    # 1. Generate public URL for avatar if it's stored in storage
     if data.get('avatar_url'):
-        # If it's a raw S3 key (doesn't start with http)
+        # If it's a raw key (doesn't start with http)
         if not data['avatar_url'].startswith('http'):
-            data['avatar_url'] = s3_service.get_presigned_url(data['avatar_url'])
-        # If it's an old direct public S3 URL, extract the key and sign it
+            data['avatar_url'] = s3_service.get_public_url(data['avatar_url'])
+        # If it's an old direct public S3 URL, extract the key and get public URL
         elif 'amazonaws.com' in data['avatar_url'] and '?' not in data['avatar_url']:
             s3_key = data['avatar_url'].split('amazonaws.com/')[-1]
-            data['avatar_url'] = s3_service.get_presigned_url(s3_key)
+            data['avatar_url'] = s3_service.get_public_url(s3_key)
             
     # 2. Generate active presigned URLs for all resumes in history
     if data.get('resumes'):
