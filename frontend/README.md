@@ -1,24 +1,23 @@
-# pathfinder-frontend
+# Pathfinder.Ai
 
-## Project setup
-```
+The ultimate career co-pilot. Build tailored resumes, get actionable LeetCode insights, and explore aggregated job postings.
+
+## Project Setup
+```bash
 npm install
 ```
 
-### Compiles and hot-reloads for development
-```
+### Run for Development
+```bash
 npm run serve
 ```
 
-### Compiles and minifies for production
-```
+### Build for Production
+```bash
 npm run build
 ```
 
-### Lints and fixes files
-```
+### Lint and Fixes
+```bash
 npm run lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
