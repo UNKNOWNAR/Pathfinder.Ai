@@ -43,6 +43,7 @@ class AdminStats(Resource):
 
         all_job_titles = db.session.query(Job.title).all()
         for (title,) in all_job_titles:
+            if not title: continue
             title_lower = title.lower()
             matched = False
             for cat, keywords in roles_categories.items():

@@ -117,11 +117,11 @@ const roleChartData = computed(() => {
       <div class="metrics-grid">
         <div class="box metric-box bg-blue" title="Active students vs total registered">
             <span class="metric-title">STUDENTS (ACTIVE/TOTAL)</span>
-            <span class="metric-value">{{ stats.students_active }} / {{ stats.students }}</span>
+            <span class="metric-value">{{ (stats.students_active || 0).toLocaleString() }} / {{ (stats.students || 0).toLocaleString() }}</span>
         </div>
         <div class="box metric-box bg-red" title="Approved companies vs total registered">
             <span class="metric-title">COMPANIES (APPV/TOTAL)</span>
-            <span class="metric-value">{{ stats.companies_approved }} / {{ stats.companies }}</span>
+            <span class="metric-value">{{ (stats.companies_approved || 0).toLocaleString() }} / {{ (stats.companies || 0).toLocaleString() }}</span>
         </div>
         <div class="box metric-box bg-green">
             <span class="metric-title">ACTIVE JOBS</span>
@@ -129,7 +129,7 @@ const roleChartData = computed(() => {
         </div>
         <div class="box metric-box bg-purple">
             <span class="metric-title">JOB SOURCES</span>
-            <span class="metric-value">{{ Object.keys(stats.sources).length }}</span>
+            <span class="metric-value">{{ Object.keys(stats.sources || {}).length }}</span>
         </div>
       </div>
 
