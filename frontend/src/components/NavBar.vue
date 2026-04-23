@@ -19,10 +19,10 @@ const studentLinks = [
 
 const adminLinks = [
   { label: 'Dashboard',  to: '/admin' },
-  { label: 'Harvesters',   to: '/admin/harvesters' },
-  { label: 'Jobs DB',      to: '/admin/jobs' },
-  { label: 'Companies',    to: '/admin/companies' },
-  { label: 'Students',     to: '/admin/students' },
+  { label: 'Harvesters', to: '/admin/harvesters' },
+  { label: 'Jobs DB',    to: '/admin/jobs' },
+  { label: 'Companies',  to: '/admin/companies' },
+  { label: 'Students',   to: '/admin/students' },
 ];
 
 const companyLinks = [

@@ -41,9 +41,20 @@ class AdminStudents(Resource):
                 'location': profile.location if profile else None,
             })
 
-        return {
-            'total': paginated.total,
-            'pages': paginated.pages,
-            'page': paginated.page,
-            'students': students,
-        }, 200
+    @admin_required
+    def put(self):
+        data = request.get_json()
+        user_id = data.get('user_id')
+        active = data.get('active')
+
+        if user_id is None or active is None:
+            return {'message': 'user_id and active status are required'}, 400
+
+        user = User.query.get(user_id)
+        if not user or user.role != 'student':
+            return {'message': 'Student not found'}, 404
+
+        user.active = active
+        db.session.commit()
+
+        return {'message': f"Student {'activated' if active else 'deactivated'} successfully"}, 200

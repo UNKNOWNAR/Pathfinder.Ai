@@ -41,6 +41,19 @@ watch(search, () => {
 const prevPage = () => { if (page.value > 1) { page.value--; fetchStudents(); } };
 const nextPage = () => { if (page.value < pages.value) { page.value++; fetchStudents(); } };
 
+const toggleStatus = async (student) => {
+  try {
+    const newStatus = !student.active;
+    await api.put('/admin/students', {
+      user_id: student.user_id,
+      active: newStatus
+    });
+    student.active = newStatus;
+  } catch {
+    alert('Failed to update student status.');
+  }
+};
+
 onMounted(fetchStudents);
 </script>
 
@@ -89,6 +102,15 @@ onMounted(fetchStudents);
             <div v-if="student.location" class="student-meta">
               <span>📍 {{ student.location }}</span>
             </div>
+          </div>
+          <div class="student-actions">
+            <button
+              class="brutal-btn status-btn"
+              :class="student.active ? 'deactivate' : 'activate'"
+              @click="toggleStatus(student)"
+            >
+              {{ student.active ? 'DEACTIVATE' : 'ACTIVATE' }}
+            </button>
           </div>
         </div>
       </div>
@@ -192,6 +214,24 @@ onMounted(fetchStudents);
   font-weight: 700;
   opacity: 0.7;
   margin-top: 4px;
+}
+
+.student-actions {
+  display: flex;
+  align-items: center;
+}
+
+.status-btn {
+  font-size: 11px;
+  padding: 6px 12px;
+}
+
+.status-btn.activate {
+  background: #55efc4;
+}
+
+.status-btn.deactivate {
+  background: #fab1a0;
 }
 
 .empty-box { padding: 40px; text-align: center; font-weight: 700; opacity: 0.5; }
