@@ -136,5 +136,5 @@ class LLMService:
             return latex_code.strip()
 
         except Exception as e:
-            logging.error(f"Error generating LaTeX resume with AWS Bedrock: {e}")
+            logging.error(f"Error generating LaTeX resume with Groq: {e}")
             raise

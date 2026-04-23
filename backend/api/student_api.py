@@ -65,3 +65,25 @@ class AdminStudents(Resource):
         db.session.commit()
 
         return {'message': f"Student {'activated' if active else 'deactivated'} successfully"}, 200
+
+    @admin_required
+    def delete(self):
+        data = request.get_json()
+        user_id = data.get('user_id')
+
+        if user_id is None:
+            return {'message': 'user_id is required'}, 400
+
+        user = User.query.get(user_id)
+        if not user or user.role != 'student':
+            return {'message': 'Student not found'}, 404
+
+        # Delete associated profile first if it exists
+        profile = Profile.query.filter_by(user_id=user_id).first()
+        if profile:
+            db.session.delete(profile)
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return {'message': 'Student deleted successfully'}, 200

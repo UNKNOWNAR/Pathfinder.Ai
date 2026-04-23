@@ -54,6 +54,18 @@ const toggleStatus = async (student) => {
   }
 };
 
+const deleteStudent = async (studentId) => {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this student? This will also delete their profile and cannot be undone.')) return;
+
+  try {
+    await api.delete('/admin/students', { data: { user_id: studentId } });
+    students.value = students.value.filter(s => s.user_id !== studentId);
+    total.value--;
+  } catch {
+    alert('Failed to delete student.');
+  }
+};
+
 onMounted(fetchStudents);
 </script>
 
@@ -110,6 +122,12 @@ onMounted(fetchStudents);
               @click="toggleStatus(student)"
             >
               {{ student.active ? 'DEACTIVATE' : 'ACTIVATE' }}
+            </button>
+            <button
+              class="brutal-btn delete-btn"
+              @click="deleteStudent(student.user_id)"
+            >
+              DELETE
             </button>
           </div>
         </div>
@@ -232,6 +250,18 @@ onMounted(fetchStudents);
 
 .status-btn.deactivate {
   background: #fab1a0;
+}
+
+.delete-btn {
+  margin-left: 8px;
+  background: #ff7675;
+  color: var(--ink);
+  font-size: 11px;
+  padding: 6px 12px;
+}
+
+.delete-btn:hover {
+  background: #ff5252;
 }
 
 .empty-box { padding: 40px; text-align: center; font-weight: 700; opacity: 0.5; }

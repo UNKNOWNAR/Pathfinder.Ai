@@ -174,6 +174,15 @@ class AdminJobsList(Resource):
         }, 200
 
 
+class AdminJobDelete(Resource):
+    @admin_required
+    def delete(self, job_id):
+        job = Job.query.get_or_404(job_id)
+        db.session.delete(job)
+        db.session.commit()
+        return {'message': f'Job {job_id} deleted successfully.'}, 200
+
+
 class JobsList(Resource):
     @jwt_required()
     def get(self):

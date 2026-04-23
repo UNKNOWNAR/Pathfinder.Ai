@@ -139,8 +139,9 @@ class AgentService:
             f"Please greet the candidate and ask them to explain one of their projects."
         )
 
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
+        # Browser TTS handles audio locally, no URL needed
+        audio_url = None
 
         return {
             'recruiter_response_text': recruiter_text,
@@ -168,9 +169,7 @@ class AgentService:
         )
 
         user_prompt = self._build_context_prompt(name, profile, context_history, user_answer)
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
 
         return {
             'recruiter_response_text': recruiter_text,
@@ -180,7 +179,7 @@ class AgentService:
                 'question_type': 'behavioral',
                 'starting_code': '{}'
             },
-            'audio_url': audio_url,
+            'audio_url': None,
             'next_phase': 'leetcode',
             'evaluation': None
         }
@@ -210,13 +209,12 @@ class AgentService:
             f"Next question: {question['question_text']}\n"
         )
 
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
 
         return {
             'recruiter_response_text': recruiter_text,
             'next_question': question,
-            'audio_url': audio_url,
+            'audio_url': None,
             'next_phase': 'system_design',
             'evaluation': None
         }
@@ -242,13 +240,12 @@ class AgentService:
             f"Next question: {question['question_text']}\n"
         )
 
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
 
         return {
             'recruiter_response_text': recruiter_text,
             'next_question': question,
-            'audio_url': audio_url,
+            'audio_url': None,
             'next_phase': 'behavioral',
             'evaluation': None
         }
@@ -274,13 +271,12 @@ class AgentService:
             f"Next question: {question['question_text']}\n"
         )
 
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
 
         return {
             'recruiter_response_text': recruiter_text,
             'next_question': question,
-            'audio_url': audio_url,
+            'audio_url': None,
             'next_phase': 'wrapup',
             'evaluation': None
         }
@@ -290,7 +286,7 @@ class AgentService:
         # Add the final answer to history for the report
         full_history = (context_history or [])
         if user_answer:
-             # This is a bit hacky since we are in a stateless call, 
+             # This is a bit hacky since we are in a stateless call,
              # but we can simulate the final exchange for evaluation
              full_history.append({"role": "user", "content": user_answer})
 
@@ -317,13 +313,12 @@ class AgentService:
             "Please provide your final spoken wrap-up."
         )
 
-        recruiter_text = self._call_bedrock(system_prompt, user_prompt)
-        audio_url = self._synthesize_and_get_url(recruiter_text)
+        recruiter_text = self._call_groq(system_prompt, user_prompt)
 
         return {
             'recruiter_response_text': recruiter_text,
             'next_question': None,
-            'audio_url': audio_url,
+            'audio_url': None,
             'next_phase': 'completed',
             'evaluation': final_report
         }
@@ -354,7 +349,7 @@ class AgentService:
         )
 
         try:
-            raw = self._call_bedrock(system_prompt, user_prompt)
+            raw = self._call_groq(system_prompt, user_prompt)
             # Cleanup markdown
             if raw.startswith("```json"):
                 raw = raw[7:]
@@ -362,7 +357,7 @@ class AgentService:
                 raw = raw[3:]
             if raw.endswith("```"):
                 raw = raw[:-3]
-            
+
             return json.loads(raw.strip())
         except Exception as e:
             logger.error(f"Final report generation failed: {e}")
@@ -375,10 +370,10 @@ class AgentService:
 
     # ─── Helper Methods ──────────────────────────────────────────────────
 
-    def _call_bedrock(self, system_prompt, user_prompt):
+    def _call_groq(self, system_prompt, user_prompt):
         """Call Groq API and return the text response."""
         import requests
-        
+
         if not self.GROQ_API_KEY:
             logger.error("GROQ_API_KEY is missing.")
             return "I am currently offline due to a missing AI configuration."
@@ -387,7 +382,7 @@ class AgentService:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.GROQ_API_KEY}"
         }
-        
+
         body = {
             "model": self.GROQ_MODEL,
             "messages": [
@@ -431,7 +426,7 @@ class AgentService:
         )
 
         try:
-            raw = self._call_bedrock(system_prompt, user_prompt)
+            raw = self._call_groq(system_prompt, user_prompt)
             # Clean markdown wrappers
             if raw.startswith("```json"):
                 raw = raw[7:]

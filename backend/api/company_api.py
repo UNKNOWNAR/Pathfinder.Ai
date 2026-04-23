@@ -97,6 +97,32 @@ class AdminCompanies(Resource):
             ]
         }, 200
 
+    @admin_required
+    def delete(self):
+        data = request.get_json()
+        company_id = data.get('company_id')
+
+        if not company_id:
+            return {'message': 'company_id is required'}, 400
+
+        company = Company.query.get(company_id)
+        if not company:
+            return {'message': 'Company not found'}, 404
+
+        # Delete associated user account
+        user = User.query.get(company.user_id)
+
+        # Delete any jobs posted by this company
+        Job.query.filter_by(company=company.name).delete()
+
+        db.session.delete(company)
+        if user:
+            db.session.delete(user)
+
+        db.session.commit()
+
+        return {'message': f'Company {company.name} and all associated data deleted successfully.'}, 200
+
 
 class AdminCompanyApprove(Resource):
     @admin_required

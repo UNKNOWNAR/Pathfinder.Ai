@@ -56,6 +56,19 @@ const approveCompany = async (companyId) => {
   }
 };
 
+const deleteCompany = async (companyId) => {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this company? This will delete their account and all jobs they posted.')) return;
+
+  try {
+    await api.delete('/admin/companies', { data: { company_id: companyId } });
+    companies.value = companies.value.filter(c => c.company_id !== companyId);
+    total.value--;
+  } catch (err) {
+    alert('Failed to delete company.');
+    console.error(err);
+  }
+};
+
 onMounted(loadCompanies);
 </script>
 
@@ -103,9 +116,12 @@ onMounted(loadCompanies);
             <p class="company-date"><strong>REGISTERED:</strong> {{ new Date(company.created_at).toLocaleDateString() }}</p>
           </div>
 
-          <div class="card-actions" v-if="!company.is_approved">
-            <button class="primary-btn approve-btn" @click="approveCompany(company.company_id)">
+          <div class="card-actions">
+            <button v-if="!company.is_approved" class="primary-btn approve-btn" @click="approveCompany(company.company_id)">
               APPROVE ACCOUNT
+            </button>
+            <button class="brutal-btn delete-btn" @click="deleteCompany(company.company_id)">
+              DELETE
             </button>
           </div>
         </div>
@@ -201,7 +217,22 @@ onMounted(loadCompanies);
   padding: 16px;
   border-top: 2px dashed var(--ink);
   background: #fafafa;
+  display: flex;
+  gap: 12px;
 }
+.approve-btn {
+  flex: 2;
+  font-size: 11px;
+  padding: 8px;
+}
+.delete-btn {
+  flex: 1;
+  background: #ff7675;
+  color: var(--ink);
+  font-size: 11px;
+  padding: 8px;
+}
+.delete-btn:hover { background: #ff5252; }
 .empty-box { padding: 40px; text-align: center; font-weight: 700; opacity: 0.5; }
 
 .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; }

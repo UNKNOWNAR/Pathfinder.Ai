@@ -41,6 +41,20 @@ watch(search, () => {
 const prevPage = () => { if (page.value > 1) { page.value--; fetchJobs(); } };
 const nextPage = () => { if (page.value < pages.value) { page.value++; fetchJobs(); } };
 
+const deleteJob = async (jobId) => {
+  if (!confirm('Are you sure you want to delete this job? This action cannot be undone.')) return;
+
+  try {
+    await api.delete(`/admin/jobs/${jobId}`);
+    // Remove from local list
+    jobs.value = jobs.value.filter(j => j.job_id !== jobId);
+    total.value--;
+  } catch (err) {
+    alert('Failed to delete job.');
+    console.error(err);
+  }
+};
+
 onMounted(fetchJobs);
 </script>
 
@@ -91,6 +105,9 @@ onMounted(fetchJobs);
           >
             View Posting →
           </a>
+          <button class="brutal-btn delete-btn" @click="deleteJob(job.job_id)">
+            DELETE
+          </button>
         </div>
       </div>
 
@@ -159,6 +176,15 @@ onMounted(fetchJobs);
 }
 .job-link:hover  { background: #f5f5f5; }
 .job-link:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px, 2px); }
+.delete-btn {
+  margin-top: 8px;
+  background: #ff7675;
+  color: var(--ink);
+  font-size: 11px;
+  padding: 6px 12px;
+  align-self: flex-start;
+}
+.delete-btn:hover { background: #ff5252; }
 .empty-box { padding: 40px; text-align: center; font-weight: 700; opacity: 0.5; }
 .pagination      { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .page-btn {
