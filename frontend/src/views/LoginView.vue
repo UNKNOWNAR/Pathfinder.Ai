@@ -61,6 +61,11 @@ const handleSignup = async () => {
 <template>
   <div class="wrapper">
     <div class="login-container">
+      <!-- App Logo -->
+      <div class="login-logo" @click="router.push('/')" style="cursor: pointer;">
+        <img src="/logo_tie.png" alt="Pathfinder Logo" />
+        <span class="logo-text">Pathfinder.Ai</span>
+      </div>
 
       <!-- Toggle row -->
       <div class="toggle-row">
@@ -135,6 +140,27 @@ const handleSignup = async () => {
   align-items: center;
   gap: 28px;
 }
+
+/* --- App Logo --- */
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.login-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+.logo-text {
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
 /* --- Toggle Row --- */
 .toggle-row {
   display: flex;

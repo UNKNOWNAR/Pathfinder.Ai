@@ -1,6 +1,5 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import logoImg from '@/assets/logo.png';
 
 const router = useRouter();
 
@@ -12,7 +11,7 @@ const goLogin = () => router.push('/login');
     <!-- Navbar -->
     <header class="navbar">
       <div class="navbar-brand">
-        <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
+        <img src="/logo_tie.png" class="nav-logo" alt="Pathfinder logo" />
         <span class="nav-title">Pathfinder.Ai</span>
       </div>
       <div class="navbar-right">
