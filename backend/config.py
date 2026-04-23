@@ -11,11 +11,15 @@ class Config:
     # ── Database (Neon.tech PostgreSQL) ──────────────────────────────────────
     _db_url = os.getenv('DATABASE_URL')
     if not _db_url:
-        raise ValueError("CRITICAL: DATABASE_URL is missing!")
-    # Fix legacy 'postgres://' prefix for SQLAlchemy 1.4+
-    if _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-    SQLALCHEMY_DATABASE_URI = _db_url
+        # Don't raise ValueError here to allow the app to start and report health diagnostics
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+        DATABASE_URL_MISSING = True
+    else:
+        DATABASE_URL_MISSING = False
+        # Fix legacy 'postgres://' prefix for SQLAlchemy 1.4+
+        if _db_url.startswith('postgres://'):
+            _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,

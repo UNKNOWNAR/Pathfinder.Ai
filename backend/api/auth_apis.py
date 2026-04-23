@@ -8,13 +8,19 @@ from flask_jwt_extended import create_access_token, jwt_required
 
 class HealthCheck(Resource):
     def get(self):
+        from flask import current_app
         db_status = "unknown"
-        try:
-            from sqlalchemy import text
-            db.session.execute(text('SELECT 1'))
-            db_status = "connected"
-        except Exception as e:
-            db_status = f"error: {str(e)}"
+        db_url_missing = current_app.config.get('DATABASE_URL_MISSING', False)
+
+        if db_url_missing:
+            db_status = "error: DATABASE_URL environment variable is missing"
+        else:
+            try:
+                from sqlalchemy import text
+                db.session.execute(text('SELECT 1'))
+                db_status = "connected"
+            except Exception as e:
+                db_status = f"error: {str(e)}"
 
         return {
             'status': 'healthy',
