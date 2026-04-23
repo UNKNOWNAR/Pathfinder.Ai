@@ -18,12 +18,12 @@ jobs:
     
     steps:
       - name: Checkout Repository 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js ⚙️
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18' # Vue 3 works well with node 18
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -40,6 +40,6 @@ jobs:
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/dist # The folder where Vue CLI builds the app
-          branch: gh-pages      # The branch the action should deploy to
+          folder: frontend/dist
+          branch: gh-pages
           clean: true
