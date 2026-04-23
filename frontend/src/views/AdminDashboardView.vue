@@ -115,9 +115,13 @@ const roleChartData = computed(() => {
 
       <!-- Top Overview Metrics -->
       <div class="metrics-grid">
-        <div class="box metric-box bg-blue">
-            <span class="metric-title">TOTAL USERS</span>
-            <span class="metric-value">{{ (stats.students + stats.companies).toLocaleString() }}</span>
+        <div class="box metric-box bg-blue" title="Active students vs total registered">
+            <span class="metric-title">STUDENTS (ACTIVE/TOTAL)</span>
+            <span class="metric-value">{{ stats.students_active }} / {{ stats.students }}</span>
+        </div>
+        <div class="box metric-box bg-red" title="Approved companies vs total registered">
+            <span class="metric-title">COMPANIES (APPV/TOTAL)</span>
+            <span class="metric-value">{{ stats.companies_approved }} / {{ stats.companies }}</span>
         </div>
         <div class="box metric-box bg-green">
             <span class="metric-title">ACTIVE JOBS</span>
@@ -176,6 +180,7 @@ const roleChartData = computed(() => {
 .metric-title { font-weight: 900; font-size: 12px; letter-spacing: 0.1em; opacity: 0.9; }
 .metric-value { font-weight: 900; font-size: 32px; letter-spacing: -1px; }
 .bg-blue { background: #74b9ff; color: var(--ink); }
+.bg-red { background: #ff7675; color: var(--ink); }
 .bg-green { background: #55efc4; color: var(--ink); }
 .bg-purple { background: #a29bfe; color: var(--ink); }
 /* Grid Layouts */

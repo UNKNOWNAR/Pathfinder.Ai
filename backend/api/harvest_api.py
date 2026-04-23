@@ -13,38 +13,26 @@ class AdminStats(Resource):
     @admin_required
     def get(self):
         from sqlalchemy import func
-        students  = User.query.filter_by(role='student').count()
-        companies = User.query.filter_by(role='company').count()
-        jobs      = Job.query.count()
+        # Detailed user breakdown
+        students_total = User.query.filter_by(role='student').count()
+        students_active = User.query.filter_by(role='student', active=True).count()
+
+        companies_total = User.query.filter_by(role='company').count()
+        companies_approved = Company.query.filter_by(is_approved=True).count()
+
+        jobs = Job.query.count()
 
         # Group jobs by source
         sources_query = db.session.query(Job.source, func.count(Job.job_id)).group_by(Job.source).all()
         sources_breakdown = {s: c for s, c in sources_query}
 
-        # Extract job roles dynamically
-        roles_query = db.session.execute(db.text("""
-            SELECT
-                CASE
-                    WHEN LOWER(title) LIKE '%software engineer%' THEN 'Software Engineer'
-                    WHEN LOWER(title) LIKE '%data scientist%' THEN 'Data Scientist'
-                    WHEN LOWER(title) LIKE '%data engineer%' THEN 'Data Engineer'
-                    WHEN LOWER(title) LIKE '%machine learning%' THEN 'ML Engineer'
-                    WHEN LOWER(title) LIKE '%frontend%' THEN 'Frontend'
-                    WHEN LOWER(title) LIKE '%backend%' THEN 'Backend'
-                    WHEN LOWER(title) LIKE '%full stack%' THEN 'Full Stack'
-                    WHEN LOWER(title) LIKE '%intern%' THEN 'Internship'
-                    ELSE 'Other'
-                END as role_type,
-                COUNT(*) as count
-            FROM job
-            GROUP BY role_type
-        """)).fetchall()
-
-        roles_breakdown = {row[0]: row[1] for row in roles_query}
+        # ... (rest of the code)
 
         return {
-            'students':  students,
-            'companies': companies,
+            'students': students_total,
+            'students_active': students_active,
+            'companies': companies_total,
+            'companies_approved': companies_approved,
             'jobs':      jobs,
             'sources':   sources_breakdown,
             'roles':     roles_breakdown
