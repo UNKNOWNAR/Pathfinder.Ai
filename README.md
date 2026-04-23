@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="frontend/public/logo_tie.png" width="160" alt="Pathfinder.Ai Logo">
+
 # 🚀 Pathfinder.Ai (Serverless Edition)
 
 **Intelligent Career Acceleration Platform — Zero-Cost Architecture**

@@ -1,5 +1,9 @@
 # Pathfinder.Ai
 
+<p align="center">
+  <img src="public/logo_tie.png" width="120" alt="Pathfinder.Ai Logo">
+</p>
+
 The ultimate career co-pilot. Build tailored resumes, get actionable LeetCode insights, and explore aggregated job postings.
 
 ## Project Setup
