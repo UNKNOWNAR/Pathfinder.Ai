@@ -52,7 +52,22 @@ const currentQuestion = computed(() => {
 });
 
 // Audio playback
-const audioPlayer = ref(null);
+function speakText(text) {
+  if (!text) return;
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.95; // Slightly slower for better clarity
+  utterance.pitch = 1.0;
+
+  // Try to find a good English voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.lang === 'en-US');
+  if (preferredVoice) utterance.voice = preferredVoice;
+
+  window.speechSynthesis.speak(utterance);
+}
 
 // Watch for language changes to update the starting code
 watch(selectedLanguage, (newLang) => {
@@ -124,6 +139,9 @@ async function startSession() {
     // Add the recruiter's greeting to context
     localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
 
+    // Speak the response
+    speakText(recruiterResponseText.value);
+
     // If the question is a coding question, set the starting code
     if (res.data.next_question?.starting_code && res.data.next_question.question_type === 'coding') {
       const codeData = typeof res.data.next_question.starting_code === 'string'
@@ -132,10 +150,6 @@ async function startSession() {
       codeAnswer.value = codeData[selectedLanguage.value] || '';
     }
 
-    if (res.data.audio_url) {
-      await playAudioFromUrl(res.data.audio_url);
-    }
-    
     // Set timer for the first question
     questionStartTime.value = Date.now();
   } catch (err) {
@@ -145,22 +159,8 @@ async function startSession() {
   }
 }
 
-async function playAudioFromUrl(audioUrl) {
-  try {
-    if (audioPlayer.value) {
-      audioPlayer.value.pause();
-      audioPlayer.value.src = audioUrl;
-      await audioPlayer.value.play();
-    }
-  } catch (err) {
-    console.error('Failed to play audio from URL:', err);
-  }
-}
-
 function replayAudio() {
-  if (audioPlayer.value && audioPlayer.value.src) {
-    audioPlayer.value.play();
-  }
+  speakText(recruiterResponseText.value);
 }
 
 // ─── Submit answer ──────────────────────────────────────
@@ -214,6 +214,9 @@ async function submitAnswer() {
     // Add recruiter's response to local context history
     localContextHistory.value.push({ role: 'assistant', content: recruiterResponseText.value });
 
+    // Speak the response
+    speakText(recruiterResponseText.value);
+
     // Reset answers and set starting code for next question if coding
     resetAnswers();
     if (res.data.next_question?.starting_code && res.data.next_question.question_type === 'coding') {
@@ -225,10 +228,6 @@ async function submitAnswer() {
       } catch (e) {
         codeAnswer.value = '';
       }
-    }
-
-    if (res.data.audio_url) {
-      await playAudioFromUrl(res.data.audio_url);
     }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to submit answer to Ghost Recruiter.';
@@ -285,9 +284,6 @@ function scoreClass(score) {
         <h1 class="page-title">AI Interview</h1>
         <p class="page-sub">Practice technical & behavioral interviews with AI feedback.</p>
       </div>
-
-      <!-- Audio Element (Hidden) -->
-      <audio ref="audioPlayer"></audio>
 
       <!-- ─── Error ─────────────────────────────────────── -->
       <div v-if="error" class="box status-box error">
