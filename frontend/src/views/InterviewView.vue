@@ -245,7 +245,7 @@ function resetAnswers() {
 }
 
 function resetSession() {
-  if (audioPlayer.value) audioPlayer.value.pause();
+  window.speechSynthesis.cancel();
   session.value = null; // Traditional session
   questions.value = [];
   currentIdx.value = 0;

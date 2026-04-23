@@ -4,7 +4,10 @@
     <div class="content">
       <div class="header">
         <h1 class="title">Student Job Feed</h1>
-        <p class="sub">View all available career opportunities tailored for you.</p>
+        <p class="sub">
+          <span v-if="totalJobs > 0" class="job-count">{{ totalJobs.toLocaleString() }} jobs available</span>
+          <span v-else>View all available career opportunities tailored for you.</span>
+        </p>
       </div>
 
       <div class="controls">
@@ -128,6 +131,7 @@ import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
 
 const jobs = ref([]);
+const totalJobs = ref(0);
 const searchQuery = ref('');
 const currentPage = ref(1);
 const totalPages = ref(1);
@@ -150,6 +154,7 @@ const fetchJobs = async () => {
 
     const data = response.data;
     jobs.value = data.jobs;
+    totalJobs.value = data.total || 0;
     totalPages.value = data.pages;
     currentPage.value = data.page;
   } catch (err) {
