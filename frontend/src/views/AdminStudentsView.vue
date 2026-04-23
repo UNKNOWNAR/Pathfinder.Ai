@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const students  = ref([]);
 const total     = ref(0);
@@ -11,8 +12,25 @@ const search    = ref('');
 const loading   = ref(false);
 const error     = ref('');
 
+const CACHE_KEY = 'admin_students_p1';
+
 const fetchStudents = async () => {
-  loading.value = true;
+  // Only cache the first page with no search query
+  const shouldCache = page.value === 1 && !search.value;
+
+  if (shouldCache) {
+    const cachedData = cache.get(CACHE_KEY);
+    if (cachedData) {
+      students.value = cachedData.students;
+      total.value    = cachedData.total;
+      pages.value    = cachedData.pages;
+    }
+  }
+
+  if (!students.value.length) {
+    loading.value = true;
+  }
+
   error.value   = '';
   try {
     const res = await api.get('/admin/students', {
@@ -21,6 +39,10 @@ const fetchStudents = async () => {
     students.value = res.data.students;
     total.value    = res.data.total;
     pages.value    = res.data.pages;
+
+    if (shouldCache) {
+      cache.set(CACHE_KEY, res.data, 2); // 2 min TTL
+    }
   } catch {
     error.value = 'Failed to load student list.';
   } finally {
@@ -48,6 +70,8 @@ const toggleStatus = async (student) => {
       user_id: student.user_id,
       active: newStatus
     });
+    // Clear cache to reflect change on next visit
+    cache.remove(CACHE_KEY);
     student.active = newStatus;
   } catch {
     alert('Failed to update student status.');
@@ -59,6 +83,8 @@ const deleteStudent = async (studentId) => {
 
   try {
     await api.delete('/admin/students', { data: { user_id: studentId } });
+    // Clear cache
+    cache.remove(CACHE_KEY);
     students.value = students.value.filter(s => s.user_id !== studentId);
     total.value--;
   } catch {

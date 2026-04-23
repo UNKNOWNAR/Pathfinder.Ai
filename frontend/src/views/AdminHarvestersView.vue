@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const systemLogs = ref(["> [SYSTEM] Connecting to database..."]);
 const harvesting = ref(false);
@@ -14,14 +15,24 @@ const quotas = ref({
   limits: {}
 });
 
+const CACHE_KEY_LOGS = 'admin_harvest_logs';
+const CACHE_KEY_QUOTAS = 'admin_harvest_quotas';
+
 const loadLogs = async () => {
+  const cachedLogs = cache.get(CACHE_KEY_LOGS);
+  if (cachedLogs) {
+    systemLogs.value = cachedLogs;
+  }
+
   try {
     const res = await api.get('/admin/logs');
     if (res.data.length === 0) {
-      systemLogs.value = ['> [SYSTEM] No harvest runs yet. Trigger one below.'];
+      const emptyMsg = ['> [SYSTEM] No harvest runs yet. Trigger one below.'];
+      systemLogs.value = emptyMsg;
+      cache.set(CACHE_KEY_LOGS, emptyMsg, 5);
       return;
     }
-    systemLogs.value = res.data.map(l => {
+    const freshLogs = res.data.map(l => {
       const dateObj = new Date(l.timestamp + 'Z');
       const istTime = dateObj.toLocaleString('en-IN', {
         timeZone: 'Asia/Kolkata',
@@ -30,17 +41,25 @@ const loadLogs = async () => {
       });
       return `> [${l.status.toUpperCase()}] Run #${l.log_id} — ${l.jobs_added} jobs added @ ${istTime} (IST)`;
     });
+    systemLogs.value = freshLogs;
+    cache.set(CACHE_KEY_LOGS, freshLogs, 5); // 5 min cache
   } catch {
-    systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
+    if (!cachedLogs) systemLogs.value.push('> [ERROR] Failed to load harvest logs.');
   }
 };
 
 const loadQuotas = async () => {
+  const cachedQuotas = cache.get(CACHE_KEY_QUOTAS);
+  if (cachedQuotas) {
+    quotas.value = cachedQuotas;
+  }
+
   try {
     const res = await api.get('/admin/quotas');
     quotas.value = res.data;
+    cache.set(CACHE_KEY_QUOTAS, res.data, 5); // 5 min cache
   } catch {
-    systemLogs.value.push('> [ERROR] Failed to load quotas.');
+    if (!cachedQuotas) systemLogs.value.push('> [ERROR] Failed to load quotas.');
   }
 };
 

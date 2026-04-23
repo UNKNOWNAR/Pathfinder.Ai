@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const companies = ref([]);
 const total     = ref(0);
@@ -11,8 +12,26 @@ const search    = ref('');
 const loading   = ref(true);
 const error     = ref('');
 
+const CACHE_KEY = 'admin_companies_p1';
+
 const loadCompanies = async () => {
-  loading.value = true;
+  // Only cache the first page with no search query
+  const shouldCache = page.value === 1 && !search.value;
+
+  if (shouldCache) {
+    const cachedData = cache.get(CACHE_KEY);
+    if (cachedData) {
+      companies.value = cachedData.companies;
+      total.value     = cachedData.total;
+      pages.value     = cachedData.pages;
+      loading.value   = false;
+    }
+  }
+
+  if (!companies.value.length) {
+    loading.value = true;
+  }
+
   error.value = '';
   try {
     const res = await api.get('/admin/companies', {
@@ -21,6 +40,10 @@ const loadCompanies = async () => {
     companies.value = res.data.companies;
     total.value     = res.data.total;
     pages.value     = res.data.pages;
+
+    if (shouldCache) {
+      cache.set(CACHE_KEY, res.data, 2); // 2 min TTL for first page
+    }
   } catch (err) {
     error.value = 'Failed to load companies.';
     console.error(err);
@@ -45,6 +68,8 @@ const nextPage = () => { if (page.value < pages.value) { page.value++; loadCompa
 const approveCompany = async (companyId) => {
   try {
     await api.post(`/admin/companies/${companyId}/approve`);
+    // Clear cache so refresh shows updated status
+    cache.remove(CACHE_KEY);
     // Update local state
     const company = companies.value.find(c => c.company_id === companyId);
     if (company) {
@@ -61,6 +86,7 @@ const deleteCompany = async (companyId) => {
 
   try {
     await api.delete('/admin/companies', { data: { company_id: companyId } });
+    cache.remove(CACHE_KEY);
     companies.value = companies.value.filter(c => c.company_id !== companyId);
     total.value--;
   } catch (err) {

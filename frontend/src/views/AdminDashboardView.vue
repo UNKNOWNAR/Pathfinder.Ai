@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 import {
   Chart as ChartJS,
   Title,
@@ -22,13 +23,28 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 const stats = ref({ students: 0, companies: 0, jobs: 0, sources: {}, roles: {} });
 const loaded = ref(false);
 
+const CACHE_KEY = 'admin_dashboard_stats';
+
 const loadStats = async () => {
+  // 1. Try to load from cache first for instant responsiveness
+  const cachedData = cache.get(CACHE_KEY);
+  if (cachedData) {
+    stats.value = cachedData;
+    loaded.value = true;
+  }
+
   try {
+    // 2. Fetch fresh data from API in background
     const res = await api.get('/admin/stats');
     stats.value = res.data;
     loaded.value = true;
-  } catch {
-    console.error('[ERROR] Failed to load platform stats.');
+
+    // 3. Save fresh data to cache (10 min TTL)
+    cache.set(CACHE_KEY, res.data, 10);
+  } catch (err) {
+    console.error('[ERROR] Failed to load platform stats.', err);
+    // If we have no cached data and the API fails, we should still stop loading
+    if (!cachedData) loaded.value = true;
   }
 };
 

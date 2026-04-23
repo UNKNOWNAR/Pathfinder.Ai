@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import logoImg from '@/assets/logo.png';
 import cache from '@/services/cache';
 
 const router = useRouter();
@@ -51,7 +50,14 @@ const logout = () => {
   <header class="navbar">
     <!-- Left: Logo + name -->
     <div class="navbar-brand" @click="router.push(isAdmin ? '/admin' : isCompany ? '/company' : '/jobs')">
-      <img :src="logoImg" class="nav-logo" alt="Pathfinder logo" />
+      <!-- Database Logo (Cylinder icon) -->
+      <div class="nav-logo-container">
+        <svg class="nav-logo-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3C7.58 3 4 4.34 4 6V18C4 19.66 7.58 21 12 21C16.42 21 20 19.66 20 18V6C20 4.34 16.42 3 12 3Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 12C20 13.66 16.42 15 12 15C7.58 15 4 13.66 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 6C20 7.66 16.42 9 12 9C7.58 9 4 7.66 4 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <span class="nav-title">Pathfinder.Ai</span>
     </div>
 
@@ -105,16 +111,28 @@ const logout = () => {
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-.nav-logo {
-  height: 48px;
-  width: 48px;
-  object-fit: contain;
+.nav-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  border: 2.5px solid #111;
+  border-radius: 50%;
+  box-shadow: 3px 3px 0 #111;
   flex-shrink: 0;
+}
+
+.nav-logo-svg {
+  width: 24px;
+  height: 24px;
+  color: #111;
 }
 
 .nav-title {
