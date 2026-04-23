@@ -61,18 +61,41 @@ class CompanyRegister(Resource):
 class AdminCompanies(Resource):
     @admin_required
     def get(self):
-        # Join Company and User to get the email
-        results = db.session.query(Company, User.email).join(User, Company.user_id == User.user_id).all()
-        return [
-            {
-                'company_id': comp.company_id,
-                'name': comp.name,
-                'email': email,
-                'is_approved': comp.is_approved,
-                'created_at': comp.created_at.isoformat() if comp.created_at else None
-            }
-            for comp, email in results
-        ], 200
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('q', '', type=str).strip()
+
+        # Build query joining Company and User to get email
+        query = db.session.query(Company, User.email).join(User, Company.user_id == User.user_id)
+
+        if search:
+            like = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Company.name.ilike(like),
+                    User.email.ilike(like)
+                )
+            )
+
+        paginated = query.order_by(Company.company_id.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        return {
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'page': paginated.page,
+            'companies': [
+                {
+                    'company_id': comp.company_id,
+                    'name': comp.name,
+                    'email': email,
+                    'is_approved': comp.is_approved,
+                    'created_at': comp.created_at.isoformat() if comp.created_at else None
+                }
+                for comp, email in paginated.items
+            ]
+        }, 200
 
 
 class AdminCompanyApprove(Resource):
