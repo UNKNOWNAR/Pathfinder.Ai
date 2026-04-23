@@ -3,6 +3,7 @@ from api.profile_api import ProfileAPI
 from api.generate_resume import GenerateResume
 from api.harvest_api import AdminStats, AdminHarvest, AdminLogs, AdminJobsList, JobsList, AdminQuotas
 from api.company_api import CompanyRegister, AdminCompanies, AdminCompanyApprove, CompanyJobs
+from api.student_api import AdminStudents
 from api.leetcode_api import LeetCodeStats
 from api.readiness_api import JobReadiness
 from api.interview_api import (
@@ -23,6 +24,7 @@ def init_routes(api):
     api.add_resource(AdminQuotas,  '/admin/quotas')
     api.add_resource(AdminLogs,    '/admin/logs')
     api.add_resource(AdminJobsList, '/admin/jobs')
+    api.add_resource(AdminStudents, '/admin/students')
     api.add_resource(CompanyRegister, '/company/register')
     api.add_resource(AdminCompanies, '/admin/companies')
     api.add_resource(AdminCompanyApprove, '/admin/companies/<int:company_id>/approve')
