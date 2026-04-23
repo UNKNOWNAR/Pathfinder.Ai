@@ -60,6 +60,12 @@ const routes = [
     meta: { requiresAdmin: true }
   },
   {
+    path: '/admin/students',
+    name: 'admin-students',
+    component: () => import('../views/AdminStudentsView.vue'),
+    meta: { requiresAdmin: true }
+  },
+  {
     path: '/company',
     name: 'company',
     component: () => import('../views/CompanyDashboardView.vue'),
