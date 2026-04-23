@@ -115,10 +115,20 @@ class S3Service:
         try:
             client = _get_client()
             bucket = 'resumes' if '/resumes/' in path else 'avatars'
+            # Note: create_signed_url may return a dict with 'error' or raise an exception
             result = client.storage.from_(bucket).create_signed_url(path, expires_in)
+
+            if isinstance(result, dict) and (result.get('error') or result.get('statusCode')):
+                # Silence 404s as they are expected for legacy files during migration
+                if str(result.get('statusCode')) != '404':
+                    logger.error(f"Supabase signed URL error for {path}: {result}")
+                return None
+
             return result.get('signedURL') or result.get('signed_url')
         except Exception as e:
-            logger.error(f"Supabase signed URL error: {e}")
+            # Silence 404 string in exception as well
+            if '404' not in str(e):
+                logger.error(f"Supabase signed URL exception for {path}: {e}")
             return None
 
     def delete_file(self, path):
