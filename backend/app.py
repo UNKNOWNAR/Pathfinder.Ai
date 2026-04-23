@@ -32,14 +32,16 @@ def create_app():
 
 def init_db():
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            # Import seed inside the app context to avoid circular imports at module level
+            from api.interview_api import seed_interview_topics
+            seed_interview_topics()
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}")
 
-        # Import seed inside the app context to avoid circular imports at module level
-        from api.interview_api import seed_interview_topics
-        seed_interview_topics()
-
-        if not User.query.filter_by(email='admin@example.com').first():
-            try:
+        try:
+            if not User.query.filter_by(email='admin@example.com').first():
                 admin = User(
                     username='admin',
                     email='admin@example.com',
@@ -49,8 +51,9 @@ def init_db():
                 admin.password = fs_hash_password('admin')
                 db.session.add(admin)
                 db.session.commit()
-            except Exception as e:
-                db.session.rollback()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Admin creation failed: {e}")
 
 app, api = create_app()
 CORS(app)
