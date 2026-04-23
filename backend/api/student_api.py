@@ -41,6 +41,13 @@ class AdminStudents(Resource):
                 'location': profile.location if profile else None,
             })
 
+        return {
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'page': paginated.page,
+            'students': students,
+        }, 200
+
     @admin_required
     def put(self):
         data = request.get_json()
