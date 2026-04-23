@@ -43,8 +43,9 @@ def _get_client() -> Client:
         logger.error("SUPABASE_URL is missing or empty")
         raise ValueError("SUPABASE_URL is missing")
 
-    # Debug logging (safe)
-    logger.info(f"Supabase Client Init - URL length: {len(url)}, starts with https: {url.startswith('https://')}")
+    # Debug logging (Masked for security)
+    masked_url = url[:12] + "..." + url[-5:] if len(url) > 20 else url
+    logger.error(f"DEBUG: Supabase Client Init - URL: '{masked_url}', Length: {len(url)}")
 
     try:
         return create_client(url, key)

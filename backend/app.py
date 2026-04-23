@@ -10,6 +10,15 @@ from api import init_routes
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
