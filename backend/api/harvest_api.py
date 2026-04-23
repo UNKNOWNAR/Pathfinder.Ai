@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from api.admin_api import admin_required
 from models import db
 from models.user import User
+from models.company import Company
 from models.job import Job, HarvestLog
 from services.harvester import harvest_all, harvest_source
 from services.embedding import find_similar_jobs
@@ -26,7 +27,31 @@ class AdminStats(Resource):
         sources_query = db.session.query(Job.source, func.count(Job.job_id)).group_by(Job.source).all()
         sources_breakdown = {s: c for s, c in sources_query}
 
-        # ... (rest of the code)
+        # Role breakdown (Categorize titles into broad buckets)
+        roles_categories = {
+            "Frontend": ["frontend", "react", "vue", "angular", "ui/ux", "web developer"],
+            "Backend": ["backend", "node", "python", "django", "flask", "java", "spring", "golang", "ruby"],
+            "Full Stack": ["full stack", "fullstack", "mern", "mean"],
+            "Data Science": ["data scientist", "data science", "analytics", "analyst"],
+            "Machine Learning": ["ml engineer", "machine learning", "artificial intelligence", "ai engineer"],
+            "Mobile": ["mobile", "android", "ios", "react native", "flutter", "swift", "kotlin"],
+            "DevOps": ["devops", "cloud", "aws", "azure", "gcp", "docker", "kubernetes", "sre"]
+        }
+
+        roles_breakdown = {cat: 0 for cat in roles_categories}
+        roles_breakdown["Other"] = 0
+
+        all_job_titles = db.session.query(Job.title).all()
+        for (title,) in all_job_titles:
+            title_lower = title.lower()
+            matched = False
+            for cat, keywords in roles_categories.items():
+                if any(kw in title_lower for kw in keywords):
+                    roles_breakdown[cat] += 1
+                    matched = True
+                    break
+            if not matched:
+                roles_breakdown["Other"] += 1
 
         return {
             'students': students_total,
