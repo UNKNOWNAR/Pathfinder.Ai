@@ -11,7 +11,7 @@ werkzeug==3.0.3
 
 # Database & Vector Support
 psycopg2-binary==2.9.9
-pgvector==0.3.2
+# pgvector==0.3.2  <-- Temporarily disabled to debug build issues
 SQLAlchemy==2.0.30
 numpy==1.26.4
 
