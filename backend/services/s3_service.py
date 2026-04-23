@@ -15,15 +15,27 @@ Setup:
 import os
 import uuid
 import logging
+from dotenv import load_dotenv
 from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL = os.getenv('SUPABASE_URL', '')
-SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '')
-
 def _get_client() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    """Gets a Supabase client, ensuring env vars are loaded and clean."""
+    url = os.getenv('SUPABASE_URL', '').strip()
+    key = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
+
+    if not url or not key:
+        # Try loading dotenv if vars are missing (development)
+        load_dotenv()
+        url = os.getenv('SUPABASE_URL', '').strip()
+        key = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
+
+    if not url:
+        logger.error("SUPABASE_URL is missing or empty")
+        raise ValueError("SUPABASE_URL is missing")
+
+    return create_client(url, key)
 
 
 class S3Service:

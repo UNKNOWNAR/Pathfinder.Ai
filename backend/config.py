@@ -45,5 +45,5 @@ class Config:
     ADZUNA_APP_KEY = os.getenv('ADZUNA_APP_KEY', '')
 
     # ── File Storage (Supabase) ───────────────────────────────────────────────
-    SUPABASE_URL = os.getenv('SUPABASE_URL', '')
-    SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '')
+    SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip()
+    SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
