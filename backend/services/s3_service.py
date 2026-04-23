@@ -80,12 +80,13 @@ class S3Service:
             return None
 
     def get_public_url(self, path):
-        """Returns a permanent public URL for avatars bucket."""
+        """Returns a permanent public URL for the file's respective bucket."""
         if not path:
             return None
         try:
             client = _get_client()
-            return client.storage.from_('avatars').get_public_url(path)
+            bucket = 'resumes' if '/resumes/' in path else 'avatars'
+            return client.storage.from_(bucket).get_public_url(path)
         except Exception as e:
             logger.error(f"Supabase public URL error: {e}")
             return None
@@ -108,12 +109,13 @@ class S3Service:
             return None
 
     def get_presigned_url(self, path, expires_in=3600):
-        """Returns a signed URL for private resume access (expires in 1 hour)."""
+        """Returns a signed URL for the file's respective bucket (expires in 1 hour)."""
         if not path:
             return None
         try:
             client = _get_client()
-            result = client.storage.from_('resumes').create_signed_url(path, expires_in)
+            bucket = 'resumes' if '/resumes/' in path else 'avatars'
+            result = client.storage.from_(bucket).create_signed_url(path, expires_in)
             return result.get('signedURL') or result.get('signed_url')
         except Exception as e:
             logger.error(f"Supabase signed URL error: {e}")
