@@ -125,7 +125,7 @@ const roleChartData = computed(() => {
         </div>
         <div class="box metric-box bg-green">
             <span class="metric-title">ACTIVE JOBS</span>
-            <span class="metric-value">{{ stats.jobs.toLocaleString() }}</span>
+            <span class="metric-value">{{ (stats.jobs || 0).toLocaleString() }}</span>
         </div>
         <div class="box metric-box bg-purple">
             <span class="metric-title">JOB SOURCES</span>

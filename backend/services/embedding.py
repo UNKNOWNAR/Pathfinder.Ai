@@ -120,7 +120,8 @@ def store_student_embedding(student_id, skills, headline, summary):
         if not text_to_embed.strip():
             return None
 
-        return generate_embedding(text_to_embed)
+        vectors = generate_embeddings([text_to_embed])
+        return vectors[0] if vectors else None
     except Exception as e:
         logger.error(f"Failed to generate embedding for student {student_id}: {str(e)}")
         return None
