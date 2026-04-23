@@ -23,7 +23,7 @@ feedparser==6.0.11
 
 # AI / LLM
 groq>=0.9.0
-bcrypt>=4.0.0
+bcrypt==4.0.1
 
 # PDF Generation
 python-bidi==0.4.2
