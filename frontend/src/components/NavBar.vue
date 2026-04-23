@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import logoImg from '@/assets/logo.png';
+import cache from '@/services/cache';
 
 const router = useRouter();
 const route  = useRoute();
@@ -41,7 +42,7 @@ const isActive = (path) => {
 };
 
 const logout = () => {
-  localStorage.clear();
+  cache.clear();
   router.push('/login');
 };
 </script>

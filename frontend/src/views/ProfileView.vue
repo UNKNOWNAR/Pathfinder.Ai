@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const defaultProfile = () => ({
   name:       '',
@@ -28,6 +29,13 @@ const isSaving = ref(false);
 const isGenerating = ref(false);
 
 onMounted(async () => {
+  // 1. Try to load from cache first for instant UI
+  const cachedProfile = cache.get('student_profile');
+  if (cachedProfile) {
+    Object.assign(profile, cachedProfile);
+  }
+
+  // 2. Fetch fresh data in background
   try {
     const res = await api.get('/profile');
     if (res.data) {
@@ -38,6 +46,9 @@ onMounted(async () => {
       profile.education = res.data.education || [];
       profile.projects = res.data.projects || [];
       profile.achievements = res.data.achievements || [];
+
+      // 3. Update cache with fresh data
+      cache.set('student_profile', res.data);
     }
   } catch (err) {
     if (err.response?.status !== 404) {
@@ -136,6 +147,8 @@ const saveProfile = async () => {
     if (res.data && res.data.profile) {
       Object.assign(profile, res.data.profile);
       selectedPhotoFile.value = null; // Clear the temporary file now that it's uploaded
+      // 4. Update cache after save
+      cache.set('student_profile', res.data.profile);
     }
 
     saved_msg.value = '✦ SAVED!';

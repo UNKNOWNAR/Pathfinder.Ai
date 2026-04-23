@@ -1,4 +1,4 @@
-from api.auth_apis import LoginUser, SignUpUser, LogoutUser
+from api.auth_apis import LoginUser, SignUpUser, LogoutUser, HealthCheck
 from api.profile_api import ProfileAPI
 from api.generate_resume import GenerateResume
 from api.harvest_api import AdminStats, AdminHarvest, AdminLogs, AdminJobsList, JobsList, AdminQuotas, AdminJobDelete
@@ -14,6 +14,7 @@ from api.interview_api import (
 
 
 def init_routes(api):
+    api.add_resource(HealthCheck,  '/health')
     api.add_resource(LoginUser,    '/login')
     api.add_resource(SignUpUser,   '/signup')
     api.add_resource(LogoutUser,   '/logout')

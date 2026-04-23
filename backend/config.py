@@ -25,6 +25,7 @@ class Config:
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default-dev-jwt-secret-key')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
+    SYSTEM_API_KEY = os.getenv('SYSTEM_API_KEY', 'default-dev-system-key')
     WTF_CSRF_ENABLED = False
     SECURITY_WTF_CSRF_ENABLED = False
     SECURITY_URL_PREFIX = '/security'
@@ -40,6 +41,7 @@ class Config:
     JSEARCH_API_KEY = RAPIDAPI_KEY
     INTERNSHIPS_API_KEY = RAPIDAPI_KEY
     GOOGLE_JOBS_API_KEY = RAPIDAPI_KEY
+    FAANG_WATCH_API_KEY = RAPIDAPI_KEY
 
     ADZUNA_APP_ID = os.getenv('ADZUNA_APP_ID', '')
     ADZUNA_APP_KEY = os.getenv('ADZUNA_APP_KEY', '')

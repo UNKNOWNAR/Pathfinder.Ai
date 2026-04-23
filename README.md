@@ -62,7 +62,7 @@ We have migrated from traditional AWS infrastructure to a modern, serverless sta
 
 ### ⚡ Automation — Daily Harvest
 - No manual triggers needed. **GitHub Actions** runs a cron job every 24 hours.
-- Uses a long-lived **Admin JWT** to securely trigger the multi-source harvester on Render.
+- Uses a persistent **System API Key** to securely trigger the multi-source harvester on Render.
 
 ---
 
@@ -92,10 +92,10 @@ Pathfinder.Ai/
 ### Backend (Render)
 1. Set `PYTHON_VERSION` environment variable to `3.11.9`.
 2. Connect your repository and use `pip install -r requirements.txt`.
-3. Set all API keys (Groq, Jina, Neon, Supabase) in the dashboard.
+3. Set all API keys (Groq, Jina, Neon, Supabase, SYSTEM_API_KEY) in the dashboard.
 
 ### Frontend (GitHub Pages)
-1. Add `RENDER_BACKEND_URL` to your GitHub Repository Secrets.
+1. Add `RENDER_BACKEND_URL` and `SYSTEM_API_KEY` to your GitHub Repository Secrets.
 2. The GitHub Action will automatically build the Vue app and inject the URL.
 
 ---

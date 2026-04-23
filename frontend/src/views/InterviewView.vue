@@ -4,6 +4,7 @@ import NavBar from '@/components/NavBar.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
 import VoiceInput from '@/components/VoiceInput.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 // ─── State ───────────────────────────────────────────────
 const topics = ref([]);
@@ -89,18 +90,37 @@ watch(selectedLanguage, (newLang) => {
 
 // ─── Fetch topics and profile on mount ──────────────────
 onMounted(async () => {
-  try {
-    const res = await api.get('/api/interview/topics');
-    topics.value = res.data.topics;
+  // 1. Try to load from cache first
+  const cachedTopics = cache.get('interview_topics');
+  if (cachedTopics) {
+    topics.value = cachedTopics;
     if (topics.value.length) selectedTopic.value = topics.value[0].topic_id;
+  }
 
-    // Fetch REAL profile data from the database
-    try {
-      const profileRes = await api.get('/profile');
-      profileData.value = profileRes.data.profile || profileRes.data || {};
-    } catch (profileErr) {
-      console.warn('Could not load profile, using empty profile:', profileErr);
-      profileData.value = {};
+  const cachedProfile = cache.get('student_profile');
+  if (cachedProfile) {
+    profileData.value = cachedProfile;
+  }
+
+  try {
+    // 2. Fetch topics if not cached or in background
+    if (!cachedTopics) {
+      const res = await api.get('/api/interview/topics');
+      topics.value = res.data.topics;
+      if (topics.value.length) selectedTopic.value = topics.value[0].topic_id;
+      cache.set('interview_topics', res.data.topics, 1440); // Cache topics for 24 hours
+    }
+
+    // 3. Fetch REAL profile data if not cached or in background
+    if (!cachedProfile) {
+      try {
+        const profileRes = await api.get('/profile');
+        profileData.value = profileRes.data.profile || profileRes.data || {};
+        cache.set('student_profile', profileData.value);
+      } catch (profileErr) {
+        console.warn('Could not load profile, using empty profile:', profileErr);
+        profileData.value = {};
+      }
     }
 
   } catch (err) {

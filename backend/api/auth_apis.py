@@ -6,6 +6,10 @@ from user_datastore import user_datastore
 from sqlalchemy import or_
 from flask_jwt_extended import create_access_token, jwt_required
 
+class HealthCheck(Resource):
+    def get(self):
+        return {'status': 'healthy', 'message': 'Backend is awake!'}, 200
+
 class LoginUser(Resource):
     def post(self):
         login_data = request.get_json()

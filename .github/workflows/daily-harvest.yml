@@ -15,7 +15,7 @@ jobs:
           echo "Waking up Render server and triggering harvest..."
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST \
-            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -H "X-System-API-Key: ${{ secrets.SYSTEM_API_KEY }}" \
             -H "Content-Type: application/json" \
             "${{ secrets.RENDER_BACKEND_URL }}/admin/harvest")
           

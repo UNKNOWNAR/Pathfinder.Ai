@@ -129,6 +129,7 @@
 import { ref, onMounted, watch } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const jobs = ref([]);
 const totalJobs = ref(0);
@@ -143,6 +144,17 @@ const readinessData = ref(null);
 const readinessLoading = ref(false);
 
 const fetchJobs = async () => {
+  // 1. Try to load from cache for the first page (no search) for instant UI
+  if (currentPage.value === 1 && !searchQuery.value) {
+    const cachedJobs = cache.get('jobs_page_1');
+    if (cachedJobs) {
+      jobs.value = cachedJobs.jobs;
+      totalJobs.value = cachedJobs.total || 0;
+      totalPages.value = cachedJobs.pages;
+      currentPage.value = cachedJobs.page;
+    }
+  }
+
   loading.value = true;
   try {
     const response = await api.get(`/api/jobs?page=${currentPage.value}&q=${encodeURIComponent(searchQuery.value)}`);
@@ -157,6 +169,11 @@ const fetchJobs = async () => {
     totalJobs.value = data.total || 0;
     totalPages.value = data.pages;
     currentPage.value = data.page;
+
+    // 2. Cache the first page for next time
+    if (currentPage.value === 1 && !searchQuery.value) {
+      cache.set('jobs_page_1', data, 30); // Cache job feed for 30 minutes
+    }
   } catch (err) {
     console.error('Error fetching jobs:', err);
   } finally {

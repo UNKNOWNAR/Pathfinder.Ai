@@ -33,3 +33,5 @@ services:
         value: production
       - key: ENVIRONMENT
         value: production
+      - key: SYSTEM_API_KEY
+        sync: false

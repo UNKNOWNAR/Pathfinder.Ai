@@ -28,12 +28,12 @@ JINA_ENDPOINT = 'https://api.jina.ai/v1/embeddings'
 JINA_MODEL = 'jina-embeddings-v3'
 
 
-def generate_embedding(text_to_embed):
+def generate_embeddings(texts):
     """
-    Generate a 1024-dimension vector embedding via Jina AI's free API.
-    Returns a flat list of floats, or [] on failure.
+    Generate 1024-dimension vector embeddings for a list of texts via Jina AI.
+    Returns a list of vectors (lists of floats), or [] on failure.
     """
-    if not text_to_embed or not isinstance(text_to_embed, str):
+    if not texts or not isinstance(texts, list):
         return []
 
     if not JINA_API_KEY:
@@ -49,43 +49,56 @@ def generate_embedding(text_to_embed):
             },
             json={
                 'model': JINA_MODEL,
-                'input': [text_to_embed],
+                'input': texts,
                 'dimensions': 1024,
                 'task': 'retrieval.passage',
             },
-            timeout=20
+            timeout=30
         )
 
         if response.status_code == 200:
             data = response.json()
-            return data['data'][0]['embedding']
+            return [d['embedding'] for d in data['data']]
         else:
-            logger.error(f"Jina embedding failed {response.status_code}: {response.text[:200]}")
+            logger.error(f"Jina batch embedding failed {response.status_code}: {response.text[:200]}")
             return []
     except Exception as e:
-        logger.error(f"Jina embedding request failed: {e}")
+        logger.error(f"Jina batch embedding request failed: {e}")
         return []
 
 
 def store_job_embedding(job_id, title, description):
     """
-    Generate and store an embedding for a job into PostgreSQL pgvector.
+    Generate and store an embedding for a single job.
     """
-    try:
-        text_to_embed = f"Job Title: {title}\n\nDescription: {description}"
-        vector = generate_embedding(text_to_embed)
+    return batch_store_job_embeddings([(job_id, title, description)])
 
-        if not vector:
+
+def batch_store_job_embeddings(job_tuples):
+    """
+    Generate and store embeddings for multiple jobs in a single batch.
+    job_tuples: List of (job_id, title, description)
+    """
+    if not job_tuples:
+        return False
+
+    try:
+        texts = [f"Job Title: {t}\n\nDescription: {d}" for _, t, d in job_tuples]
+        vectors = generate_embeddings(texts)
+
+        if not vectors or len(vectors) != len(job_tuples):
             return False
 
-        job = Job.query.get(job_id)
-        if job:
-            job.embedding = vector
-            db.session.commit()
-            return True
-        return False
+        for i, (job_id, _, _) in enumerate(job_tuples):
+            job = Job.query.get(job_id)
+            if job:
+                job.embedding = vectors[i]
+
+        db.session.commit()
+        return True
     except Exception as e:
-        logger.error(f"Failed to store embedding for job {job_id}: {str(e)})")
+        logger.error(f"Failed to store batch embeddings: {str(e)}")
+        db.session.rollback()
         return False
 
 

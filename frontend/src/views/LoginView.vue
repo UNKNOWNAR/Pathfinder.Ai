@@ -1,9 +1,18 @@
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const router = useRouter();
+
+// Warmup the backend (mitigate Render cold start)
+onMounted(() => {
+  api.get('/health').catch(() => {
+    // Ignore errors, we just want to trigger a wakeup
+  });
+});
+
 const isSignUp = ref(false);
 const showLoginPassword = ref(false);
 const showSignupPassword = ref(false);
@@ -13,6 +22,9 @@ const signupData = reactive({ username: '', email: '', password: '', role: 'stud
 
 const handleLogin = async () => {
   try {
+    // Clear any previous session cache before new login
+    cache.clear();
+
     const res = await api.post('/login', loginData);
     localStorage.setItem('token', res.data.access_token);
     localStorage.setItem('role', res.data.role);

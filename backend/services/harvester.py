@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from models import db
 from models.job import Job, HarvestLog
 from services.utils import make_job_hash, is_fresher_role
-from services.embedding import store_job_embedding
+from services.embedding import batch_store_job_embeddings
 from services.rss_sources import (
     fetch_remoteok_jobs,
     fetch_weworkremotely_jobs,
@@ -374,9 +374,9 @@ def _run_harvest(app, source="all", roles=None, locations=None):
                             db.session.bulk_save_objects(new_jobs, return_defaults=True)
                             db.session.commit()
                             total_added += added
-                            # Generate embeddings for newly inserted jobs
-                            for j in new_jobs:
-                                store_job_embedding(j.job_id, j.title, j.description)
+                            # Generate embeddings for newly inserted jobs in batch
+                            job_data = [(j.job_id, j.title, j.description) for j in new_jobs]
+                            batch_store_job_embeddings(job_data)
                         logger.info(f"Completed {name}: added {added} jobs from {calls} API calls.")
             else:
                 raw_data, calls = _fetch_source_raw(source, app.config, roles, locations)
@@ -386,9 +386,9 @@ def _run_harvest(app, source="all", roles=None, locations=None):
                 if total_added > 0:
                     db.session.bulk_save_objects(new_jobs, return_defaults=True)
                     db.session.commit()
-                    # Generate embeddings for newly inserted jobs
-                    for j in new_jobs:
-                        store_job_embedding(j.job_id, j.title, j.description)
+                    # Generate embeddings for newly inserted jobs in batch
+                    job_data = [(j.job_id, j.title, j.description) for j in new_jobs]
+                    batch_store_job_embeddings(job_data)
                 logger.info(f"Completed {source}: added {total_added} jobs from {calls} API calls.")
 
             log.status = "completed"

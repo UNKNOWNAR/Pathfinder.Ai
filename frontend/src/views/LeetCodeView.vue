@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import api from '@/services/api';
+import cache from '@/services/cache';
 
 const stats = ref(null);
 const advice = ref('');
@@ -23,14 +24,29 @@ const weakTags = computed(() => {
 });
 
 const fetchStats = async () => {
+  // 1. Try to load from cache first
+  const cachedStats = cache.get('leetcode_stats');
+  if (cachedStats) {
+    stats.value = cachedStats.stats;
+    advice.value = cachedStats.advice || '';
+  }
+
   loading.value = true;
   error.value = '';
   noUsername.value = false;
 
   try {
-    // First, check if the user has a LeetCode username set
-    const profileRes = await api.get('/profile');
-    if (!profileRes.data.leetcode_username) {
+    // Check cache for profile just to see if we have username
+    const profile = cache.get('student_profile');
+    let leetcode_username = profile?.leetcode_username;
+
+    if (!leetcode_username) {
+      const profileRes = await api.get('/profile');
+      leetcode_username = profileRes.data.leetcode_username;
+      cache.set('student_profile', profileRes.data);
+    }
+
+    if (!leetcode_username) {
       noUsername.value = true;
       return;
     }
@@ -38,6 +54,9 @@ const fetchStats = async () => {
     const res = await api.get('/api/leetcode/stats');
     stats.value = res.data.stats;
     advice.value = res.data.advice || '';
+
+    // 2. Cache the results
+    cache.set('leetcode_stats', res.data, 60); // Cache for 60 mins
   } catch (err) {
     if (err.response?.data?.no_username) {
       noUsername.value = true;
