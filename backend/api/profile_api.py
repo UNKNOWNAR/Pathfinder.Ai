@@ -98,3 +98,17 @@ class ProfileAPI(Resource):
             'message': 'Profile updated successfully',
             'profile': _format_profile_data(profile)
         }, 200
+
+    @jwt_required()
+    def delete(self):
+        """Clears the resume history for the current user."""
+        user_id = get_jwt_identity()
+        profile = Profile.query.filter_by(user_id=user_id).first()
+
+        if not profile:
+            return {'message': 'Profile not found'}, 404
+
+        profile.resumes = []
+        db.session.commit()
+
+        return {'message': 'Resume history cleared successfully'}, 200

@@ -179,6 +179,19 @@ const generateResume = async () => {
   }
 };
 
+const clearResumeHistory = async () => {
+  if (!confirm('Are you sure you want to clear your entire resume history? This cannot be undone.')) return;
+
+  try {
+    await api.delete('/profile');
+    profile.resumes = [];
+    alert('Resume history cleared.');
+  } catch (err) {
+    console.error(err);
+    alert('Failed to clear history.');
+  }
+};
+
 // ── Toggle accordion ──────────────────────────────────────────────────────
 const toggle = (key) => { openSections[key] = !openSections[key]; };
 </script>
@@ -469,6 +482,9 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
           <span class="chevron" :class="{ open: openSections.history }">▼</span>
         </button>
         <div v-if="openSections.history" class="accord-body">
+          <div class="history-header" v-if="profile.resumes && profile.resumes.length">
+             <button class="outline-btn small danger" @click="clearResumeHistory">✕ CLEAR HISTORY</button>
+          </div>
           <div class="resumes-list" style="width: 100%;">
             <div v-for="(resume, i) in profile.resumes" :key="i" class="resume-item">
               <span class="resume-date">{{ new Date(resume.created_at).toLocaleString() }}</span>
@@ -511,6 +527,7 @@ const toggle = (key) => { openSections[key] = !openSections[key]; };
 }
 .outline-btn:hover  { background: #f0f0f0; }
 .outline-btn:active { box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
+.outline-btn.danger:hover { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
 /* ── Hero ────────────────────────────────────────────────────────────── */
 .hero {
   display: flex;
