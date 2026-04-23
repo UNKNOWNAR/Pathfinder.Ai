@@ -22,20 +22,35 @@ logger = logging.getLogger(__name__)
 
 def _get_client() -> Client:
     """Gets a Supabase client, ensuring env vars are loaded and clean."""
-    url = os.getenv('SUPABASE_URL', '').strip()
-    key = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
+    def clean_var(val):
+        if not val:
+            return ""
+        # Remove whitespace, surrounding quotes, and trailing slash from URL
+        cleaned = val.strip().strip("'").strip('"')
+        if cleaned.endswith('/'):
+            cleaned = cleaned[:-1]
+        return cleaned
+
+    url = clean_var(os.getenv('SUPABASE_URL'))
+    key = clean_var(os.getenv('SUPABASE_SERVICE_KEY'))
 
     if not url or not key:
-        # Try loading dotenv if vars are missing (development)
         load_dotenv()
-        url = os.getenv('SUPABASE_URL', '').strip()
-        key = os.getenv('SUPABASE_SERVICE_KEY', '').strip()
+        url = clean_var(os.getenv('SUPABASE_URL'))
+        key = clean_var(os.getenv('SUPABASE_SERVICE_KEY'))
 
     if not url:
         logger.error("SUPABASE_URL is missing or empty")
         raise ValueError("SUPABASE_URL is missing")
 
-    return create_client(url, key)
+    # Debug logging (safe)
+    logger.info(f"Supabase Client Init - URL length: {len(url)}, starts with https: {url.startswith('https://')}")
+
+    try:
+        return create_client(url, key)
+    except Exception as e:
+        logger.error(f"Failed to create Supabase client: {e}")
+        raise
 
 
 class S3Service:
